@@ -8,3 +8,9 @@
 -keepclasseswithmembers class com.conreo.couchytv.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
+
+# ZXing QR encoder used for Telegram device-link
+-keep class com.google.zxing.** { *; }
+
+# TDLib JNI (io.xbot.tdlib.NativeBridge native methods)
+-keep class io.xbot.tdlib.** { *; }
