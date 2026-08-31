@@ -38,6 +38,7 @@ These keep their own licenses, all compatible with GPLv3:
 | AndroidX / Jetpack Compose, `androidx.tv`, DataStore | framework / UI | Apache-2.0 |
 | AndroidX Media3 (ExoPlayer) + OkHttp data source | video wallpaper | Apache-2.0 |
 | ZXing core | QR code for Telegram device-link | Apache-2.0 |
+| HiddenApiBypass | Close → force-stop + clear cache (hidden APIs) | Apache-2.0 |
 | TDLib (via `tdlib-kmp`) | optional Telegram Saved Messages backup | Boost 1.0 |
 | kotlinx.serialization | config persistence | Apache-2.0 |
 

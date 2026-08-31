@@ -140,6 +140,9 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // QR encoding for Telegram device-link on the TV (no camera on the box).
     implementation("com.google.zxing:core:3.5.3")
+    // Reach ActivityManager.forceStopPackage / PackageManager.deleteApplicationCacheFiles
+    // (hidden on API 28+). Apache-2.0; F-Droid-safe. Permissions still required.
+    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1")
 }
 
 // TDLib natives only (the published AAR needs Kotlin 2.3 + compileSdk 36).

@@ -14,3 +14,6 @@
 
 # TDLib JNI (io.xbot.tdlib.NativeBridge native methods)
 -keep class io.xbot.tdlib.** { *; }
+
+# Hidden API exemption used by Close (force-stop + clear cache)
+-keep class org.lsposed.hiddenapibypass.** { *; }
