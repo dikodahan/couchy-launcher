@@ -82,6 +82,12 @@ Couchy reads imagery only. The app tile still launches the app normally. A TV’
 
 Couchy Launcher 1.1.0 requires Android TV or Google TV running **Android 9 (API 28) or newer**.
 
+### Install with Downloader
+
+Open **Downloader** on your TV, enter code **`5058414`** to download the latest release, and follow the on-screen installation prompts.
+
+### Install with ADB
+
 1. **Get the APK and ADB.** Download [the latest signed APK](https://github.com/dikodahan/couchy-launcher/releases/latest/download/Couchy-Launcher.apk), choose a version on the [Releases page](https://github.com/dikodahan/couchy-launcher/releases), or build from source with `./gradlew assembleRelease -PlocalSign` (output: `app/build/outputs/apk/release/app-release.apk`). Install [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) on your computer so you can run `adb`. See [CONTRIBUTING.md](CONTRIBUTING.md) for build prerequisites.
 2. **Enable Developer options on the TV.** In **Settings → System → About** (sometimes **Device Preferences → About**), select **Android TV OS build** seven times. Open **Developer options** and find your TV's debugging option. For a network connection, put the computer and TV on the same local network.
 3. **Connect ADB using the option your TV exposes.** Replace the example addresses and ports with the values shown on your TV.
