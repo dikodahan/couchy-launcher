@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Telegram sessions are device credentials, never portable settings. -->
+    <exclude domain="file" path="tdlib/" />
+    <exclude domain="sharedpref" path="home_launcher.xml" />
+    <exclude domain="sharedpref" path="home_diagnostics.xml" />
+</full-backup-content>

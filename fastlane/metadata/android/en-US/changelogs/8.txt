@@ -1,0 +1,8 @@
+Updated open-source fork of conreo/Couchy Launcher.
+• Optional weather and seven-day forecasts.
+• App renaming, custom banners and icon-pack support.
+• Lower-memory rendering and bounded aerial video caching.
+• Compatible Telegram/ADB/local backups with safer imports and export fallback.
+• Built-in Home switching through Android or approved local ADB, with stock-launcher recovery.
+• Android 9+ minimum; updated Telegram/build dependencies and normal HTTPS validation.
+Thanks to conreo, Xaero252 and 9Chrk for the original work and contributions.

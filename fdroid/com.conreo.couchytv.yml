@@ -1,3 +1,5 @@
+# Historical upstream F-Droid build recipe, retained as a reference.
+# This is not a published F-Droid recipe for the independent 1.1.0 fork.
 Categories:
   - Launcher
 License: GPL-3.0-only

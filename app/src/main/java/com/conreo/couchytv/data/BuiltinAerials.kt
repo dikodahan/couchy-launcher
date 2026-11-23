@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
  * community collections (38).
  */
 object BuiltinAerials {
+    private val format = Json { ignoreUnknownKeys = true }
 
     /** Source filter values (config.builtinSource). */
     val SOURCES = listOf("", "A", "Z", "C1", "C2") // "" = all
@@ -27,8 +28,7 @@ object BuiltinAerials {
         val list = runCatching {
             val json = context.assets.open("aerials.json")
                 .bufferedReader().use { it.readText() }
-            Json { ignoreUnknownKeys = true }
-                .decodeFromString<List<Entry>>(json)
+            format.decodeFromString<List<Entry>>(json)
                 .map { it.s to it.u }
         }.getOrDefault(emptyList())
         cache = list

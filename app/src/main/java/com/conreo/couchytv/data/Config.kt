@@ -41,6 +41,7 @@ data class LauncherConfig(
     val knownApps: Set<String> = emptySet(),
     val wallpaper: Int = 1, // Aurora
     val useCustomWallpaper: Boolean = false,
+    val useTopShelf: Boolean = false,
     /** video wallpaper: persisted content-URI of a local video, looped muted */
     val videoUri: String = "",
     val useVideoWallpaper: Boolean = false,
@@ -80,7 +81,49 @@ data class LauncherConfig(
     val language: String = "",
     /** 0 = carousel (fixed selection), 1 = grid, 2 = dock */
     val layout: Int = 2, // Dock
+    // ----- weather -----
+    val weatherEnabled: Boolean = false,
+    // Defaults to manual coordinates, NOT GeoIP: flipping "Show weather" on
+    // must never by itself phone a third party with the device's IP — that
+    // only happens once the user deliberately picks GeoIP as the source.
+    /** 0 = GeoIP, 1 = manual lat/long, 2 = zip/postal code */
+    val weatherLocationSource: Int = 1,
+    val weatherGeoJsEnabled: Boolean = false,
+    val weatherLat: Double = 0.0,
+    val weatherLon: Double = 0.0,
+    val weatherCityLabel: String = "",
+    val weatherZip: String = "",
+    /** 2-letter country code for zip lookup */
+    val weatherCountry: String = "",
+    /** 0 = Celsius, 1 = Fahrenheit */
+    val weatherUnit: Int = 0,
+    /** 0 = icon only, 1 = icon + temperature, 2 = icon + low/high */
+    val weatherDisplay: Int = 1,
+    /** 0 = open Settings, 1 = forecast dialog, 2 = open weatherApp */
+    val weatherClickAction: Int = WEATHER_CLICK_FORECAST,
+    val weatherForecastView: Int = WEATHER_FORECAST_BOTH,
+    val weatherForecastIconStyle: Int = WEATHER_ICONS_MONOCHROME,
+    /** package opened when weatherClickAction = 2 (open app) */
+    val weatherApp: String = "",
+    // ----- app reskinning -----
+    /** package -> custom label */
+    val labelOverrides: Map<String, String> = emptyMap(),
+    /** package of the selected icon-pack app; empty = none */
+    val iconPackPkg: String = "",
 )
+
+internal fun LauncherConfig.reconcileInstalledApps(installed: Set<String>): LauncherConfig {
+    if (knownApps.isEmpty()) return copy(knownApps = installed)
+    if (knownApps == installed) return this
+    // Backups retain placement for apps that have not been installed on this TV yet.
+    val ordered = order.values.flatten().toSet()
+    val unplaced = installed - knownApps - sections.keys - ordered
+    val firstSection = categories.first().id
+    return copy(
+        knownApps = installed,
+        sections = sections + unplaced.associateWith { setOf(firstSection) },
+    )
+}
 
 const val LAYOUT_CAROUSEL = 0
 const val LAYOUT_GRID = 1
@@ -89,22 +132,33 @@ const val LAYOUT_DOCK = 2
 /** Status bar date formats (SimpleDateFormat patterns); index 0 = off. */
 val DATE_FORMATS = listOf("", "EEE d", "EEE d MMM", "d MMM yyyy", "dd/MM", "MM/dd", "yyyy-MM-dd")
 
+const val WEATHER_SRC_GEOIP = 0
+const val WEATHER_SRC_LATLONG = 1
+const val WEATHER_SRC_ZIP = 2
+const val WEATHER_DISPLAY_ICON = 0
+const val WEATHER_DISPLAY_TEMP = 1
+const val WEATHER_DISPLAY_LOWHIGH = 2
+const val WEATHER_CLICK_SETTINGS = 0
+const val WEATHER_FORECAST_BOTH = 0
+const val WEATHER_FORECAST_HOURLY = 1
+const val WEATHER_FORECAST_DAILY = 2
+const val WEATHER_ICONS_MONOCHROME = 0
+const val WEATHER_ICONS_COLOR = 1
+const val WEATHER_ICONS_ANIMATED = 2
+const val WEATHER_CLICK_FORECAST = 1
+const val WEATHER_CLICK_APP = 2
+
 /** Sorted by user base — the display name is localized in the UI via string resource. */
 val LANGUAGES = listOf(
     "",     // system default
     "zh", "es", "ja", "de", "fr",   // tier 1
     "pt", "ru", "ko", "ar", "it",   // tier 2
-    "tr", "pl", "nl", "hi", "th", "in", "vi", // tier 3
+    "tr", "pl", "nl", "hi", "th", "in", "vi", "he", // tier 3
 )
 
 private val Context.dataStore by preferencesDataStore(name = "launcher")
 private val KEY_CONFIG = stringPreferencesKey("config")
 private val json = Json { ignoreUnknownKeys = true }
-private val exportJson = Json {
-    ignoreUnknownKeys = true
-    prettyPrint = true
-    encodeDefaults = true
-}
 
 class ConfigStore(private val context: Context) {
 
@@ -125,9 +179,16 @@ class ConfigStore(private val context: Context) {
         context.dataStore.edit { prefs ->
             val current = prefs[KEY_CONFIG]?.let {
                 runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
-            } ?: LauncherConfig()
+            } ?: LauncherConfig(categories = defaultCategories(context))
             prefs[KEY_CONFIG] = json.encodeToString(transform(current))
         }
+    }
+
+    suspend fun snapshot(): LauncherConfig = flow.first()
+
+    /** Apply portable settings atomically while keeping destination scan state. */
+    suspend fun restore(loaded: LauncherConfig) {
+        update { current -> loaded.copy(knownApps = current.knownApps, setupDone = true) }
     }
 
     /** Same JSON the settings Save locally button writes. */
@@ -135,7 +196,12 @@ class ConfigStore(private val context: Context) {
         val cfg = flow.first()
         withContext(Dispatchers.IO) {
             file.parentFile?.mkdirs()
-            file.writeText(exportJson.encodeToString(LauncherConfig.serializer(), cfg))
+            val bytes = ConfigBackup.encode(cfg).toByteArray(Charsets.UTF_8)
+            val target = android.util.AtomicFile(file)
+            val output = target.startWrite()
+            try { output.write(bytes); target.finishWrite(output) }
+            catch (error: Exception) { target.failWrite(output); throw error }
+            check(target.openRead().use { it.readBytes().contentEquals(bytes) })
         }
     }
 
@@ -146,10 +212,10 @@ class ConfigStore(private val context: Context) {
     suspend fun importFrom(file: File): Boolean {
         val loaded = withContext(Dispatchers.IO) {
             runCatching {
-                exportJson.decodeFromString(LauncherConfig.serializer(), file.readText())
+                file.inputStream().use(ConfigBackup::read)
             }.getOrNull()
         } ?: return false
-        update { loaded.copy(knownApps = it.knownApps, setupDone = true) }
+        restore(loaded)
         return true
     }
 

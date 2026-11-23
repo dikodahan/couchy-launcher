@@ -2,6 +2,7 @@ package com.conreo.couchytv.data
 
 import android.content.Context
 import android.os.Build
+import com.conreo.couchytv.R
 import com.conreo.couchytv.BuildConfig
 import io.xbot.tdlib.TdLib
 import kotlinx.coroutines.CompletableDeferred
@@ -9,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -51,6 +54,8 @@ class TelegramCloudBackup private constructor(private val app: Context) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val startMutex = Mutex()
+    private val uploadMutex = Mutex()
+    @Volatile private var uploadUpdates: Channel<JsonObject>? = null
     private val pending = ConcurrentHashMap<String, CompletableDeferred<JsonObject>>()
     private val started = AtomicBoolean(false)
 
@@ -70,6 +75,8 @@ class TelegramCloudBackup private constructor(private val app: Context) {
 
     fun isConfigured(): Boolean =
         BuildConfig.TELEGRAM_API_ID != 0 && BuildConfig.TELEGRAM_API_HASH.isNotBlank()
+
+    fun unavailableMessage(): String = app.getString(R.string.cloud_not_configured)
 
     /** Opens the TDLib client so [session] can show an existing Saved-Messages login. */
     fun warmup() {
@@ -123,45 +130,59 @@ class TelegramCloudBackup private constructor(private val app: Context) {
         _authUi.value = TelegramAuthUi.Idle
     }
 
-    suspend fun saveConfig(jsonText: String) = withContext(Dispatchers.IO) {
+    suspend fun saveConfig(config: LauncherConfig) = uploadMutex.withLock {
+        withContext(Dispatchers.IO) { upload(config) }
+    }
+
+    private suspend fun upload(config: LauncherConfig) {
         ensureReady()
         val stamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
         val timeLabel = SimpleDateFormat("HH:mm yyyy-MM-dd", Locale.US).format(Date())
-        val file = File(app.cacheDir, "CouchyBackup_${stamp}.$EXT")
-        file.writeText(jsonText)
         val chatId = savedMessagesChatId()
+        val file = File.createTempFile("CouchyBackup_${stamp}_", ".$EXT", app.cacheDir)
+        val updates = Channel<JsonObject>(capacity = 32)
         val caption = "$TAG\nname=$timeLabel Couchy backup"
-        sendAwait(
-            buildJsonObject {
-                put("@type", JsonPrimitive("sendMessage"))
-                put("chat_id", JsonPrimitive(chatId))
-                put(
-                    "input_message_content",
-                    buildJsonObject {
-                        put("@type", JsonPrimitive("inputMessageDocument"))
-                        put(
-                            "document",
-                            buildJsonObject {
-                                put("@type", JsonPrimitive("inputFileLocal"))
-                                put("path", JsonPrimitive(file.absolutePath))
-                            },
-                        )
-                        put(
-                            "caption",
-                            buildJsonObject {
-                                put("@type", JsonPrimitive("formattedText"))
-                                put("text", JsonPrimitive(caption))
-                            },
-                        )
-                    },
-                )
-            },
-            timeoutMs = 90_000,
-        )
+        try {
+            file.writeText(ConfigBackup.encode(config))
+            // Listen before sending so a fast upload cannot race the sendMessage response.
+            uploadUpdates = updates
+            val sent = sendAwait(
+                buildJsonObject {
+                    put("@type", JsonPrimitive("sendMessage"))
+                    put("chat_id", JsonPrimitive(chatId))
+                    put(
+                        "input_message_content",
+                        buildJsonObject {
+                            put("@type", JsonPrimitive("inputMessageDocument"))
+                            put(
+                                "document",
+                                buildJsonObject {
+                                    put("@type", JsonPrimitive("inputFileLocal"))
+                                    put("path", JsonPrimitive(file.absolutePath))
+                                },
+                            )
+                            put(
+                                "caption",
+                                buildJsonObject {
+                                    put("@type", JsonPrimitive("formattedText"))
+                                    put("text", JsonPrimitive(caption))
+                                },
+                            )
+                        },
+                    )
+                },
+                timeoutMs = 90_000,
+            )
+            awaitBackupUpload(sent, chatId, updates)
+            // TDLib may reuse the uploaded local file for a restore on this TV.
+        } finally {
+            uploadUpdates = null
+            updates.close()
+        }
     }
 
-    /** Raw JSON of the newest Couchy backup in Saved Messages, or null. */
-    suspend fun loadConfig(): String? = withContext(Dispatchers.IO) {
+    /** Validated settings from the newest sent Couchy backup in Saved Messages. */
+    suspend fun loadConfig(): LauncherConfig? = withContext(Dispatchers.IO) {
         ensureReady()
         val chatId = savedMessagesChatId()
         val found = sendAwait(
@@ -183,10 +204,11 @@ class TelegramCloudBackup private constructor(private val app: Context) {
             ?.get("document")?.jsonObject
             ?.get("document")?.jsonObject
             ?: return@withContext null
+        require(fileObj.long("size") <= ConfigBackup.MAX_BYTES) { "Backup too large" }
         val local = fileObj["local"]?.jsonObject
-        val existing = local?.str("path").orEmpty()
-        if (local?.str("is_downloading_completed") == "true" && existing.isNotBlank()) {
-            return@withContext File(existing).readText()
+        val existing = local?.str("path")?.takeIf(String::isNotBlank)?.let(::File)
+        if (local?.str("is_downloading_completed") == "true" && existing?.isFile == true) {
+            return@withContext existing.inputStream().use(ConfigBackup::read)
         }
         val fileId = fileObj.int("id")
         if (fileId == 0) return@withContext null
@@ -196,14 +218,16 @@ class TelegramCloudBackup private constructor(private val app: Context) {
                 put("file_id", JsonPrimitive(fileId))
                 put("priority", JsonPrimitive(1))
                 put("offset", JsonPrimitive(0))
-                put("limit", JsonPrimitive(0))
+                put("limit", JsonPrimitive(ConfigBackup.MAX_BYTES + 1))
                 put("synchronous", JsonPrimitive(true))
             },
             timeoutMs = 90_000,
         )
-        val path = downloaded["local"]?.jsonObject?.str("path").orEmpty()
-        if (path.isBlank()) return@withContext null
-        File(path).readText()
+        val downloadedLocal = downloaded["local"]?.jsonObject ?: error("Missing backup download")
+        check(downloadedLocal.str("is_downloading_completed") == "true") { "Backup download did not complete" }
+        val path = downloadedLocal.str("path")
+        check(path.isNotBlank()) { "Missing backup download" }
+        File(path).inputStream().use(ConfigBackup::read)
     }
 
     private suspend fun ensureReady() {
@@ -227,13 +251,12 @@ class TelegramCloudBackup private constructor(private val app: Context) {
 
     private suspend fun savedMessagesChatId(): Long {
         if (userId == 0L) refreshMe()
-        val chat = sendAwait(
-            buildJsonObject {
-                put("@type", JsonPrimitive("createPrivateChat"))
-                put("user_id", JsonPrimitive(userId))
-                put("force", JsonPrimitive(true))
-            },
-        )
+        val request = buildJsonObject {
+            put("@type", JsonPrimitive("createPrivateChat"))
+            put("user_id", JsonPrimitive(userId))
+            put("force", JsonPrimitive(true))
+        }
+        val chat = sendAwait(request)
         val id = chat.long("id")
         return if (id != 0L) id else userId
     }
@@ -284,8 +307,11 @@ class TelegramCloudBackup private constructor(private val app: Context) {
             }.getOrNull() ?: continue
             val extra = obj.str("@extra")
             if (extra.isNotBlank()) pending.remove(extra)?.complete(obj)
-            if (obj.str("@type") == "updateAuthorizationState") {
-                obj["authorization_state"]?.jsonObject?.let { handleAuth(it) }
+            when (obj.str("@type")) {
+                "updateAuthorizationState" ->
+                    obj["authorization_state"]?.jsonObject?.let { handleAuth(it) }
+                "updateMessageSendSucceeded", "updateMessageSendFailed" ->
+                    uploadUpdates?.trySend(obj)
             }
         }
     }
@@ -385,8 +411,8 @@ class TelegramCloudBackup private constructor(private val app: Context) {
     private fun pickLatestBackup(found: JsonObject): JsonObject? {
         val messages = found["messages"] as? JsonArray ?: return null
         return messages.map { it.jsonObject }
-            .filter { isCouchyBackup(it) }
-            .maxByOrNull { it.long("date") }
+            .filter { it.isSentMessage() && isCouchyBackup(it) }
+            .maxWithOrNull(compareBy({ it.long("date") }, { it.long("id") }))
     }
 
     private fun isCouchyBackup(msg: JsonObject): Boolean {
@@ -444,3 +470,30 @@ private fun JsonObject.long(key: String): Long =
     this[key]?.jsonPrimitive?.longOrNull
         ?: this[key]?.jsonPrimitive?.content?.toLongOrNull()
         ?: 0L
+
+private fun JsonObject.isSentMessage(): Boolean =
+    this["sending_state"] == null || this["sending_state"] == JsonNull
+
+internal suspend fun awaitBackupUpload(
+    message: JsonObject,
+    chatId: Long,
+    updates: Channel<JsonObject>,
+) {
+    val messageId = message.long("id")
+    check(message.str("@type") == "message" && messageId != 0L && message.long("chat_id") == chatId) {
+        "Telegram did not accept the backup message"
+    }
+    if (message.isSentMessage()) return
+    check(message["sending_state"]?.jsonObject?.str("@type") == "messageSendingStatePending") {
+        "Telegram failed to send the backup"
+    }
+    withTimeout(90_000) {
+        while (true) {
+            val update = updates.receive()
+            val sent = update["message"]?.jsonObject ?: continue
+            if (update.long("old_message_id") != messageId || sent.long("chat_id") != chatId) continue
+            check(update.str("@type") == "updateMessageSendSucceeded") { "Telegram failed to send the backup" }
+            return@withTimeout
+        }
+    }
+}

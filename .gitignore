@@ -31,3 +31,6 @@ pi-session-*.html
 *.session.html
 .env
 .dsx/
+
+# Local Android release signing material
+/.release-signing/

@@ -34,11 +34,10 @@ These keep their own licenses, all compatible with GPLv3:
 |---|---|---|
 | Couch artwork — Twemoji couch emoji ([source](https://github.com/twitter/twemoji)) | `art/couchy-launcher.svg`, `res/drawable/ic_couch.xml`, app icon & banner | **MIT** |
 | Material Design icon path data — Google | `ui/Icons.kt` (vector path strings) | Apache-2.0 |
-| Cookie font — Ania Kruk (Google Fonts) | `res/font/cookie.ttf` (the "Buy me a coffee" heading) | **SIL OFL 1.1** |
+| Google Material Symbols ([source](https://github.com/google/material-design-icons)), via [Iconify Material Symbols 1.2.95](https://www.npmjs.com/package/@iconify-json/material-symbols/v/1.2.95) | `app/src/main/assets/material-symbols.tsv` and accompanying license | Apache-2.0 |
 | AndroidX / Jetpack Compose, `androidx.tv`, DataStore | framework / UI | Apache-2.0 |
 | AndroidX Media3 (ExoPlayer) + OkHttp data source | video wallpaper | Apache-2.0 |
 | ZXing core | QR code for Telegram device-link | Apache-2.0 |
-| HiddenApiBypass | Close → force-stop + clear cache (hidden APIs) | Apache-2.0 |
 | TDLib (via `tdlib-kmp`) | optional Telegram Saved Messages backup | Boost 1.0 |
 | kotlinx.serialization | config persistence | Apache-2.0 |
 
@@ -54,6 +53,12 @@ credentials or personal data are ever sent.
 as a Telegram device (QR on the TV, scan with the phone app; optional two-step
 password) and stores a `.couchybak` file in **Saved Messages**. The session
 stays on the device; it is not included in the local JSON backup.
+
+## Fork and community attribution
+
+This is the updated open-source fork at [dikodahan/couchy-launcher](https://github.com/dikodahan/couchy-launcher), based on [conreo/couchy-launcher](https://github.com/conreo/couchy-launcher). Original copyright and GPLv3 terms remain in place. Thanks to conreo and the original contributors, Xaero252 (upstream PRs #19/#20), and 9Chrk (upstream PR #27). Their contributions are adapted in version 1.1.0.
+
+The native TDLib package includes OpenSSL 3.5 (Apache-2.0) and zlib (zlib license), in addition to TDLib (Boost 1.0). Source/build provenance and advisory limitations are recorded in `docs/DEPENDENCY-REVIEW.md`. Weather data comes from Open-Meteo; location lookup is optional and uses the selected provider.
 
 ## Contributions
 

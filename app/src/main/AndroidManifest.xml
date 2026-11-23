@@ -15,24 +15,18 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Aerial wallpapers (opt-in) and Telegram Saved-Messages backup (opt-in). -->
+    <uses-permission android:name="android.permission.READ_TV_LISTINGS" />
+    <!-- Optional aerial streaming, weather (Open-Meteo; ipapi.co/zippopotam.us
+         only for the selected location source), and Telegram Saved-Messages backup. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Close: Force stop + Clear cache (same APIs as App info). Privileged on
-         stock Android — granted only if this APK is a priv-app. Sideload still
-         falls back to killBackgroundProcesses. -->
-    <uses-permission
-        android:name="android.permission.FORCE_STOP_PACKAGES"
-        tools:ignore="ProtectedPermissions" />
-    <uses-permission
-        android:name="android.permission.CLEAR_APP_CACHE"
-        tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <!-- Show the system uninstall dialog -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
     <application
         android:allowBackup="true"
-        android:usesCleartextTraffic="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:usesCleartextTraffic="false"
         android:banner="@drawable/app_banner"
         android:icon="@drawable/app_icon"
         android:label="@string/app_name"
@@ -67,6 +61,7 @@
         <!-- ADB save/restore of Downloads/CouchyBackup.json. No launcher category. -->
         <activity
             android:name=".BackupActivity"
+            android:permission="android.permission.DUMP"
             android:exported="true"
             android:excludeFromRecents="true"
             android:noHistory="true"

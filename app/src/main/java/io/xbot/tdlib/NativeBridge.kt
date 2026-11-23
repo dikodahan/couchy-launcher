@@ -14,6 +14,9 @@ internal object NativeBridge {
     fun receive(timeout: Double): String? = nativeReceive(timeout)
     fun execute(request: String): String? = nativeExecute(request)
 
+    // JNI_OnLoad registers this callback signature even when logging is unused.
+    private interface LogMessageHandler { fun onLogMessage(verbosityLevel: Int, message: String) }
+    @JvmStatic private external fun nativeSetLogMessageHandler(maxVerbosityLevel: Int, handler: LogMessageHandler?)
     @JvmStatic private external fun nativeCreateClientId(): Int
     @JvmStatic private external fun nativeSend(clientId: Int, request: String)
     @JvmStatic private external fun nativeReceive(timeout: Double): String?

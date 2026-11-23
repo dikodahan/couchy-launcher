@@ -33,12 +33,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
@@ -77,23 +80,31 @@ import com.conreo.couchytv.data.AppRepository
 import com.conreo.couchytv.data.CategoryCfg
 import com.conreo.couchytv.data.CloudNotConfigured
 import com.conreo.couchytv.data.CloudSession
+import com.conreo.couchytv.data.ConfigBackup
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.DATE_FORMATS
+import com.conreo.couchytv.data.IconPack
 import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
 import com.conreo.couchytv.data.LauncherConfig
 import com.conreo.couchytv.data.NeedTelegramLogin
+import com.conreo.couchytv.data.ParentalControls
+import com.conreo.couchytv.data.ParentalState
+import com.conreo.couchytv.data.READ_TV_LISTINGS
+import com.conreo.couchytv.data.TopShelf
 import com.conreo.couchytv.data.TelegramCloudBackup
+import com.conreo.couchytv.data.WEATHER_CLICK_APP
+import com.conreo.couchytv.data.WEATHER_SRC_GEOIP
+import com.conreo.couchytv.data.WEATHER_SRC_LATLONG
+import com.conreo.couchytv.data.WEATHER_SRC_ZIP
 import kotlinx.coroutines.Dispatchers
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import kotlinx.serialization.json.Json
 
-private val format = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true }
 
-private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Apps, Categories, Launcher, About }
+private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Weather, Apps, Categories, IconPack, Parental, Launcher, About }
 
 /**
  * Settings panel built entirely from focusable rows and buttons — every
@@ -101,17 +112,49 @@ private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Apps, C
  * inside a dedicated dialog (opened with the pencil button).
  */
 @Composable
-fun SettingsSheet(
+internal fun SettingsSheet(
     config: LauncherConfig,
     apps: List<AppEntry>,
     store: ConfigStore,
     onDismiss: () -> Unit,
+    parental: ParentalControls,
+    parentalState: ParentalState,
+    onLaunchApp: (String) -> Unit,
+    onAppInfo: (String) -> Unit,
+    onUninstallApp: (String) -> Unit,
     onWallpaperChanged: () -> Unit,
     onRerunWizard: () -> Unit,
+    startAtWeather: Boolean = false,
+    weatherStatus: Int? = null,
+    weatherLocationName: String? = null,
+    canRetryWeather: Boolean = false,
+    onRetryWeather: () -> Unit = {},
+    // True only when this sheet was opened by a still-held long-press (the
+    // weather chip). That hold's eventual key-up must not reach — and
+    // activate — whatever ends up focused first once the sheet appears.
+    suppressInitialRelease: Boolean = false,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var screen by remember { mutableStateOf(SettingsScreen.Main) }
+    var screen by remember { mutableStateOf(if (startAtWeather) SettingsScreen.Weather else SettingsScreen.Main) }
+    var released by remember { mutableStateOf(!suppressInitialRelease) }
+
+    fun selectTopShelf() {
+        scope.launch {
+            store.update {
+                it.copy(
+                    useTopShelf = true,
+                    useCustomWallpaper = false,
+                    useVideoWallpaper = false,
+                    useBuiltinAerials = false,
+                )
+            }
+        }
+    }
+    val tvListingsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) selectTopShelf()
+        else Actions.toast(context, context.getString(R.string.top_shelf_need_permission))
+    }
 
     // Same document-picker flow as videos: opens the system file manager,
     // works with USB drives and network storage providers.
@@ -130,6 +173,7 @@ fun SettingsSheet(
                 store.update {
                     it.copy(
                         useCustomWallpaper = true,
+                        useTopShelf = false,
                         useVideoWallpaper = false,
                         useBuiltinAerials = false,
                     )
@@ -155,6 +199,7 @@ fun SettingsSheet(
                     it.copy(
                         videoUri = uri.toString(),
                         useVideoWallpaper = true,
+                        useTopShelf = false,
                         useCustomWallpaper = false,
                         useBuiltinAerials = false,
                     )
@@ -190,15 +235,27 @@ fun SettingsSheet(
                 colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier
                     .width(440.dp)
-                    .fillMaxHeight(),
+                    .fillMaxHeight()
+                    // Same held-button guard as MenuDialog: swallow every select
+                    // event, including the first key-up, until the long-press
+                    // that opened this sheet has been fully released once.
+                    .onPreviewKeyEvent { e ->
+                        val select = e.key == Key.DirectionCenter || e.key == Key.Enter || e.key == Key.NumPadEnter
+                        when {
+                            !select -> false
+                            released -> false
+                            e.type == KeyEventType.KeyUp -> { released = true; true }
+                            else -> true
+                        }
+                    },
             ) {
-                // Slide left when entering a sub-screen, right when going back
-                // to Main (the root); cross-fade so it never looks abrupt.
+                val towardEnd = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
+                // Enter from the sheet's outer edge and reverse when going back.
                 androidx.compose.animation.AnimatedContent(
                     targetState = screen,
                     transitionSpec = {
                         val forward = targetState != SettingsScreen.Main
-                        val dir = if (forward) 1 else -1
+                        val dir = if (forward) towardEnd else -towardEnd
                         (androidx.compose.animation.slideInHorizontally(tween(260)) { w -> dir * w } +
                             androidx.compose.animation.fadeIn(tween(260))) togetherWith
                             (androidx.compose.animation.slideOutHorizontally(tween(260)) { w -> -dir * w } +
@@ -211,8 +268,11 @@ fun SettingsSheet(
                         onWallpaper = { screen = SettingsScreen.Wallpaper },
                         onDisplay = { screen = SettingsScreen.Display },
                         onStatusBar = { screen = SettingsScreen.StatusBar },
+                        onWeather = { screen = SettingsScreen.Weather },
                         onApps = { screen = SettingsScreen.Apps },
                         onCategories = { screen = SettingsScreen.Categories },
+                        onIconPack = { screen = SettingsScreen.IconPack },
+                        onParental = { screen = SettingsScreen.Parental },
                         onLauncher = { screen = SettingsScreen.Launcher },
                         onAndroidSettings = { Actions.openSystemSettings(context) },
                         onAbout = { screen = SettingsScreen.About },
@@ -224,6 +284,7 @@ fun SettingsSheet(
                                 store.update {
                                     it.copy(
                                         useBuiltinAerials = true,
+                                        useTopShelf = false,
                                         useVideoWallpaper = false,
                                         useCustomWallpaper = false,
                                     )
@@ -244,12 +305,17 @@ fun SettingsSheet(
                                 store.update {
                                     it.copy(
                                         wallpaper = i,
+                                        useTopShelf = false,
                                         useCustomWallpaper = false,
                                         useVideoWallpaper = false,
                                         useBuiltinAerials = false,
                                     )
                                 }
                             }
+                        },
+                        onSelectTopShelf = {
+                            if (TopShelf.hasPermission(context)) selectTopShelf()
+                            else tvListingsPermission.launch(READ_TV_LISTINGS)
                         },
                         onPickPhoto = {
                             runCatching { photoPicker.launch(arrayOf("image/*")) }
@@ -271,13 +337,30 @@ fun SettingsSheet(
                         store = store,
                         onBack = { screen = SettingsScreen.Main },
                     )
+                    SettingsScreen.Weather -> WeatherScreen(
+                        apps = apps,
+                        config = config,
+                        store = store,
+                        weatherStatus = weatherStatus,
+                        weatherLocationName = weatherLocationName,
+                        canRetry = canRetryWeather,
+                        onRetry = onRetryWeather,
+                        onBack = { screen = SettingsScreen.Main },
+                    )
+                    SettingsScreen.IconPack -> IconPackScreen(
+                        config = config,
+                        apps = apps,
+                        store = store,
+                        onBack = { screen = SettingsScreen.Main },
+                    )
+                    SettingsScreen.Parental -> ParentalSettings(parentalState, parental)
                     SettingsScreen.Apps -> AppsScreen(
                         apps = apps,
                         config = config,
                         onBack = { screen = SettingsScreen.Main },
-                        onLaunch = { pkg -> Actions.launchApp(context, pkg) },
-                        onAppInfo = { pkg -> Actions.openAppInfo(context, pkg) },
-                        onUninstall = { pkg -> Actions.uninstall(context, pkg) },
+                        onLaunch = onLaunchApp,
+                        onAppInfo = onAppInfo,
+                        onUninstall = onUninstallApp,
                         onToggleHide = { pkg ->
                             scope.launch {
                                 store.update { c ->
@@ -316,8 +399,11 @@ private fun MainScreen(
     onWallpaper: () -> Unit,
     onDisplay: () -> Unit,
     onStatusBar: () -> Unit,
+    onWeather: () -> Unit,
     onApps: () -> Unit,
     onCategories: () -> Unit,
+    onIconPack: () -> Unit,
+    onParental: () -> Unit,
     onLauncher: () -> Unit,
     onAndroidSettings: () -> Unit,
     onAbout: () -> Unit,
@@ -348,6 +434,18 @@ private fun MainScreen(
             supportingContent = { Text(stringResource(R.string.item_sections_sub)) },
             leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
         )
+        SettingsItem(
+            selected = false, onClick = onIconPack,
+            headlineContent = { Text(stringResource(R.string.item_icon_pack)) },
+            supportingContent = { Text(stringResource(R.string.item_icon_pack_sub)) },
+            leadingContent = { Icon(AppIcons.Palette, contentDescription = null) },
+        )
+
+        SettingsItem(
+            selected = false, onClick = onParental,
+            headlineContent = { Text(stringResource(R.string.parental_controls)) },
+            leadingContent = { Icon(AppIcons.Lock, contentDescription = null) },
+        )
 
         // ---- Appearance: how it looks ----
         SectionLabel(stringResource(R.string.group_appearance))
@@ -368,6 +466,12 @@ private fun MainScreen(
             headlineContent = { Text(stringResource(R.string.item_statusbar)) },
             supportingContent = { Text(stringResource(R.string.item_statusbar_sub)) },
             leadingContent = { Icon(AppIcons.Wifi, contentDescription = null) },
+        )
+        SettingsItem(
+            selected = false, onClick = onWeather,
+            headlineContent = { Text(stringResource(R.string.item_weather)) },
+            supportingContent = { Text(stringResource(R.string.item_weather_sub)) },
+            leadingContent = { Icon(AppIcons.WeatherPartlyCloudy, contentDescription = null) },
         )
 
         // ---- System ----
@@ -450,28 +554,6 @@ private fun AboutScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = 8.dp, top = 8.dp),
-        )
-
-        // Support — scannable QR to Buy me a coffee (Cookie script font; brand name, not localized)
-        Text(
-            stringResource(R.string.about_coffee),
-            fontFamily = androidx.compose.ui.text.font.FontFamily(
-                androidx.compose.ui.text.font.Font(R.font.cookie)
-            ),
-            fontSize = 30.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(top = 14.dp),
-        )
-        Image(
-            painter = androidx.compose.ui.res.painterResource(R.drawable.qr_coffee),
-            contentDescription = stringResource(R.string.about_coffee),
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(top = 6.dp)
-                .size(150.dp)
-                .clip(RoundedCornerShape(10.dp)),
         )
 
         Text(
@@ -580,6 +662,8 @@ private fun SelectorRow(
     description: String? = null,
     modifier: Modifier = Modifier,
 ) {
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val towardEnd = if (rtl) -1 else 1
     SettingsItem(
         selected = false,
         onClick = { onSelect((current + 1) % steps) },
@@ -587,16 +671,16 @@ private fun SelectorRow(
         supportingContent = { if (description != null) Text(description) },
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("◄", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(if (rtl) "►" else "◄", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(value)
-                Text("►", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(if (rtl) "◄" else "►", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
         modifier = modifier.onPreviewKeyEvent { e ->
             if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
             when (e.key) {
-                Key.DirectionLeft -> { onSelect((current - 1 + steps) % steps); true }
-                Key.DirectionRight -> { onSelect((current + 1) % steps); true }
+                Key.DirectionLeft -> { onSelect((current - towardEnd + steps) % steps); true }
+                Key.DirectionRight -> { onSelect((current + towardEnd + steps) % steps); true }
                 else -> false
             }
         },
@@ -792,7 +876,7 @@ private fun SectionAppsDialog(
 
 /* ------------------------------ launcher settings ------------------------------ */
 
-private enum class LauncherPane { Menu, Language, Save, Load }
+private enum class LauncherPane { Menu, Home, Language, Save, Load }
 
 @Composable
 private fun LauncherSettingsSubscreen(
@@ -814,25 +898,34 @@ private fun LauncherSettingsSubscreen(
         BackHandler { pane = LauncherPane.Menu }
     }
 
+    val savePicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) scope.launch {
+            val saved = withContext(Dispatchers.IO) {
+                runCatching {
+                    val text = ConfigBackup.encode(store.snapshot())
+                    val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("No output stream")
+                    output.bufferedWriter().use { it.write(text) }
+                }.isSuccess
+            }
+            Actions.toast(context, context.getString(if (saved) R.string.toast_config_saved else R.string.toast_config_save_failed))
+        }
+    }
     fun saveLocal() {
         scope.launch {
-            val ok = withContext(Dispatchers.IO) {
-                runCatching { store.exportTo(ConfigStore.defaultLocalFile()) }.isSuccess
-            }
-            Actions.toast(
-                context,
-                context.getString(
-                    if (ok) R.string.toast_config_saved_local else R.string.toast_config_bad
-                ),
-            )
+            val ok = runCatching { store.exportTo(ConfigStore.defaultLocalFile()) }.isSuccess
+            if (ok) Actions.toast(context, context.getString(R.string.toast_config_saved_local))
+            else runCatching { savePicker.launch(ConfigStore.LOCAL_FILE) }
+                .onFailure { Actions.toast(context, context.getString(R.string.toast_config_save_failed)) }
         }
     }
 
     fun applyLoaded(loaded: LauncherConfig?) {
         scope.launch {
             if (loaded != null) {
-                store.update { loaded.copy(knownApps = config.knownApps, setupDone = true) }
-                Actions.toast(context, context.getString(R.string.toast_config_loaded))
+                val saved = runCatching { store.restore(loaded) }.isSuccess
+                Actions.toast(context, context.getString(
+                    if (saved) R.string.toast_config_loaded else R.string.toast_config_bad,
+                ))
             } else {
                 Actions.toast(context, context.getString(R.string.toast_config_bad))
             }
@@ -841,12 +934,11 @@ private fun LauncherSettingsSubscreen(
 
     fun saveCloud() {
         scope.launch {
-            val jsonText = format.encodeToString(LauncherConfig.serializer(), config)
-            val result = withContext(Dispatchers.IO) { runCatching { cloud.saveConfig(jsonText) } }
+            val result = runCatching { cloud.saveConfig(store.snapshot()) }
             when (result.exceptionOrNull()) {
                 is NeedTelegramLogin, is CloudNotConfigured -> {
                     if (!cloud.isConfigured()) {
-                        Actions.toast(context, context.getString(R.string.cloud_not_configured))
+                        Actions.toast(context, cloud.unavailableMessage())
                     } else {
                         pendingCloud = LauncherPane.Save
                         showAuth = true
@@ -864,20 +956,17 @@ private fun LauncherSettingsSubscreen(
             when (val e = result.exceptionOrNull()) {
                 is NeedTelegramLogin, is CloudNotConfigured -> {
                     if (!cloud.isConfigured()) {
-                        Actions.toast(context, context.getString(R.string.cloud_not_configured))
+                        Actions.toast(context, cloud.unavailableMessage())
                     } else {
                         pendingCloud = LauncherPane.Load
                         showAuth = true
                     }
                 }
                 null -> {
-                    val raw = result.getOrNull()
-                    if (raw == null) {
+                    val loaded = result.getOrNull()
+                    if (loaded == null) {
                         Actions.toast(context, context.getString(R.string.toast_cloud_load_missing))
                     } else {
-                        val loaded = runCatching {
-                            format.decodeFromString(LauncherConfig.serializer(), raw)
-                        }.getOrNull()
                         applyLoaded(loaded)
                     }
                 }
@@ -891,7 +980,7 @@ private fun LauncherSettingsSubscreen(
 
     fun onCloudChosen(which: LauncherPane) {
         if (!cloud.isConfigured()) {
-            Actions.toast(context, context.getString(R.string.cloud_not_configured))
+            Actions.toast(context, cloud.unavailableMessage())
             return
         }
         if (session.signedIn) {
@@ -910,10 +999,7 @@ private fun LauncherSettingsSubscreen(
                 val loaded = withContext(Dispatchers.IO) {
                     runCatching {
                         context.contentResolver.openInputStream(uri)?.use { input ->
-                            format.decodeFromString(
-                                LauncherConfig.serializer(),
-                                String(input.readBytes()),
-                            )
+                            ConfigBackup.read(input)
                         }
                     }.getOrNull()
                 }
@@ -923,6 +1009,7 @@ private fun LauncherSettingsSubscreen(
     }
 
     when (pane) {
+        LauncherPane.Home -> HomeLauncherScreen()
         LauncherPane.Language -> LanguageScreen(
             config = config, store = store, onBack = { pane = LauncherPane.Menu },
         )
@@ -961,6 +1048,12 @@ private fun LauncherSettingsSubscreen(
                 stringResource(R.string.item_launcher_settings),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
+            )
+            SettingsItem(
+                selected = false, onClick = { pane = LauncherPane.Home },
+                headlineContent = { Text(stringResource(R.string.home_launcher_title)) },
+                supportingContent = { Text(stringResource(R.string.home_launcher_settings_sub)) },
+                leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
             )
             SettingsItem(
                 selected = false,
@@ -1091,7 +1184,7 @@ private fun LanguageScreen(
         com.conreo.couchytv.data.LANGUAGES.forEachIndexed { i, code ->
             // Endonym: each language named in its own tongue (no per-language strings)
             val label = if (code.isEmpty()) stringResource(R.string.lang_system)
-            else java.util.Locale(code).let { it.getDisplayName(it) }
+            else java.util.Locale.forLanguageTag(code).let { it.getDisplayLanguage(it) }
                 .replaceFirstChar { it.uppercase() }
             SettingsItem(
                 selected = false,
@@ -1231,6 +1324,319 @@ private fun StatusBarScreen(
     }
 }
 
+/* ------------------------------ weather ------------------------------ */
+
+@Composable
+private fun WeatherScreen(
+    config: LauncherConfig,
+    apps: List<AppEntry>,
+    store: ConfigStore,
+    weatherStatus: Int?,
+    weatherLocationName: String?,
+    canRetry: Boolean,
+    onRetry: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var editField by remember { mutableStateOf<String?>(null) } // "lat" | "lon" | "zip" | "country"
+    var pickWeatherApp by remember { mutableStateOf(false) }
+    var findCity by remember { mutableStateOf(false) }
+    var savingCity by remember { mutableStateOf(false) }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            stringResource(R.string.item_weather),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 4.dp, start = 8.dp),
+        )
+        Text(
+            stringResource(R.string.weather_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
+        )
+        val f = initialFocus()
+        SettingsItem(
+            selected = false,
+            onClick = { scope.launch { store.update { it.copy(weatherEnabled = !it.weatherEnabled) } } },
+            modifier = Modifier.focusRequester(f),
+            headlineContent = { Text(stringResource(R.string.weather_enable)) },
+            trailingContent = { CheckMark(checked = config.weatherEnabled) },
+        )
+        if (!config.weatherEnabled) return@Column
+        if (weatherStatus != null) {
+            Text(
+                stringResource(weatherStatus),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+        }
+        if (canRetry && weatherStatus != null) {
+            androidx.tv.material3.Button(
+                onClick = onRetry,
+                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
+            ) { Text(stringResource(R.string.weather_retry)) }
+        }
+
+        SettingsItem(
+            selected = false,
+            onClick = { findCity = true },
+            headlineContent = { Text(stringResource(R.string.weather_find_city)) },
+            supportingContent = {
+                val detail = if (config.weatherLocationSource == WEATHER_SRC_LATLONG && config.weatherCityLabel.isNotBlank())
+                    config.weatherCityLabel
+                else stringResource(R.string.weather_find_city_sub)
+                Text(detail)
+            },
+        )
+
+        val sourceNames = listOf(
+            stringResource(R.string.weather_src_geoip),
+            stringResource(R.string.weather_src_latlong),
+            stringResource(R.string.weather_src_zip),
+        )
+        val srcIdx = config.weatherLocationSource.coerceIn(0, sourceNames.size - 1)
+        SelectorRow(
+            label = stringResource(R.string.weather_source),
+            value = sourceNames[srcIdx],
+            steps = sourceNames.size,
+            current = srcIdx,
+            onSelect = { v -> scope.launch { store.update { it.copy(weatherLocationSource = v) } } },
+        )
+        if (srcIdx == WEATHER_SRC_GEOIP) {
+            if (weatherLocationName != null) {
+                Text(
+                    stringResource(R.string.weather_ip_city, weatherLocationName),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
+            // Full-width note, not squeezed into the row's supporting-text column
+            // next to the ◄ ► stepper — that wrapped this sentence into confetti.
+            Text(
+                stringResource(R.string.weather_geoip_notice),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+            if (!config.weatherGeoJsEnabled) {
+                Button(
+                    onClick = { scope.launch { store.update { it.copy(weatherGeoJsEnabled = true) } } },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                ) { Text(stringResource(R.string.weather_ip_enable)) }
+            }
+        }
+
+        when (srcIdx) {
+            WEATHER_SRC_LATLONG -> {
+                SettingsItem(
+                    selected = false, onClick = { editField = "lat" },
+                    headlineContent = { Text(stringResource(R.string.weather_lat)) },
+                    supportingContent = { Text(config.weatherLat.toString()) },
+                )
+                SettingsItem(
+                    selected = false, onClick = { editField = "lon" },
+                    headlineContent = { Text(stringResource(R.string.weather_lon)) },
+                    supportingContent = { Text(config.weatherLon.toString()) },
+                )
+            }
+            WEATHER_SRC_ZIP -> {
+                SettingsItem(
+                    selected = false, onClick = { editField = "zip" },
+                    headlineContent = { Text(stringResource(R.string.weather_zip)) },
+                    supportingContent = { Text(config.weatherZip.ifEmpty { stringResource(R.string.weather_not_set) }) },
+                )
+                SettingsItem(
+                    selected = false, onClick = { editField = "country" },
+                    headlineContent = { Text(stringResource(R.string.weather_country)) },
+                    supportingContent = {
+                        Text(config.weatherCountry.ifEmpty { "US" })
+                    },
+                )
+            }
+        }
+
+        val unitNames = listOf(stringResource(R.string.weather_celsius), stringResource(R.string.weather_fahrenheit))
+        val unitIdx = config.weatherUnit.coerceIn(0, 1)
+        SelectorRow(
+            label = stringResource(R.string.weather_unit),
+            value = unitNames[unitIdx],
+            steps = 2,
+            current = unitIdx,
+            onSelect = { v -> scope.launch { store.update { it.copy(weatherUnit = v) } } },
+        )
+
+        val displayNames = listOf(
+            stringResource(R.string.weather_display_icon),
+            stringResource(R.string.weather_display_temp),
+            stringResource(R.string.weather_display_lowhigh),
+        )
+        val displayIdx = config.weatherDisplay.coerceIn(0, displayNames.size - 1)
+        SelectorRow(
+            label = stringResource(R.string.weather_display),
+            value = displayNames[displayIdx],
+            steps = displayNames.size,
+            current = displayIdx,
+            onSelect = { v -> scope.launch { store.update { it.copy(weatherDisplay = v) } } },
+        )
+
+        val forecastViews = listOf(
+            stringResource(R.string.weather_forecast_both),
+            stringResource(R.string.weather_forecast_hours_only),
+            stringResource(R.string.weather_forecast_days_only),
+        )
+        val view = config.weatherForecastView.coerceIn(0, forecastViews.lastIndex)
+        SelectorRow(
+            label = stringResource(R.string.weather_forecast_view),
+            value = forecastViews[view],
+            steps = forecastViews.size,
+            current = view,
+            onSelect = { v -> scope.launch { store.update { it.copy(weatherForecastView = v) } } },
+        )
+
+        val iconStyles = listOf(
+            stringResource(R.string.weather_icons_mono),
+            stringResource(R.string.weather_icons_color),
+            stringResource(R.string.weather_icons_animated),
+        )
+        val iconStyle = config.weatherForecastIconStyle.coerceIn(0, iconStyles.lastIndex)
+        SelectorRow(
+            label = stringResource(R.string.weather_forecast_icons),
+            value = iconStyles[iconStyle],
+            steps = iconStyles.size,
+            current = iconStyle,
+            onSelect = { v -> scope.launch { store.update { it.copy(weatherForecastIconStyle = v) } } },
+        )
+
+        val clickNames = listOf(
+            stringResource(R.string.weather_click_settings),
+            stringResource(R.string.weather_click_forecast),
+            stringResource(R.string.weather_click_app),
+        )
+        val clickIdx = config.weatherClickAction.coerceIn(0, clickNames.size - 1)
+        SelectorRow(
+            label = stringResource(R.string.weather_click_action),
+            value = clickNames[clickIdx],
+            steps = clickNames.size,
+            current = clickIdx,
+            description = stringResource(R.string.weather_click_sub),
+            onSelect = { v -> scope.launch { store.update { it.copy(weatherClickAction = v) } } },
+        )
+        if (clickIdx == WEATHER_CLICK_APP) {
+            val appLabel = apps.firstOrNull { it.pkg == config.weatherApp }?.label
+                ?: stringResource(R.string.weather_not_set)
+            SettingsItem(
+                selected = false, onClick = { pickWeatherApp = true },
+                headlineContent = { Text(stringResource(R.string.weather_app_opens)) },
+                supportingContent = { Text(appLabel) },
+            )
+        }
+    }
+
+    if (findCity) {
+        WeatherCityPicker(
+            onDismiss = { findCity = false },
+            onSelect = { city ->
+                if (!savingCity) scope.launch {
+                    savingCity = true
+                    runCatching {
+                        store.update {
+                            it.copy(
+                                weatherLocationSource = WEATHER_SRC_LATLONG,
+                                weatherLat = city.latitude,
+                                weatherLon = city.longitude,
+                                weatherCityLabel = city.label,
+                            )
+                        }
+                    }.onSuccess { findCity = false }
+                        .onFailure { error ->
+                            if (error is kotlinx.coroutines.CancellationException) throw error
+                            Actions.toast(context, context.getString(R.string.toast_config_save_failed))
+                        }
+                    savingCity = false
+                }
+            },
+        )
+    }
+
+    if (pickWeatherApp) {
+        Dialog(onDismissRequest = { pickWeatherApp = false }) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.width(380.dp).height(480.dp),
+            ) {
+                Column(Modifier.fillMaxSize().padding(16.dp)) {
+                    Text(
+                        stringResource(R.string.weather_app_opens),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = 8.dp, bottom = 10.dp),
+                    )
+                    val fw = initialFocus()
+                    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        items(apps.size, key = { apps[it].pkg }) { i ->
+                            val app = apps[i]
+                            SettingsItem(
+                                selected = false,
+                                onClick = {
+                                    scope.launch { store.update { it.copy(weatherApp = app.pkg) } }
+                                    pickWeatherApp = false
+                                },
+                                headlineContent = { Text(app.label) },
+                                leadingContent = { AppThumb(app) },
+                                trailingContent = { CheckMark(checked = config.weatherApp == app.pkg) },
+                                modifier = if (i == 0) Modifier.focusRequester(fw) else Modifier,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    editField?.let { field ->
+        val (title, initial) = when (field) {
+            "lat" -> stringResource(R.string.weather_lat) to config.weatherLat.toString()
+            "lon" -> stringResource(R.string.weather_lon) to config.weatherLon.toString()
+            "zip" -> stringResource(R.string.weather_zip) to config.weatherZip
+            else -> stringResource(R.string.weather_country) to config.weatherCountry
+        }
+        TextEntryDialog(
+            title = title,
+            initial = initial,
+            onSave = { value ->
+                val clean = value.trim()
+                val number = clean.toDoubleOrNull()
+                val valid = when (field) {
+                    "lat" -> number != null && number.isFinite() && number in -90.0..90.0
+                    "lon" -> number != null && number.isFinite() && number in -180.0..180.0
+                    "zip" -> clean.isNotEmpty() && clean.length <= 32 && clean.none { it.isISOControl() }
+                    else -> clean.matches(Regex("[A-Za-z]{2}"))
+                }
+                if (valid) {
+                    scope.launch {
+                        store.update {
+                            when (field) {
+                                "lat" -> it.copy(weatherLat = number!!, weatherCityLabel = "")
+                                "lon" -> it.copy(weatherLon = number!!, weatherCityLabel = "")
+                                "zip" -> it.copy(weatherZip = clean)
+                                else -> it.copy(weatherCountry = clean.uppercase(java.util.Locale.ROOT))
+                            }
+                        }
+                    }
+                    editField = null
+                } else Actions.toast(context, context.getString(R.string.weather_invalid_input))
+            },
+            onDismiss = { editField = null },
+        )
+    }
+}
+
 /* ------------------------------ sections ------------------------------ */
 
 @Composable
@@ -1364,7 +1770,8 @@ private fun CategoriesScreen(
     }
 
     renameFor?.let { cat ->
-        RenameDialog(
+        TextEntryDialog(
+            title = stringResource(R.string.rename_section),
             initial = cat.name,
             onSave = { newName ->
                 scope.launch {
@@ -1381,21 +1788,28 @@ private fun CategoriesScreen(
     }
 }
 
-/** Pencil dialog: the ONLY place with a text field, so D-pad browsing never lands in an editor. */
+/** The ONLY place with a text field, so D-pad browsing never lands in an editor. */
 @Composable
-private fun RenameDialog(
+internal fun TextEntryDialog(
+    title: String,
     initial: String,
     onSave: (String) -> Unit,
     onDismiss: () -> Unit,
+    submitLabel: Int = R.string.save,
+    allowEmpty: Boolean = false,
 ) {
     var name by remember { mutableStateOf(initial) }
+    fun submit() {
+        val trimmed = name.trim()
+        if (allowEmpty || trimmed.isNotEmpty()) onSave(trimmed)
+    }
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(Modifier.width(340.dp).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text(stringResource(R.string.rename_section), style = MaterialTheme.typography.titleMedium)
+                Text(title, style = MaterialTheme.typography.titleMedium)
                 val f = initialFocus()
                 Box(
                     Modifier
@@ -1411,16 +1825,89 @@ private fun RenameDialog(
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(
-                            onDone = { if (name.isNotBlank()) onSave(name.trim()) }
+                            onDone = { submit() }
                         ),
                         modifier = Modifier.fillMaxWidth().focusRequester(f),
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = { if (name.isNotBlank()) onSave(name.trim()) }) { Text(stringResource(R.string.save)) }
+                    Button(onClick = ::submit) { Text(stringResource(submitLabel)) }
                     Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                 }
             }
+        }
+    }
+}
+
+/* ------------------------------ icon pack ------------------------------ */
+
+@Composable
+private fun IconPackScreen(
+    config: LauncherConfig,
+    apps: List<AppEntry>,
+    store: ConfigStore,
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val packs by produceState(initialValue = emptyList<com.conreo.couchytv.data.IconPackInfo>(), apps) {
+        value = withContext(Dispatchers.IO) { IconPack.installedIconPacks(context) }
+    }
+    val matchCounts by produceState(initialValue = emptyMap<String, Int>(), packs, apps) {
+        value = withContext(Dispatchers.IO) {
+            packs.associate { pack ->
+                val map = runCatching { IconPack.appFilterMap(context, pack.pkg) }.getOrNull().orEmpty()
+                pack.pkg to apps.count { it.pkg in map }
+            }
+        }
+    }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            stringResource(R.string.item_icon_pack),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 4.dp, start = 8.dp),
+        )
+        Text(
+            stringResource(R.string.icon_pack_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
+        )
+        val f = initialFocus()
+        SettingsItem(
+            selected = false,
+            onClick = { scope.launch { store.update { it.copy(iconPackPkg = "") } } },
+            modifier = Modifier.focusRequester(f),
+            headlineContent = { Text(stringResource(R.string.icon_pack_none)) },
+            trailingContent = { CheckMark(checked = config.iconPackPkg.isEmpty()) },
+        )
+        packs.forEach { pack ->
+            SettingsItem(
+                selected = false,
+                onClick = { scope.launch { store.update { it.copy(iconPackPkg = pack.pkg) } } },
+                headlineContent = { Text(pack.label) },
+                supportingContent = {
+                    Text(stringResource(R.string.icon_pack_match_count, matchCounts[pack.pkg] ?: 0, apps.size))
+                },
+                leadingContent = {
+                    if (pack.icon != null) {
+                        Image(bitmap = pack.icon, contentDescription = null, modifier = Modifier.size(30.dp))
+                    }
+                },
+                trailingContent = { CheckMark(checked = config.iconPackPkg == pack.pkg) },
+            )
+        }
+        if (packs.isEmpty()) {
+            Text(
+                stringResource(R.string.icon_pack_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp, start = 8.dp),
+            )
         }
     }
 }
@@ -1439,6 +1926,7 @@ private fun WallpaperScreen(
     onSetScrim: (Int) -> Unit,
     onSetSpeed: (Int) -> Unit,
     onPreset: (Int) -> Unit,
+    onSelectTopShelf: () -> Unit,
     onPickPhoto: () -> Unit,
     onPickVideo: () -> Unit,
 ) {
@@ -1453,7 +1941,7 @@ private fun WallpaperScreen(
         )
         val f = initialFocus()
         val staticActive = !config.useBuiltinAerials &&
-            !config.useVideoWallpaper && !config.useCustomWallpaper
+            !config.useVideoWallpaper && !config.useCustomWallpaper && !config.useTopShelf
 
         // Dimming — how much the wallpaper is darkened for icon readability.
         // Applies to any background; "Top & bottom" keeps the centre clear.
@@ -1512,6 +2000,14 @@ private fun WallpaperScreen(
             supportingContent = { Text(stringResource(R.string.pick_photo_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
             trailingContent = { CheckMark(checked = config.useCustomWallpaper) },
+        )
+
+        SettingsItem(
+            selected = false, onClick = onSelectTopShelf,
+            headlineContent = { Text(stringResource(R.string.top_shelf)) },
+            supportingContent = { Text(stringResource(R.string.top_shelf_desc)) },
+            leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.useTopShelf) },
         )
 
         /* ---------------- VIDEO: built-in aerials + your own video ---------------- */
@@ -1574,7 +2070,7 @@ private fun WallpaperScreen(
  * so there are no on-screen Back buttons).
  */
 @Composable
-private fun initialFocus(): FocusRequester {
+internal fun initialFocus(): FocusRequester {
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         // Claim focus the moment the first item's node is attached (retry per
@@ -1600,7 +2096,7 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun CheckMark(checked: Boolean) {
+internal fun CheckMark(checked: Boolean, uncheckedColor: Color = Color.White.copy(alpha = 0.4f)) {
     Box(
         Modifier
             .size(22.dp)
@@ -1611,7 +2107,7 @@ private fun CheckMark(checked: Boolean) {
             .border(
                 width = 2.dp,
                 color = if (checked) MaterialTheme.colorScheme.primary
-                else Color.White.copy(alpha = 0.4f),
+                else uncheckedColor,
                 shape = RoundedCornerShape(5.dp),
             ),
         contentAlignment = Alignment.Center,
@@ -1633,7 +2129,7 @@ private fun CheckMark(checked: Boolean) {
  * blurry on TV; the focused container colour alone signals selection.
  */
 @Composable
-private fun SettingsItem(
+internal fun SettingsItem(
     onClick: () -> Unit,
     headlineContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,

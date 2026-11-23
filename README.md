@@ -1,5 +1,3 @@
-<a id="english"></a>
-
 <div align="center">
 
 <img src="art/couchy-launcher.svg" width="120" alt="Couchy Launcher logo" />
@@ -10,42 +8,42 @@
 
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 ![Platform](https://img.shields.io/badge/Android%20TV%20·%20Google%20TV-3DDC84?logo=android&logoColor=white)
-![Languages](https://img.shields.io/badge/languages-17%2B-orange)
+![Languages](https://img.shields.io/badge/languages-19-orange)
 
-[**English**](#english) · [中文](#chinese) — [Contributing](CONTRIBUTING.md) · [Licensing](LICENSING.md)
+[Install](#install) · [Contributing](CONTRIBUTING.md) · [Licensing](LICENSING.md)
 
 https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
 
-
-<a href="https://www.buymeacoffee.com/conreo" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" 
-         alt="Buy Me A Coffee" 
-         style="height: 40px !important; width: auto !important;">
-</a>
-
-
 </div>
 
-One screen, remote-driven, for 1080p and 4K TVs. No network requests out of the box — the wallpaper is a local gradient and settings live in a single file on the device.
+**Version 1.1.0 — an updated open-source fork.** This repository, [dikodahan/couchy-launcher](https://github.com/dikodahan/couchy-launcher), builds on the original [Couchy Launcher by conreo](https://github.com/conreo/couchy-launcher). It is maintained independently and remains licensed under GPLv3. The original author created the launcher, design and foundation; this fork adapts community contributions and adds compatibility and reliability fixes.
 
-| Live aerial wallpaper | Settings | First-run wizard |
-|:---:|:---:|:---:|
-| <img src="docs/img/aerial.png" width="100%"/> | <img src="docs/img/settings.png" width="100%"/> | <img src="docs/img/wizard.png" width="100%"/> |
+### Thanks and community contributions
+
+Thank you to **[conreo](https://github.com/conreo)** and all original Couchy contributors for making the project open source; **[Xaero252](https://github.com/Xaero252)** for [weather and forecasts (#19)](https://github.com/conreo/couchy-launcher/pull/19) and [app customization (#20)](https://github.com/conreo/couchy-launcher/pull/20); and **[9Chrk](https://github.com/9Chrk)** for [performance and aerial playback improvements (#27)](https://github.com/conreo/couchy-launcher/pull/27). These contributions were adapted and reviewed against this fork rather than merged unchanged. Existing Telegram/ADB backup and close-app functionality is retained. Household profiles and restore-preview/undo are not part of 1.1.0.
+
+One screen, remote-driven, for 1080p and 4K TVs. Optional weather, aerial video and Telegram backup stay off until selected. Settings and custom artwork are stored locally.
+
+| Launcher Home with a custom icon | Offline icon library |
+| :---: | :---: |
+| <img src="docs/img/launcher-home.png" width="100%" alt="Couchy Home with the floating Dock and a custom satellite icon" /> | <img src="docs/img/library-picker.png" width="100%" alt="Choose from Library showing a scrollable grid of Material Symbols" /> |
+| Weather forecast with sample data | Parental controls |
+| <img src="docs/img/weather-forecast.png" width="100%" alt="Hourly and daily forecast columns with colored weather icons" /> | <img src="docs/img/parental-controls.png" width="100%" alt="Parental controls showing the empty PIN keypad" /> |
 
 ---
 
 ## Features
 
-- **Three layouts** — Carousel, Grid, or a floating glass Dock (press **Down** to expand to the full grid).
+- **Built-in Home switching** - choose Couchy or keep your current launcher during setup. Launcher settings provides Android’s picker, other installed Home launchers, and stock launcher recovery.
+- **Three layouts** - Carousel, Grid, or a floating glass Dock (press **Down** to expand to the full grid).
 - **Sections** you rename, reorder and fill; an app can appear in several. New installs go to the first section.
-- **Wallpapers** — gradients, your own photo, a looping video, or optional built-in aerial videos (Apple / Amazon / community, streamed only when enabled), with speed control and cross-fades.
-- **Save & load** your full configuration — categories, layout, wallpaper, and all settings — as a JSON file.
-- **18 languages** with a dedicated language picker in Launcher settings.
-- **Adjustable** icon size, spacing, corner roundness, interface scale, dimming, and an optional glass status-bar panel.
-- **Status row** — clock, network state, optional VPN button.
-- **D-pad only** — text entry happens only inside dialogs.
-- **17 languages** (+ English), auto-selected from your system language:
-  العربية · Deutsch · Español · Français · हिन्दी · Bahasa Indonesia · Italiano · 日本語 · 한국어 · Nederlands · Polski · Português · Русский · ไทย · Türkçe · Tiếng Việt · 中文.
+- **Wallpapers** - gradients, Top Shelf previews for compatible apps, your own photo, a looping video, or optional built-in aerial videos (Apple / Amazon / community, streamed only when enabled), with speed control and cross-fades.
+- **Save & load** your full configuration — categories, layout, wallpaper, and all settings - as a JSON file.
+- **19 languages** - The launcher supports both right-to-left (RTL) and left-to-right (LTR) orientation based on the selected language. Hebrew and Arabic mirror the interface, menus, dialogs, and D-pad controls. English and other LTR languages use left-to-right orientation. Choose a language in **Settings → Launcher settings → Language**, or select **System default** to follow your TV.
+- **Adjustable** - icon size, spacing, corner roundness, interface scale, dimming, and an optional glass status-bar panel.
+- **Status row** - clock, network state, optional VPN button, and an opt-in weather chip (Open-Meteo, no key/account/ads).
+- **Reskin any app** - rename it, or swap in a custom icon/banner; or apply an installed Nova/ADW-compatible icon pack (e.g. ProjectivyIconPack) to every app that ships no banner.
+- **D-pad only** - text entry happens only inside dialogs.
 
 ---
 
@@ -58,65 +56,112 @@ The built-in aerial video wallpapers are **opt-in and off by default**. When ena
 ## Requirements
 
 - **Android TV or Google TV** (requires the `leanback` feature — it won't install on phones/tablets).
-- **Android 5.0 (Lollipop) or newer** — the whole Android TV lineage.
-- **ARM (32- or 64-bit) or x86** — one universal APK covers every box, old and new.
-- **No dependencies** — no companion app and **no Google Play Services** required; runs on AOSP boxes too.
+- **Android 9 (Pie/API 28) or newer** - Android TV and Google TV devices on supported Android versions.
+- **ARM (32- or 64-bit), x86 or x86_64** - one universal APK covers these architectures. The launcher, local backups and Telegram integration all require **Android 9/API 28 or newer**.
+- **No dependencies** - no companion app and **no Google Play Services** required; runs on AOSP boxes too.
 - Driven entirely by the **remote / D-pad**; no touchscreen needed.
 
 ---
 
+## Top Shelf wallpaper
+
+Open **Settings → Appearance → Wallpaper → Top Shelf** and allow access to Android TV listings. Highlight a streaming app with the remote and leave it focused. Couchy cycles through movie and TV artwork that the focused app makes available through Android TV Preview or Watch Next. The selected gradient appears when a feed or its images are unavailable. Availability varies by app and TV firmware. Top Shelf uses the platform’s read-only listings permission and is inactive while Android TV parental controls are on. The wallpaper choice is included in backups. Android asks for listings access separately on each device.
+
+### Publishing artwork from an Android TV app
+
+Top Shelf reads the standard Android TV home-screen feeds. A streaming app can support it with the same AndroidX TV Provider integration it uses to publish a [Preview channel](https://developer.android.com/training/tv/discovery/recommendations-channel) or [Watch Next programs](https://developer.android.com/training/tv/discovery/watch-next-add-programs). Publish records under your Android TV app’s own package so Couchy can match them to its app tile.
+
+1. Declare `com.android.providers.tv.permission.WRITE_EPG_DATA` and use `androidx.tvprovider:tvprovider` to create a Preview channel. Publish titles with `PreviewProgram.Builder`. Use a movie, TV series, TV season, or TV episode program type. A Watch Next publisher can supply the same artwork fields with `WatchNextProgram.Builder`.
+2. Set `thumbnailUri` or `posterArtUri`. A landscape thumbnail (ideally 16:9) works best for the full-screen preview. Couchy tries the thumbnail first and falls back to poster art if the thumbnail is missing or fails to load. Use an HTTPS URL that can load without private headers, or an externally readable `content://` URI from a provider owned by your app. Bundled `android.resource://` artwork can also use your app’s package as its authority. For HTTPS, keep each image at or below 8 MiB. Couchy downsamples images to fit within 1280 × 720.
+3. Publish only items intended for home-screen discovery. Couchy uses entries marked searchable and browsable. It prioritizes Preview entries by weight, then fills the remaining slots with Watch Next entries by most recent engagement. It shows up to four images in a rotation and ignores private or unreadable artwork.
+4. Test on an Android TV or Google TV device with Couchy’s Top Shelf and TV listings permission enabled. Highlight your app tile without pressing OK. Check that artwork appears, rotates if multiple images are available, and clears when focus moves to a different app.
+
+Couchy reads imagery only. The app tile still launches the app normally. A TV’s provider determines which listings it shares with third-party launchers. Private in-app catalogs and proprietary launcher feeds require the app developer to publish compatible entries before Couchy can display them.
+
 ## Install
 
-**1. Enable ADB debugging on the TV**
+Couchy Launcher 1.1.0 requires Android TV or Google TV running **Android 9 (API 28) or newer**.
 
-- `Settings → System → About →` click **Android TV OS build** 7 times
-- `Settings → System → Developer options →` enable **USB / Wireless debugging**
+1. **Get the APK and ADB.** Download [the latest signed APK](https://github.com/dikodahan/couchy-launcher/releases/latest/download/Couchy-Launcher.apk), choose a version on the [Releases page](https://github.com/dikodahan/couchy-launcher/releases), or build from source with `./gradlew assembleRelease -PlocalSign` (output: `app/build/outputs/apk/release/app-release.apk`). Install [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) on your computer so you can run `adb`. See [CONTRIBUTING.md](CONTRIBUTING.md) for build prerequisites.
+2. **Enable Developer options on the TV.** In **Settings → System → About** (sometimes **Device Preferences → About**), select **Android TV OS build** seven times. Open **Developer options** and find your TV's debugging option. For a network connection, put the computer and TV on the same local network.
+3. **Connect ADB using the option your TV exposes.** Replace the example addresses and ports with the values shown on your TV.
+   - **Network debugging on port 5555:** Enable it on the TV, run `adb connect 192.168.1.50:5555`, and approve the computer's debugging prompt on the TV if shown.
+   - **Wireless debugging with a pairing code:** Open **Pair device with pairing code** on the TV. Run `adb pair 192.168.1.50:37123` using the pairing dialog's address and port, then enter the displayed code. If the TV does not appear in `adb devices`, run `adb connect 192.168.1.50:41235` using the **IP address & port** on the main Wireless debugging screen. The connection port can differ from the pairing port.
+   - **USB debugging:** Enable it and connect a data cable if your TV or TV box supports USB ADB. Approve the computer's debugging prompt on the TV if shown.
 
-**2. Connect and install from your computer** (TV IP is under `Settings → Network`):
+   See the [Android ADB guide](https://developer.android.com/tools/adb) for connection troubleshooting.
 
-```sh
-adb connect <tv-ip>:5555
-adb install -r couchy-launcher.apk
-```
+4. **Install the APK.** Confirm the TV is listed as `device` and substitute its identifier and your APK's path:
 
-Building from source instead: see [CONTRIBUTING.md](CONTRIBUTING.md).
+   ```sh
+   adb devices
+   adb -s "TV_SERIAL" install -r "/path/to/Couchy-Launcher.apk"
+   ```
+
+   An in-place update requires the same signing certificate as the installed app. The `-local.apk` build uses a local debug certificate. If the certificates differ, use a build signed with the matching key, or export your Couchy configuration and keep a copy before uninstalling the old app and installing the new APK. Uninstalling removes the app's local data.
+
+5. **Open Couchy Launcher** from your TV's apps list and follow the wizard. To make it your Home launcher, see [Set or switch the Home launcher](#set-or-switch-the-home-launcher).
 
 ---
 
-## Set as default launcher
+The GitHub APK uses this fork’s release signing key. Before switching from an upstream, F-Droid, or local test build signed with a different key, export your settings. Android requires replacing the old app before installing the differently signed APK. Restore the backup after installation.
 
-**Generic Android TV / AOSP boxes** — press **Home**, pick **Couchy Launcher**, choose **Always**.
+## Set or switch the Home launcher
 
-**Certified Google TV** — Google blocks the on-screen home picker, so set it once over ADB:
+During setup, choose **Use Couchy as Home** or **Keep current launcher**. Once Couchy verifies the switch, it asks you to press Home on your remote to check that Couchy opens. Select **Next** to finish the rest of setup. If the TV keeps a known stock launcher active after accepting the switch, Couchy offers to pause it after you confirm. Later, open **Settings → Launcher settings → Home launcher** for the Android picker, other launchers, and recovery.
 
-```sh
-adb shell cmd package set-home-activity com.conreo.couchytv/.MainActivity
-```
+For a locked-down TV, expand **TV debugging controls**. Enable network/ADB debugging on that TV and approve Couchy’s debugging prompt with **Always allow from this computer**, then choose **Use Couchy as Home** or **Switch to another Home launcher**. Couchy contains its own authenticated local ADB client, so a separate Launcher Manager app is not required. It connects only to the same TV at `127.0.0.1:5555`; it cannot silently enable debugging or authorize itself. Pairing-based wireless debugging works for installing the APK from a computer. For Home switching on a pairing-only TV, use the system picker. Advanced controls require a TV that exposes TCP ADB on port 5555.
 
-<details>
-<summary><b>Stock launcher still taking over?</b></summary>
+**Stop the stock launcher taking over** is optional. It pauses only known stock launcher components after verifying that Couchy’s enabled Home entry exists. A device/user-local recovery journal is committed before each change; switching away restores those components first. **Restore paused system launchers** provides recovery after an interrupted change. The final Home is checked, and command failures trigger a recovery attempt. Vendor firmware can still reject these operations.
 
-<br>
-
-Check which launcher grabs **Home**:
+For a manual ADB alternative:
 
 ```sh
-adb shell cmd package resolve-activity -a android.intent.action.MAIN -c android.intent.category.HOME
+adb shell cmd package set-home-activity --user current com.conreo.couchytv/.MainActivity
 ```
 
-Disable whichever package it reports (reversible with `adb shell pm enable <package>`) — the usual suspects:
+To recover a stock launcher over ADB, enable the installed package before choosing it as Home:
 
 ```sh
-adb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx      # Google TV
-adb shell pm disable-user --user 0 com.google.android.tvlauncher             # Android TV
-adb shell pm disable-user --user 0 com.google.android.tungsten.setupwraith   # setup/recovery
+adb shell pm enable --user current com.google.android.apps.tv.launcherx   # Google TV
+adb shell pm enable --user current com.google.android.tvlauncher        # Android TV
+adb shell pm enable --user current com.google.android.tungsten.setupwraith # Google TV companion
 ```
 
-Re-check; if another launcher takes over, disable that one too, until **Home** lands on Couchy.
+Only enable packages actually present on your TV. See [Launcher Manager analysis and safeguards](docs/LAUNCHER-MANAGER-REVIEW.md) for the REA findings, supported mechanism and limitations.
 
-</details>
+---
 
-The built-in setup wizard walks through this with your TV's IP pre-filled. No computer? It also offers a button-remap method (map **Home** to Couchy with an app like Button Mapper).
+## Pull the Home debug log
+
+On Android 10 or newer, Couchy updates **Downloads/CouchyLauncher-debug.txt** after a Home switch attempt. You can also open **Settings → Launcher settings → Home launcher → Export debug log** to save the current log. On Android 9, or if Android cannot write automatically, choose **Downloads** in the file picker.
+
+With the TV connected to ADB, pull the file from your computer.
+
+```sh
+adb pull /sdcard/Download/CouchyLauncher-debug.txt
+```
+
+Use the name shown on the TV if Android adds a suffix. Each fresh launch starts a new log and replaces the contents of the Downloads copy Couchy can still write to. Returning to an already running Couchy session, including with the Home button, keeps its log. Pull the file before relaunching if you need details from that session. Copies saved through the file picker can only be reset when Android preserves write access.
+
+The log records Couchy's Home-switch commands, results, timing, and recovery steps. It stays on the TV until you copy it and contains no Telegram backup data or ADB private keys. Review it before sharing since it includes software, device, and launcher information.
+
+---
+
+## Move settings between TVs with Telegram
+
+Both TVs need internet access and a Couchy build with Telegram enabled. If the Cloud option says Telegram is not configured, use a build configured with a Telegram API ID and hash or transfer a local backup instead. Build configuration is described in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+1. On the **source TV**, open **Settings → Launcher settings → Save configuration → Save in the Cloud**.
+2. When Couchy displays a QR code, open Telegram on your phone and go to **Settings → Devices → Link Desktop Device**. Scan the TV code with the Telegram app, then enter your Telegram two-step verification password on the TV if prompted. Couchy resumes the selected action after linking.
+3. Wait for **Configuration saved to Telegram Saved Messages**. You can confirm that a new `.couchybak` file appears in **Saved Messages** on your phone.
+4. On the **destination TV**, install Couchy and finish its first-run wizard. To keep a copy of its current settings, use **Save configuration → Save locally** before restoring. Saving to Telegram on the destination first would make that backup the newest one.
+5. Open **Settings → Launcher settings → Load configuration → Restore from the Cloud**. Scan the destination TV's QR code with Telegram signed into the **same account**. Couchy loads the newest Couchy backup in that account's Saved Messages and replaces the destination's launcher settings.
+6. After **Configuration loaded**, check the layout and sections. Install the same apps and icon packs, reselect any local photos, video, or custom app artwork, and set Couchy as Home separately if desired.
+
+The backup carries section names and order, app placement and order, hidden apps, custom app names, the selected icon pack, layout and appearance, language, clock and status options, weather settings, and wallpaper and playback preferences. App assignments are kept even if an app is installed after the restore. Device-local files and access permissions, installed apps, downloaded caches, Telegram sign-in, and Android's default Home choice stay with each TV.
+
+To restore an older copy, download its `.couchybak` from Saved Messages, rename it with a `.json` extension, and choose it under **Load configuration → Restore from a local file**. Use **Disconnect Telegram** on the backup screen to sign out of Couchy on that TV.
 
 ---
 
@@ -140,45 +185,80 @@ Optional custom path: add `--es path /sdcard/Download/my-backup.json` to either 
 
 ---
 
-## Privacy
+## Weather, customization and playback
 
-No ads, analytics or background services. Network use is optional: aerial-video streaming (off by default) and Telegram Saved-Messages backup if you choose Save in the Cloud. Sections, ordering, hidden apps and wallpaper stay in one local file unless you export them.
+- **Weather:** Off by default. Open **Settings → Weather** to turn it on. Choose **Find by city** and select the matching city and region, or enter coordinates or a postal code manually. City search sends the search term to [Open-Meteo Geocoding](https://open-meteo.com/en/docs/geocoding-api), which uses [GeoNames](https://www.geonames.org/) location data. Couchy saves the coordinates and uses them for future forecasts. For approximate location, select **Approximate (IP address)** and then **Use GeoJS for IP location**. An older IP setting needs this one-time step before connecting to the new provider. When enabled, Couchy attempts one [GeoJS](https://www.geojs.io/) IP lookup per app launch and reuses the returned city and coordinates for forecasts. If the next launch cannot resolve the IP, Couchy uses the last successful location saved on the TV. Forecast refreshes and manual weather retries do not repeat the IP lookup. Temperature units and location changes trigger a refresh immediately; forecast data refreshes every 30 minutes while Home is visible. Press the weather chip to open the forecast by default, or long-press for Weather settings. **Forecast view** switches between the next six hours, the next seven days, or both. **Forecast icons** offers monochrome, colored, and gently animated icons for the forecast dialog. Forecast data is provided by [Open-Meteo](https://open-meteo.com/); location resolution uses [GeoJS](https://www.geojs.io/) or [Zippopotam.us](https://www.zippopotam.us/) only when selected. No Android location permission is requested. If the status bar shows **Weather unavailable**, select it for details and retry. If the IP location service is rate limited, choose **Find by city**, manual coordinates, or a postal code.
+- **Customization:** Long-press an app → Customize to rename it or choose a photo, another installed app’s artwork, or a compatible icon-pack image. **Change icon → Choose from Library** opens Couchy’s scrollable icon picker. Browse over 6,800 Google Material Symbols or search by English icon name. The library and saved icons work offline. Settings → Icon pack applies a pack to apps without their own banners; manual choices take priority. Reset appearance removes that app’s overrides; a selected global icon pack still applies.
+- **Aerials:** Played bytes use a disposable LRU disk cache: up to 128 MiB on constrained TVs or 256 MiB otherwise, additionally limited by free storage. Caching is skipped below 512 MiB of free space; cache errors fall back to streaming. The next clip is queued, failures back off to a gradient, and the decoder is released when a full-screen app hides Home. Up from the expanded grid’s top row collapses it back into the dock.
+- **Backups:** Local, document-picker, Telegram and ADB routes use the same flat JSON format. Old backups receive safe defaults for new features. Downloads writes are atomic; if that location is unavailable, the in-app Save locally action opens the system document picker. New weather settings, app names and the selected icon pack are included. **Custom images, wallpaper/video files, URI grants, installed icon-pack apps and Telegram sessions are not included**; reselect media and install the same packs on another TV. ADB keeps its direct-file behavior and requires shell privileges.
+
+## App closing and parental controls
+
+- **Close & clear cache** is in the app’s long-press menu. It needs network/ADB debugging enabled on the TV and an approved Couchy debugging connection. The TV must support the cache-only command and allow the ADB shell to run it. If the command is unavailable, use **App info** to complete the operation manually. The action preserves app data and sign-ins.
+- Open **Settings → Content → Parental controls** and enter a 4–8 digit PIN twice. Then long-press an app and choose **Customize → Lock app**. Enter the PIN each time you open a locked app through Couchy. Unlocking, disabling protection, and deleting the PIN all require the current PIN. Disabling preserves your selected locks for re-enabling, while deleting the PIN removes them. The PIN and app locks are stored on this TV, outside portable and Android backups. Couchy protects its own launch paths. Use the TV’s system parental controls for restrictions outside Couchy.
+
+## Privacy and security
+
+No ads, analytics or tracking. Network features are opt-in: aerial streaming, weather, Top Shelf artwork, and Telegram Saved Messages backup. Top Shelf reads the focused app’s published TV listings on the device and may load images from the HTTPS hosts named in those listings. GeoJS receives the public IP address to estimate the location only when the GeoJS option is enabled. Third-party endpoints receive ordinary network connection information; manual/selected weather coordinates are sent to Open-Meteo. Settings and custom artwork remain local unless you export settings.
+
+Aerial HTTPS now validates certificates and hostnames. A TV with an outdated trust store may fall back to a gradient; update its firmware or choose local media rather than disabling TLS checks. Telegram session files are excluded from Android cloud backup and device transfer. Telegram API credentials are build-time options; without them, local backup still works and cloud actions explain that cloud is unavailable.
+
+Dependency versions and checksums are pinned. See [the dependency risk review](docs/DEPENDENCY-REVIEW.md) for coverage, the native Telegram update, compatibility decisions and remaining limitations.
 
 ## Changelog
 
 <details>
 <summary>Click to expand</summary>
 
+**v1.1.0 — updated open-source fork**
+
+- Adapt weather/7-day forecasts, per-app customization and low-memory/aerial playback contributions from upstream PRs #19, #20 and #27.
+- Refresh weather on settings changes; isolate cached forecasts by location and units; validate inputs and bound responses.
+- Downsample custom artwork before decode, save it atomically and avoid applying global packs over native banners.
+- Use a device-aware aerial disk cache, queued playback and recovery after network failures.
+- Preserve Telegram and ADB backup with one bounded JSON codec and document-picker export fallback.
+- Replace obsolete Telegram native binaries, restore normal TLS validation, exclude sessions from OS backup, and pin build/dependency integrity metadata.
+- Integrate Home switching into setup and Launcher settings with approved local ADB, recovery journaling and checked results.
+- Raise the minimum to Android 9/API 28 and remove obsolete older-version branches and JNI extraction packaging.
+- Version code 8; Android 9/API 28 minimum for the entire app.
+
 **v1.0.6**
+
 - Smoother cold start (limitedParallelism scan, 2-frame boot fade)
 - Settings: white highlight, instant transitions, couch icon
 - Save/load config to Downloads
 
 **v1.0.5**
+
 - Launcher settings: Language, Save/Load config, Run wizard
 - Dynamic version in About
 - 18-language translations
 
 **v1.0.4**
+
 - "Close" app action in long-press menu
 - Gradient cover during aerial loading (no black screen)
 - Clock refreshes instantly on wake
 - Perf: @Immutable config, stable keys, memoized brush
 
 **v1.0.3**
+
 - Font fixes, non-translatable brand strings
 - New installs sort by install time
 - Initial F-Droid submission
 
 **v1.0.2**
+
 - Wake-from-sleep aerial fix
 - Player released in background (lower RAM)
 - Stall watchdog respects resume state
 
 **v1.0.1**
+
 - Dark gradient cover during video wallpaper load
 
 **v1.0**
+
 - Initial release
 </details>
 
@@ -189,158 +269,3 @@ No ads, analytics or background services. Network use is optional: aerial-video 
 ## Contributing & translations
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Adding a language is copying `values/strings.xml` to `values-<lang>/` and translating the values.
-
-<br>
-
----
-
-<a id="chinese"></a>
-
-<div align="center">
-
-<img src="art/couchy-launcher.svg" width="120" alt="Couchy Launcher logo" />
-
-# Couchy Launcher
-
-**为 Android TV 与 Google TV 打造的快速、私密、单屏主页启动器。**
-
-![License](https://img.shields.io/badge/license-GPLv3-blue)
-![Platform](https://img.shields.io/badge/Android%20TV%20·%20Google%20TV-3DDC84?logo=android&logoColor=white)
-![Languages](https://img.shields.io/badge/languages-17%2B-orange)
-
-[English](#english) · [**中文**](#chinese) — [参与贡献](CONTRIBUTING.md) · [许可证](LICENSING.md)
-
-https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
-
-
-<a href="https://www.buymeacoffee.com/conreo" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" 
-         alt="Buy Me A Coffee" 
-         style="height: 40px !important; width: auto !important;">
-</a>
-
-
-</div>
-
-单屏、遥控器操作，支持 1080p 与 4K 电视。开箱不联网——壁纸是本地渐变，设置存在设备上的单个文件里。
-
-| 航拍视频壁纸 | 设置 | 首次设置向导 |
-|:---:|:---:|:---:|
-| <img src="docs/img/aerial.png" width="100%"/> | <img src="docs/img/settings.png" width="100%"/> | <img src="docs/img/wizard.png" width="100%"/> |
-
----
-
-## 功能
-
-- **三种布局**——轮播、网格，或悬浮玻璃底栏 Dock（按「下」展开为完整网格）。
-- **分区**可自行重命名、排序、填充；一个应用可归入多个分区。新安装的应用进入第一个分区。
-- **壁纸**——渐变、你自己的照片、循环视频，或可选的内置航拍视频（Apple / Amazon / 社区，仅在开启时才联网），带速度控制与淡入淡出。
-- **可调**图标大小、间距、圆角、界面缩放、暗化，以及可选的玻璃状态栏面板。
-- **保存与加载**完整配置——分类、布局、壁纸及所有设置导出为 JSON 文件。
-- **18 种语言**（另加英文），在启动器设置中可选择语言。
-  العربية · Deutsch · Español · Français · हिन्दी · Bahasa Indonesia · Italiano · 日本語 · 한국어 · Nederlands · Polski · Português · Русский · ไทย · Türkçe · Tiếng Việt · 中文。
-
----
-
-## ⚠️ 航拍壁纸说明
-
-内置航拍视频壁纸是**可选功能，默认关闭**。启用后，会从 **Apple** 和 **Amazon** CDN 串流公共视频文件——这些是非自由的第三方服务。不会发送任何凭据或隐私数据，但网络流量会经过专有基础设施。如需完全自由的配置，请使用渐变、照片或本地视频壁纸。
-
----
-
-## 系统要求
-
-- **Android TV 或 Google TV**（需要 `leanback` 特性——手机 / 平板无法安装）。
-- **Android 5.0（Lollipop）及以上**——覆盖整个 Android TV 世代。
-- **ARM（32/64 位）或 x86**——单个通用 APK 适配新旧所有盒子。
-- **无依赖**——无需伴侣应用，**无需 Google Play 服务**；AOSP 盒子也能运行。
-- 完全用**遥控器 / 方向键**操作，无需触摸屏。
-
----
-
-## 安装
-
-**1. 在电视上开启 ADB 调试**
-
-- `设置 → 系统 → 关于 →` 连续点击 **Android TV OS 版本** 7 次
-- `设置 → 系统 → 开发者选项 →` 开启 **USB / 无线调试**
-
-**2. 在电脑上连接并安装**（电视 IP 见 `设置 → 网络`）：
-
-```sh
-adb connect <电视IP>:5555
-adb install -r couchy-launcher.apk
-```
-
-想自行构建：见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
----
-
-## 设为默认启动器
-
-**通用 Android TV / AOSP 盒子**——按 **Home**，选择 **Couchy Launcher**，点「始终」。
-
-**认证版 Google TV**——Google 禁止屏幕内更改主页应用，用一次 ADB：
-
-```sh
-adb shell cmd package set-home-activity com.conreo.couchytv/.MainActivity
-```
-
-<details>
-<summary><b>原厂启动器仍抢占主页？</b></summary>
-
-<br>
-
-查看是哪个启动器抢占 **Home**：
-
-```sh
-adb shell cmd package resolve-activity -a android.intent.action.MAIN -c android.intent.category.HOME
-```
-
-停用它报告的那个包（可用 `adb shell pm enable <包名>` 恢复）——常见的几个：
-
-```sh
-adb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx      # Google TV
-adb shell pm disable-user --user 0 com.google.android.tvlauncher             # Android TV
-adb shell pm disable-user --user 0 com.google.android.tungsten.setupwraith   # 设置/恢复
-```
-
-再次检查；如又有别的启动器接管，就把它也停用，直到 **Home** 落到 Couchy 上。
-
-</details>
-
-内置设置向导会带你完成整个过程，并预填电视 IP。没有电脑？它还提供按键重映射方案（用 Button Mapper 之类的应用把 **Home** 映射到 Couchy）。
-
----
-
-## 用 ADB 备份 / 恢复
-
-与 **设置 → 保存 / 加载配置 → 本地** 使用同一文件（`Download/CouchyBackup.json`）。
-
-```sh
-# 在电视上保存当前设置
-adb shell am start -n com.conreo.couchytv/.BackupActivity \
-  -a com.conreo.couchytv.action.BACKUP_SAVE
-adb pull /sdcard/Download/CouchyBackup.json
-
-# 恢复到这台（或另一台）电视
-adb push CouchyBackup.json /sdcard/Download/CouchyBackup.json
-adb shell am start -n com.conreo.couchytv/.BackupActivity \
-  -a com.conreo.couchytv.action.BACKUP_RESTORE
-```
-
-自定义路径：在命令后加上 `--es path /sdcard/Download/my-backup.json`。
-
----
-
-## 隐私
-
-无广告、分析或后台服务。联网是可选的：默认关闭的航拍视频，以及在你选择「保存到云端」时使用的 Telegram 收藏夹备份。分区、排序、隐藏应用与壁纸默认只存在本地文件中。
-
-## 许可证
-
-**GNU GPLv3**——自由、开源、Copyleft。应用、图标与内置库详情见 [LICENSING.md](LICENSING.md)。
-
-## 参与贡献与翻译
-
-见 [CONTRIBUTING.md](CONTRIBUTING.md)。添加一种语言只需把 `values/strings.xml` 复制到 `values-<语言>/` 并翻译其中的值。

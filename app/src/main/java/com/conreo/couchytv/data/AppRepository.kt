@@ -1,10 +1,13 @@
 package com.conreo.couchytv.data
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
@@ -16,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
@@ -40,6 +44,11 @@ data class AppEntry(
 )
 
 object AppRepository {
+    // Custom artwork is reused across config changes, with an 8 MiB process-wide cap.
+    private val overrideBitmaps = object : android.util.LruCache<String, Bitmap>(8 * 1024 * 1024) {
+        override fun sizeOf(key: String, value: Bitmap) = value.allocationByteCount
+    }
+
 
     /** Reserved id for the auto-filled "All apps" section (every launchable app). */
     const val ALL_APPS_ID = "__all__"
@@ -76,6 +85,7 @@ object AppRepository {
     // render thread, so the breathing loading logo drops frames. Cap it to leave
     // a core free — still concurrent, just not scorched-earth.
     // ponytail: cores-1 (min 2); revisit only if scan wall-time regresses.
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val scanDispatcher = Dispatchers.IO.limitedParallelism(
         (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(2)
     )
@@ -91,7 +101,13 @@ object AppRepository {
         // layout size, so focus-zoom needs no extra headroom. Clamp: never
         // below the 320px spec, capped so an extreme density can't blow up RAM.
         val density = context.resources.displayMetrics.density
-        val bannerW = (270 * density).toInt().coerceIn(320, 720)
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        // Some Android TV firmwares do not set ro.config.low_ram even though
+        // the per-app heap is small. Treat a <=256 MiB heap as constrained too.
+        // The 320px Leanback minimum stays intact; only the upper bound changes.
+        val constrainedHeap = activityManager.isLowRamDevice || activityManager.memoryClass <= 256
+        val maxBannerWidth = if (constrainedHeap) 512 else 720
+        val bannerW = (270 * density).toInt().coerceIn(320, maxBannerWidth)
         val bannerH = bannerW * 9 / 16
         val validCacheNames = java.util.Collections.synchronizedSet(HashSet<String>())
 
@@ -134,12 +150,17 @@ object AppRepository {
                 // original behaviour — a size threshold wrongly demoted good
                 // banners whose loaded bitmap is below 320px on this density).
                 val bannerDrawable = runCatching { ai.loadBanner(pm) }.getOrNull()
+                val bannerConfig = if (
+                    bannerDrawable is BitmapDrawable && !bannerDrawable.bitmap.hasAlpha()
+                ) {
+                    // TV banners are normally opaque. RGB_565 halves their Java
+                    // heap and upload footprint while translucent art keeps alpha.
+                    Bitmap.Config.RGB_565
+                } else Bitmap.Config.ARGB_8888
                 val banner = if (bannerDrawable == null) null else
-                    cachedBitmap(cacheDir, bannerName, Bitmap.Config.ARGB_8888) {
-                        // Full 8-bit, sized to the display (see bannerW above):
-                        // crisp for vector/hi-res banners, lean on low-density TVs.
+                    cachedBitmap(cacheDir, bannerName, bannerConfig) {
                         runCatching {
-                            bannerDrawable.toBitmap(bannerW, bannerH, Bitmap.Config.ARGB_8888)
+                            bannerDrawable.toBitmap(bannerW, bannerH, bannerConfig)
                         }.getOrNull()
                     }
                 val icon = if (banner == null) {
@@ -187,7 +208,7 @@ object AppRepository {
      * the old lossy q90) never adds gradient banding to icons/banners.
      * RAM/GPU cost is unchanged either way: it's set by the decoded size.
      */
-    private fun cachedBitmap(
+    internal fun cachedBitmap(
         dir: File,
         name: String,
         config: Bitmap.Config,
@@ -215,12 +236,10 @@ object AppRepository {
     private fun autoCategory(ai: ApplicationInfo?): String {
         ai ?: return "apps"
         KNOWN[ai.packageName]?.let { return it }
-        if (Build.VERSION.SDK_INT >= 26) {
-            when (ai.category) {
-                ApplicationInfo.CATEGORY_VIDEO -> return "streaming"
-                ApplicationInfo.CATEGORY_GAME -> return "games"
-                ApplicationInfo.CATEGORY_AUDIO -> return "music"
-            }
+        when (ai.category) {
+            ApplicationInfo.CATEGORY_VIDEO -> return "streaming"
+            ApplicationInfo.CATEGORY_GAME -> return "games"
+            ApplicationInfo.CATEGORY_AUDIO -> return "music"
         }
         @Suppress("DEPRECATION")
         if (ai.flags and ApplicationInfo.FLAG_IS_GAME != 0) return "games"
@@ -278,5 +297,122 @@ object AppRepository {
                 else ordered.filter { it.pkg !in config.hidden }
             cat to visible
         }
+    }
+
+    /** Where per-app custom icon/banner images are cached (see [overlay]). */
+    fun overridesDir(context: Context): File =
+        File(context.filesDir, "overrides").apply { mkdirs() }
+
+    private fun overrideFile(context: Context, pkg: String, kind: String) =
+        File(overridesDir(context), "$pkg-$kind.webp")
+
+    /**
+     * Layers rename/reskin state on top of a scan result: manual label,
+     * then manual icon/banner image (if the user picked one), then an
+     * active icon pack's icon (if no manual icon was set). Unmodified
+     * entries are returned as the SAME instance so Compose still skips
+     * their cards.
+     */
+    suspend fun overlay(
+        context: Context,
+        apps: List<AppEntry>,
+        config: LauncherConfig,
+    ): List<AppEntry> = withContext(Dispatchers.Default) {
+        if (config.labelOverrides.isEmpty() && config.iconPackPkg.isEmpty() &&
+            overridesDir(context).listFiles().isNullOrEmpty()
+        ) return@withContext apps
+
+        val packMap = if (config.iconPackPkg.isNotEmpty()) {
+            runCatching { IconPack.appFilterMap(context, config.iconPackPkg) }.getOrNull().orEmpty()
+        } else emptyMap()
+
+        apps.map { app ->
+            val label = config.labelOverrides[app.pkg]
+            val iconFile = overrideFile(context, app.pkg, "icon").takeIf { it.exists() }
+            val bannerFile = overrideFile(context, app.pkg, "banner").takeIf { it.exists() }
+            // A manual banner override always wins over the pack.
+            val packDrawableName = if (bannerFile == null && app.banner == null) packMap[app.pkg] else null
+
+            if (label == null && iconFile == null && bannerFile == null && packDrawableName == null) {
+                return@map app
+            }
+
+            val overrideIcon = iconFile?.let { decodeFile(it)?.asImageBitmap() }
+            val overrideBanner = when {
+                bannerFile != null -> decodeFile(bannerFile)?.asImageBitmap()
+                packDrawableName != null -> runCatching {
+                    IconPack.loadPackBanner(context, config.iconPackPkg, packDrawableName)
+                }.getOrNull()?.asImageBitmap()
+                else -> null
+            }
+
+            app.copy(
+                label = label ?: app.label,
+                icon = overrideIcon ?: app.icon,
+                // A resolved manual/pack icon replaces the app's own banner
+                // too — even one it already ships — so the fallback tile
+                // actually shows the new artwork instead of staying hidden
+                // behind the original banner.
+                banner = overrideBanner ?: if (overrideIcon != null) null else app.banner,
+            )
+        }
+    }
+
+    private fun decodeFile(f: File): Bitmap? {
+        val key = "${f.absolutePath}|${f.lastModified()}|${f.length()}"
+        overrideBitmaps.get(key)?.let { return it }
+        return runCatching { BitmapFactory.decodeFile(f.absolutePath) }.getOrNull()
+            ?.also { overrideBitmaps.put(key, it) }
+    }
+
+    /** Reopen the provider for the decode pass rather than retaining an unbounded byte array. */
+    private suspend fun saveOverrideImage(
+        context: Context, pkg: String, kind: String, source: Uri, maxDim: Int,
+    ): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            val input = context.contentResolver.openInputStream(source) ?: error("Image provider returned no stream")
+            input.use { BitmapFactory.decodeStream(it, null, bounds) }
+            val sample = ImageSizing.sampleSize(bounds.outWidth, bounds.outHeight, maxDim)
+            val options = BitmapFactory.Options().apply { inSampleSize = sample }
+            val bitmap = context.contentResolver.openInputStream(source)?.use { BitmapFactory.decodeStream(it, null, options) }
+                ?: error("Image could not be decoded")
+            try { writeOverrideBitmap(context, pkg, kind, bitmap, maxDim) }
+            finally { bitmap.recycle() }
+        }.getOrDefault(false)
+    }
+
+    /** Writes an already-decoded bitmap (app icon, icon-pack icon) as an override, downscaled to [maxDim]. */
+    private fun writeOverrideBitmap(context: Context, pkg: String, kind: String, bitmap: Bitmap, maxDim: Int): Boolean {
+        val (width, height) = ImageSizing.fit(bitmap.width, bitmap.height, maxDim)
+        val bmp = if (width != bitmap.width || height != bitmap.height)
+            Bitmap.createScaledBitmap(bitmap, width, height, true) else bitmap
+        val file = android.util.AtomicFile(overrideFile(context, pkg, kind))
+        return try {
+            runCatching {
+                val output = file.startWrite()
+                try {
+                    val format = if (Build.VERSION.SDK_INT >= 30) Bitmap.CompressFormat.WEBP_LOSSLESS
+                        else { @Suppress("DEPRECATION") Bitmap.CompressFormat.WEBP }
+                    check(bmp.compress(format, 100, output))
+                    file.finishWrite(output)
+                } catch (error: Exception) { file.failWrite(output); throw error }
+                val saved = file.openRead().use { BitmapFactory.decodeStream(it) } ?: error("Image write failed")
+                saved.recycle()
+                overrideBitmaps.evictAll()
+            }.isSuccess
+        } finally { if (bmp !== bitmap) bmp.recycle() }
+    }
+
+    suspend fun saveOverrideBanner(context: Context, pkg: String, source: Uri): Boolean =
+        saveOverrideImage(context, pkg, "banner", source, maxDim = 720)
+
+    suspend fun saveOverrideBannerBitmap(context: Context, pkg: String, bitmap: Bitmap): Boolean =
+        withContext(Dispatchers.IO) { writeOverrideBitmap(context, pkg, "banner", bitmap, maxDim = 720) }
+
+    fun clearOverrideImages(context: Context, pkg: String) {
+        overrideBitmaps.evictAll()
+        overrideFile(context, pkg, "icon").delete()
+        overrideFile(context, pkg, "banner").delete()
     }
 }

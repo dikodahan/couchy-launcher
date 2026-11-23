@@ -12,6 +12,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
+import com.conreo.couchytv.data.HomeDiagnostics
 import com.conreo.couchytv.ui.LauncherApp
 import java.util.Locale
 
@@ -43,11 +44,13 @@ class MainActivity : ComponentActivity() {
         // this mirror in sync with the DataStore config and triggers recreate().
         val lang = newBase.getSharedPreferences(LOCALE_PREFS, MODE_PRIVATE)
             .getString(LOCALE_KEY, "").orEmpty()
+        if (lang.isEmpty()) Locale.setDefault(newBase.resources.configuration.locales[0])
         super.attachBaseContext(if (lang.isEmpty()) newBase else applyLocale(newBase, lang))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        HomeDiagnostics.beginLaunch(this, restoringActivity = savedInstanceState != null)
 
         // A home screen never exits on Back
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -66,6 +69,9 @@ class MainActivity : ComponentActivity() {
             androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
         )
 
+        // Compose reads the host view direction, including when the app's
+        // language differs from the system language.
+        window.decorView.layoutDirection = resources.configuration.layoutDirection
         setContent {
             LauncherApp(rescanTick)
         }
@@ -94,7 +100,7 @@ class MainActivity : ComponentActivity() {
             val locale = if (lang.contains('-')) {
                 val parts = lang.split('-')
                 Locale(parts[0], parts.getOrElse(1) { "" })
-            } else Locale(lang)
+            } else Locale.forLanguageTag(lang)
             Locale.setDefault(locale)
             val config = Configuration(context.resources.configuration)
             config.setLocale(locale)

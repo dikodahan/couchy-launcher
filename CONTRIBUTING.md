@@ -8,6 +8,8 @@ Thanks for helping out! Couchy is GPLv3 — by contributing you agree your chang
 
 ## Build
 
+This repository is an independent GPLv3 fork of [conreo/Couchy Launcher](https://github.com/conreo/couchy-launcher). See the README for contributor credits and fork changes.
+
 Requirements: **JDK 17**, the **Android SDK** (API 34), and either Android Studio (Ladybug+) or the command line. There's no `local.properties` in the repo — point Gradle at your SDK:
 
 ```
@@ -31,7 +33,9 @@ adb shell monkey -p com.conreo.couchytv -c android.intent.category.LAUNCHER 1
 
 (Without `-PlocalSign` the release is **unsigned**, which is what F-Droid builds and signs itself.)
 
-**Telegram Cloud backup** is optional. `api_id` / `api_hash` from [my.telegram.org](https://my.telegram.org) identify *this app* to Telegram (not a user's login). TV users only scan the QR. Set them in gitignored `local.properties` (`telegram.api.id` / `telegram.api.hash`) or env `TELEGRAM_API_ID` / `TELEGRAM_API_HASH`. GitHub release builds need the same values as repository secrets, or Cloud options toast "not configured".
+For public GitHub releases, use the same Android release signing key across versions and upload the APK as `Couchy-Launcher.apk`. This stable name keeps the README’s latest-download URL working. The tag workflow publishes when the signing secrets are configured. Otherwise, build a signed release locally and upload the APK and its SHA-256 checksum to the tagged release.
+
+**Telegram Cloud backup** is optional and, like the rest of this version, requires Android 9/API 28 or newer. `api_id` / `api_hash` from [my.telegram.org](https://my.telegram.org) identify *this app* to Telegram (not a user's login). TV users only scan the QR. Set them in gitignored `local.properties` (`telegram.api.id` / `telegram.api.hash`) or env `TELEGRAM_API_ID` / `TELEGRAM_API_HASH`. GitHub release builds need the same values as repository secrets, or Cloud options toast "not configured".
 
 ## Project layout
 
@@ -163,3 +167,10 @@ app/src/main/res/          字符串（values + 17 种语言）、图形、主�
 ## 发布与 F-Droid
 
 发布在默认分支上打 `vX.Y` 标签。F-Droid 构建配方位于 [`fdroid/com.conreo.couchytv.yml`](fdroid/com.conreo.couchytv.yml)。提交步骤见该文件头部说明。
+
+
+## Fork validation and dependency updates
+
+Run `./gradlew testDebugUnitTest assembleDebug assembleRelease lintRelease` before proposing a change. An Android TV emulator can run `./gradlew connectedDebugAndroidTest`; account-free tests cover the native Telegram bridge, backup safety and image downsampling. Physical-TV playback, real icon packs and authenticated Telegram backup still need device/account testing.
+
+Run `./gradlew dependencyInventory -I scripts/dependency-inventory.init.gradle` and `python3 scripts/audit-dependencies.py` to scan the exact resolved Maven graph. Review version changes before regenerating locks and SHA-256 metadata with `--write-locks --write-verification-metadata sha256`. Finish with a normal strict-verification build. Keep the native-only TDLib pin and its JNI bridge in sync; read `docs/DEPENDENCY-REVIEW.md` before replacing the native artifact.

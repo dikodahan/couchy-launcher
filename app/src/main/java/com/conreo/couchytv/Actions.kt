@@ -1,18 +1,15 @@
 package com.conreo.couchytv
 
-import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import org.lsposed.hiddenapibypass.HiddenApiBypass
-import java.util.concurrent.atomic.AtomicBoolean
+import com.conreo.couchytv.data.AdbShellResult
+import com.conreo.couchytv.data.LocalAdb
+import java.io.IOException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 
 object Actions {
 
@@ -47,20 +44,50 @@ object Actions {
         }
     }
 
-    /**
-     * Same two App-info actions: Force stop, then Clear cache.
-     * Both are hidden + privileged (`FORCE_STOP_PACKAGES`, `CLEAR_APP_CACHE`);
-     * they succeed when the OS grants those (priv-app / some AOSP boxes) and
-     * otherwise fall back to [ActivityManager.killBackgroundProcesses].
-     */
-    fun close(context: Context, pkg: String) {
-        if (pkg == context.packageName) return
-        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        runCatching { forceStopPackage(am, pkg) }
-            .onFailure { Log.w(TAG, "forceStopPackage $pkg", it) }
-        runCatching { clearAppCache(context.packageManager, pkg) }
-            .onFailure { Log.w(TAG, "deleteApplicationCacheFiles $pkg", it) }
-        runCatching { am.killBackgroundProcesses(pkg) }
+    internal enum class CloseResult { Complete, Stopped, AdbUnavailable, Unavailable }
+
+    internal suspend fun closeAndClearCache(context: Context, pkg: String): CloseResult {
+        val command = closeCacheCommand(pkg) ?: return CloseResult.Unavailable
+        if (pkg == context.packageName || !isInstalled(context, pkg)) return CloseResult.Unavailable
+        return try {
+            closeCacheResult(LocalAdb(context).shell(command))
+        } catch (_: IOException) {
+            CloseResult.AdbUnavailable
+        } catch (_: TimeoutCancellationException) {
+            CloseResult.AdbUnavailable
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            CloseResult.Unavailable
+        }
+    }
+
+    internal fun closeCacheResult(result: AdbShellResult): CloseResult {
+        val lines = result.output.lineSequence().map(String::trim).toSet()
+        if ("COUCHY_STOPPED" !in lines) return CloseResult.Unavailable
+        return if (result.exitCode == 0 && "Success" in lines) CloseResult.Complete else CloseResult.Stopped
+    }
+
+    internal fun closeCacheCommand(pkg: String): String? {
+        if (!packageName.matches(pkg)) return null
+        val permission = "android.permission.INTERNAL_DELETE_CACHE_FILES"
+        // Some firmware advertises cache-only but silently ignores it for the shell UID.
+        return """
+            am force-stop --user current $pkg || exit 1
+            echo COUCHY_STOPPED
+            pm help | grep -Fq -- --cache-only || exit 1
+            if [ "${'$'}(id -u)" = 2000 ] && pm list permissions | grep -Fxq 'permission:$permission'; then
+                dumpsys package com.android.shell | grep -Fq '$permission: granted=true' || exit 1
+            fi
+            timeout -k 1 8 pm clear --user current --cache-only $pkg
+        """.trimIndent()
+    }
+
+    private val packageName = Regex("[a-zA-Z0-9_]+(?:\\.[a-zA-Z0-9_]+)+")
+
+    fun openDebuggingSettings(context: Context) {
+        runCatching { context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)) }
+            .onFailure { openSystemSettings(context) }
     }
 
     fun openSystemSettings(context: Context) {
@@ -82,48 +109,6 @@ object Actions {
 
     fun isInstalled(context: Context, pkg: String): Boolean =
         runCatching { context.packageManager.getPackageInfo(pkg, 0) }.isSuccess
-
-    @SuppressLint("PrivateApi")
-    private fun forceStopPackage(am: ActivityManager, pkg: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            allowHiddenApis()
-            HiddenApiBypass.invoke(ActivityManager::class.java, am, "forceStopPackage", pkg)
-        } else {
-            ActivityManager::class.java.getMethod("forceStopPackage", String::class.java)
-                .invoke(am, pkg)
-        }
-    }
-
-    @SuppressLint("PrivateApi")
-    private fun clearAppCache(pm: PackageManager, pkg: String) {
-        val observer = Class.forName("android.content.pm.IPackageDataObserver")
-        val method = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            allowHiddenApis()
-            HiddenApiBypass.getDeclaredMethod(
-                PackageManager::class.java,
-                "deleteApplicationCacheFiles",
-                String::class.java,
-                observer,
-            )
-        } else {
-            PackageManager::class.java.getMethod(
-                "deleteApplicationCacheFiles",
-                String::class.java,
-                observer,
-            )
-        }
-        method.invoke(pm, pkg, null)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.P)
-    private fun allowHiddenApis() {
-        if (!hiddenApisReady.compareAndSet(false, true)) return
-        runCatching { HiddenApiBypass.addHiddenApiExemptions("L") }
-            .onFailure { Log.w(TAG, "hidden API exemptions", it) }
-    }
-
-    private val hiddenApisReady = AtomicBoolean(false)
-    private const val TAG = "LiteTV"
 
     fun openAppStore(context: Context, pkg: String) {
         runCatching {

@@ -1,6 +1,9 @@
 package com.conreo.couchytv.ui
 
 import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -47,6 +50,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
@@ -59,6 +64,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -69,20 +75,34 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.conreo.couchytv.Actions
+import com.conreo.couchytv.R
+import com.conreo.couchytv.data.reconcileInstalledApps
 import com.conreo.couchytv.data.AppEntry
 import com.conreo.couchytv.data.AppRepository
+import com.conreo.couchytv.data.AerialVideoCache
 import com.conreo.couchytv.data.ConfigStore
+import com.conreo.couchytv.data.IconPack
 import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
 import com.conreo.couchytv.data.LauncherConfig
 import com.conreo.couchytv.data.NetStatus
+import com.conreo.couchytv.data.ParentalControls
+import com.conreo.couchytv.data.ParentalState
+import com.conreo.couchytv.data.WEATHER_CLICK_APP
+import com.conreo.couchytv.data.WEATHER_SRC_GEOIP
+import com.conreo.couchytv.data.WEATHER_CLICK_FORECAST
+import com.conreo.couchytv.data.WeatherFailure
+import com.conreo.couchytv.data.WeatherResult
+import com.conreo.couchytv.data.WeatherRepository
 import com.conreo.couchytv.data.networkStatusFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -203,11 +223,15 @@ private fun android.content.Context.findActivity(): android.app.Activity? {
 @Composable
 fun LauncherApp(rescanTick: Int) {
     val context = LocalContext.current
-    val store = remember { ConfigStore(context.applicationContext) }
+    val store = remember(context) { ConfigStore(context) }
     val scope = rememberCoroutineScope()
 
     // Wait for the persisted config before drawing anything, so the setup
     // wizard never flashes for users who already completed it.
+    val parental = remember(context) { ParentalControls(context) }
+    val parentalOrNull by produceState<ParentalState?>(null) {
+        parental.state.collect { value = it }
+    }
     val configOrNull by produceState<LauncherConfig?>(initialValue = null) {
         store.flow.collect { value = it }
     }
@@ -217,6 +241,10 @@ fun LauncherApp(rescanTick: Int) {
     // still runs to pick up changes. Not rendered until past the gates below.
     val appsOrNull by produceState(initialValue = AppRepository.memoryCache, rescanTick) {
         value = withContext(Dispatchers.Default) { AppRepository.scan(context.applicationContext) }
+    }
+    val parentalState = parentalOrNull ?: run {
+        LoadingScreen()
+        return
     }
     val config = configOrNull ?: run {
         LoadingScreen()
@@ -241,8 +269,8 @@ fun LauncherApp(rescanTick: Int) {
     // The SurfaceView video wallpaper needs a transparent window to show through;
     // every other mode draws an opaque wallpaper, so keep the window opaque then
     // (a transparent window would let whatever is behind the home leak through).
-    val videoWallpaper = config.useBuiltinAerials ||
-        (config.useVideoWallpaper && config.videoUri.isNotEmpty())
+    val videoWallpaper = !config.useTopShelf &&
+        (config.useBuiltinAerials || (config.useVideoWallpaper && config.videoUri.isNotEmpty()))
     LaunchedEffect(activity, videoWallpaper) {
         activity?.window?.setBackgroundDrawable(
             if (videoWallpaper) null
@@ -294,7 +322,6 @@ fun LauncherApp(rescanTick: Int) {
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-
     // Format with the app's current locale (reflects the language override, and
     // recomposes on change) — not Locale.getDefault(), which the framework can
     // reset, leaving the date stuck in the previous language.
@@ -319,35 +346,144 @@ fun LauncherApp(rescanTick: Int) {
         }
     }
 
+    // Clear old data immediately when units/location change, and only poll while Home is visible.
+    val weatherRequest = remember(config.weatherEnabled, config.weatherLocationSource, config.weatherGeoJsEnabled,
+        config.weatherLat, config.weatherLon, config.weatherZip, config.weatherCountry, config.weatherUnit) {
+        com.conreo.couchytv.data.WeatherRequest.from(config)
+    }
+    var weatherRetryTick by remember { mutableIntStateOf(0) }
+    var weatherResult by remember(weatherRequest, resumeTick, weatherRetryTick) {
+        mutableStateOf<WeatherResult?>(null)
+    }
+    LaunchedEffect(weatherRequest, resumeTick, weatherRetryTick, lifecycleOwner) {
+        val request = weatherRequest ?: return@LaunchedEffect
+        lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+            while (true) {
+                weatherResult = withContext(Dispatchers.IO) { WeatherRepository.fetch(context.applicationContext, request) }
+                delay(30 * 60_000L)
+            }
+        }
+    }
+    val weather = weatherResult?.data
+    val needsGeoJs = config.weatherEnabled && config.weatherLocationSource == WEATHER_SRC_GEOIP &&
+        !config.weatherGeoJsEnabled
+    val weatherStatus = when {
+        !config.weatherEnabled || needsGeoJs -> null
+        weatherRequest == null -> R.string.weather_location_missing
+        weatherResult == null -> R.string.weather_loading
+        weatherResult?.usingSavedIpLocation == true && weather != null -> R.string.weather_using_saved_ip_city
+        else -> when (weatherResult?.failure) {
+            WeatherFailure.IpRateLimited -> R.string.weather_ip_rate_limited
+            WeatherFailure.LocationUnavailable -> R.string.weather_location_failed
+            WeatherFailure.ForecastUnavailable -> R.string.weather_forecast_failed
+            null -> null
+        }
+    }
+
+    // Per-app rename/icon/banner overrides + icon-pack icons layered on top of
+    // the raw scan — recomputed off the main thread whenever config or the
+    // scan itself changes.
+    var overrideVersion by remember { mutableIntStateOf(0) }
+    val displayApps by produceState(initialValue = apps, apps, config.labelOverrides, config.iconPackPkg, overrideVersion) {
+        value = AppRepository.overlay(context.applicationContext, apps, config)
+    }
+
     // New installs are auto-added to the FIRST section.
     LaunchedEffect(apps) {
         if (apps.isEmpty()) return@LaunchedEffect
         val current = apps.map { it.pkg }.toSet()
-        store.update { cfg ->
-            if (cfg.knownApps.isEmpty()) cfg.copy(knownApps = current)
-            else {
-                val added = current - cfg.knownApps
-                if (added.isEmpty() && current == cfg.knownApps) cfg
-                else {
-                    val first = cfg.categories.first().id
-                    cfg.copy(
-                        knownApps = current,
-                        sections = cfg.sections + added.associateWith { setOf(first) },
-                    )
-                }
+        store.update { it.reconcileInstalledApps(current) }
+    }
+
+    var menuFor by remember { mutableStateOf<AppEntry?>(null) }
+    var customizeFor by remember { mutableStateOf<AppEntry?>(null) }
+    var renameFor by remember { mutableStateOf<AppEntry?>(null) }
+    var movePkg by remember { mutableStateOf<String?>(null) }
+    var showSettings by remember { mutableStateOf(false) }
+    var settingsStartAtWeather by remember { mutableStateOf(false) }
+    // Only true when Settings was opened by a still-held long-press (the
+    // weather chip): the eventual key-up of that hold must not fall through
+    // to whatever is focused first once the sheet appears (see SettingsSheet).
+    var settingsSuppressRelease by remember { mutableStateOf(false) }
+    var showForecast by remember { mutableStateOf(false) }
+    var wallpaperVersion by remember { mutableIntStateOf(0) }
+
+    var pinPrompt by remember { mutableStateOf<PinPrompt?>(null) }
+    var closingApp by remember { mutableStateOf(false) }
+    var closeFailure by remember { mutableStateOf<Pair<String, Int>?>(null) }
+
+    fun protectedAction(pkg: String, action: () -> Unit) {
+        if (parentalState.isLocked(pkg)) {
+            pinPrompt = PinPrompt(R.string.parental_open_app, verify = parental::verify, onAccepted = action)
+        } else action()
+    }
+
+    fun launchApp(pkg: String) = protectedAction(pkg) { Actions.launchApp(context, pkg) }
+    fun appInfo(pkg: String) = protectedAction(pkg) { Actions.openAppInfo(context, pkg) }
+    fun uninstallApp(pkg: String) = protectedAction(pkg) { Actions.uninstall(context, pkg) }
+
+    fun closeApp(pkg: String) {
+        if (closingApp) return
+        closingApp = true
+        scope.launch {
+            val result = try {
+                Actions.closeAndClearCache(context, pkg)
+            } finally {
+                closingApp = false
+            }
+            val message = when (result) {
+                Actions.CloseResult.Complete -> R.string.close_cache_complete
+                Actions.CloseResult.Stopped -> R.string.close_cache_partial
+                Actions.CloseResult.AdbUnavailable -> R.string.adb_enable_required
+                Actions.CloseResult.Unavailable -> R.string.close_cache_unavailable
+            }
+            if (result == Actions.CloseResult.Complete) Actions.toast(context, context.getString(message))
+            else closeFailure = pkg to message
+        }
+    }
+
+    fun openWeatherSettings(suppressRelease: Boolean = false) {
+        settingsStartAtWeather = true
+        settingsSuppressRelease = suppressRelease
+        showSettings = true
+    }
+    fun onWeatherClick() {
+        when (config.weatherClickAction) {
+            WEATHER_CLICK_FORECAST ->
+                if (weather != null) showForecast = true else openWeatherSettings()
+            WEATHER_CLICK_APP ->
+                if (config.weatherApp.isNotEmpty()) launchApp(config.weatherApp) else openWeatherSettings()
+            else -> openWeatherSettings()
+        }
+    }
+
+    // Icon picker for the per-app "Customize" menu — same OpenDocument pattern
+    // SettingsSheet uses for the wallpaper photo picker. Only one slot (banner)
+    // is written to — see the comment by IconSourceMenu's usage below.
+    var bannerTargetPkg by remember { mutableStateOf<String?>(null) }
+    // "Change icon" also offers another installed app's icon, or a pack icon,
+    // as poor substitutes for a file browser aren't reliably present on TV OSes.
+    var iconSourceFor by remember { mutableStateOf<AppEntry?>(null) }
+    var appIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
+    var packIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
+    var libraryIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
+    val iconPacks by produceState(initialValue = emptyList<com.conreo.couchytv.data.IconPackInfo>(), apps, resumeTick) {
+        value = withContext(Dispatchers.IO) { IconPack.installedIconPacks(context.applicationContext) }
+    }
+    val bannerPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val pkg = bannerTargetPkg; bannerTargetPkg = null
+        if (uri != null && pkg != null) {
+            scope.launch {
+                if (AppRepository.saveOverrideBanner(context.applicationContext, pkg, uri)) overrideVersion++
+                else Actions.toast(context, context.getString(R.string.icon_save_failed))
             }
         }
     }
 
-    var menuFor by remember { mutableStateOf<AppEntry?>(null) }
-    var movePkg by remember { mutableStateOf<String?>(null) }
-    var showSettings by remember { mutableStateOf(false) }
-    var wallpaperVersion by remember { mutableIntStateOf(0) }
-
     // Drop empty sections: an empty row is dead space AND a focus trap that
     // stops D-pad navigation from reaching the section below it.
-    val categorized = remember(apps, config) {
-        AppRepository.categorize(apps, config).filter { it.second.isNotEmpty() }
+    val categorized = remember(displayApps, config) {
+        AppRepository.categorize(displayApps, config).filter { it.second.isNotEmpty() }
     }
     // The dock's flat app list (all sections concatenated, de-duped). Hoisted &
     // remembered so its identity stays stable across recompositions — otherwise a
@@ -397,7 +533,7 @@ fun LauncherApp(rescanTick: Int) {
         val target = catIndex + delta
         if (target < 0 || target >= categorized.size) return
         val pkg = movePkg ?: return
-        val app = apps.firstOrNull { it.pkg == pkg } ?: return
+        val app = displayApps.firstOrNull { it.pkg == pkg } ?: return
         val sourceId = categorized[catIndex].first.id
         val targetId = categorized[target].first.id
         val targetList = categorized[target].second
@@ -458,7 +594,7 @@ fun LauncherApp(rescanTick: Int) {
 
         val orderCats = config.categories.map { it.id }
         fun dockCatOf(p: String): String {
-            val app = apps.firstOrNull { it.pkg == p } ?: return orderCats.last()
+            val app = displayApps.firstOrNull { it.pkg == p } ?: return orderCats.last()
             val secs = AppRepository.sectionsOf(app, config)
             return orderCats.firstOrNull { it in secs } ?: orderCats.last()
         }
@@ -466,7 +602,7 @@ fun LauncherApp(rescanTick: Int) {
         val targetCat = flat.getOrNull(target - 1)?.let { dockCatOf(it) }
             ?: flat.getOrNull(target + 1)?.let { dockCatOf(it) }
             ?: sourceCat
-        val movedApp = apps.firstOrNull { it.pkg == pkg }
+        val movedApp = displayApps.firstOrNull { it.pkg == pkg }
 
         scope.launch {
             store.update { cfg ->
@@ -488,6 +624,7 @@ fun LauncherApp(rescanTick: Int) {
         }
     }
 
+    val towardEnd = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
     fun moveHorizontal(delta: Int) =
         if (config.layout == LAYOUT_DOCK) moveDock(delta) else moveWithinRow(delta)
 
@@ -531,40 +668,61 @@ fun LauncherApp(rescanTick: Int) {
         WALLPAPERS[config.wallpaper.coerceIn(0, WALLPAPERS.size - 1)].brush()
     }
 
-    // ----- Built-in aerial videos: the manifests ship with the launcher, so
-    // there's no external dependency — pick one, rotate every 10 minutes. -----
-    val aerialWallpaper by produceState<String?>(
-        initialValue = null,
+    // ----- Built-in aerial videos: keep a shuffled queue so ExoPlayer can
+    // prepare the successor before the current clip reaches its last frame. -----
+    val aerialPlaylist by produceState<List<String>>(
+        initialValue = emptyList(),
         config.useBuiltinAerials, config.builtinSource, wallpaperVersion,
     ) {
         if (!config.useBuiltinAerials) {
-            value = null
+            value = emptyList()
             return@produceState
         }
-        // NOTE: value is intentionally NOT reset here — when the collection
-        // changes, the previous video keeps playing until the new one is
-        // picked, instead of flashing back to the preset background.
         val aerials = withContext(Dispatchers.IO) {
+            AerialVideoCache.warm(context.applicationContext)
             com.conreo.couchytv.data.BuiltinAerials.load(context, config.builtinSource)
         }
-        if (aerials.isEmpty()) return@produceState
-        // Pick one, different from the current so the uri always changes (which
-        // drives the fade out→in). The next is chosen when this clip ENDS
-        // (onEnded bumps wallpaperVersion, re-running this) — a continuous
-        // shuffle. A 10-min safety timer also advances very long clips.
-        val current = value
-        var next = aerials.random()
-        if (aerials.size > 1) while (next == current) next = aerials.random()
-        value = next
-        delay(10 * 60_000L)
-        wallpaperVersion++
+        if (aerials.isEmpty()) { value = emptyList(); return@produceState }
+        value = aerials.shuffled()
     }
+    var aerialPosition by remember(config.builtinSource) { mutableIntStateOf(0) }
+    LaunchedEffect(aerialPlaylist) { aerialPosition = 0 }
+    val aerialWallpaper = if (aerialPlaylist.isEmpty()) null
+        else aerialPlaylist[aerialPosition.mod(aerialPlaylist.size)]
+    val nextAerialWallpaper = if (aerialPlaylist.size < 2) null
+        else aerialPlaylist[(aerialPosition + 1).mod(aerialPlaylist.size)]
 
     // Aerials stream from a CDN. Right after the TV powers on, the network/DNS
     // isn't up yet, so the first clip fails to load — show the gradient instead
     // of a black screen, and retry: quickly once the network reconnects,
     // otherwise backing off, until a clip streams.
     var aerialError by remember { mutableStateOf(false) }
+    var aerialFailureStreak by remember { mutableIntStateOf(0) }
+    var aerialCoolingDown by remember { mutableStateOf(false) }
+    fun recordAerialFailure() {
+        aerialFailureStreak++
+        if (aerialFailureStreak >= 3) aerialCoolingDown = true else aerialError = true
+    }
+    fun recordAerialReady(firstFrameMs: Long) {
+        aerialFailureStreak = 0
+        android.util.Log.d("Couchy", "Aerial ready in ${firstFrameMs}ms; cache=${AerialVideoCache.bytesUsed()}")
+    }
+    // A deliberate source change or reconnect should recover immediately from an old failure.
+    LaunchedEffect(config.useBuiltinAerials, config.builtinSource, net.connected) {
+        aerialFailureStreak = 0
+        aerialCoolingDown = false
+        aerialError = false
+    }
+    LaunchedEffect(aerialCoolingDown) {
+        if (!aerialCoolingDown) return@LaunchedEffect
+        // Three consecutive failures mean the decoder or network is unhealthy.
+        // Rest on the lightweight gradient rather than retry-looping forever.
+        aerialError = false
+        delay(30 * 60_000L)
+        aerialFailureStreak = 0
+        aerialCoolingDown = false
+        wallpaperVersion++
+    }
     LaunchedEffect(aerialError, net.connected) {
         if (!aerialError) return@LaunchedEffect
         delay(if (net.connected) 2500L else 6000L)
@@ -572,10 +730,24 @@ fun LauncherApp(rescanTick: Int) {
         wallpaperVersion++
     }
 
+    var shelfFocus by remember { mutableStateOf<Pair<Any, String>?>(null) }
+    val reportShelfFocus = remember {
+        { token: Any, packageName: String, focused: Boolean ->
+            if (focused) shelfFocus = token to packageName
+            else if (shelfFocus?.first == token) shelfFocus = null
+        }
+    }
+    val shelfPackage = if (config.useTopShelf && movePkg == null && LocalWindowInfo.current.isWindowFocused) {
+        shelfFocus?.second?.takeUnless(parentalState::isLocked)
+    } else null
+
     val corner: Dp = CORNER_RADII[config.cornerRadius.coerceIn(0, CORNER_RADII.size - 1)]
     Box(Modifier.fillMaxSize()) {
     ScaledUi(uiScale) {
-    androidx.compose.runtime.CompositionLocalProvider(LocalCornerRadius provides corner) {
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalCornerRadius provides corner,
+        LocalTopShelfFocus provides reportShelfFocus.takeIf { config.useTopShelf },
+    ) {
     LiteTvTheme(accent = accent) {
         Box(
             Modifier
@@ -601,8 +773,8 @@ fun LauncherApp(rescanTick: Int) {
                         return@onPreviewKeyEvent true
                     }
                     when (event.key) {
-                        Key.DirectionLeft -> { moveHorizontal(-1); true }
-                        Key.DirectionRight -> { moveHorizontal(1); true }
+                        Key.DirectionLeft -> { moveHorizontal(-towardEnd); true }
+                        Key.DirectionRight -> { moveHorizontal(towardEnd); true }
                         Key.DirectionUp -> { moveVertical(-1); true }
                         Key.DirectionDown -> { moveVertical(1); true }
                         else -> true // swallow select/cancel key-downs too
@@ -610,23 +782,45 @@ fun LauncherApp(rescanTick: Int) {
                 }
         ) {
             // Wallpaper + readability scrim.
-            // Priority: built-in aerials > local video > photo > preset.
+            // Top Shelf fades over its gradient fallback. Other wallpaper modes are exclusive.
             val videoSpeed = VIDEO_SPEEDS[config.videoSpeed.coerceIn(0, VIDEO_SPEEDS.size - 1)]
             val aerial = aerialWallpaper
-            if (aerial != null && net.connected && !aerialError) {
+            if (config.useTopShelf) {
+                Box(Modifier.fillMaxSize().background(presetBrush))
+                TopShelfWallpaper(shelfPackage)
+            } else if (aerial != null && net.connected && !aerialError && !aerialCoolingDown) {
                 VideoWallpaper(
                     uri = aerial,
+                    nextUri = nextAerialWallpaper,
                     speed = videoSpeed,
                     loop = false, // play once, then shuffle to the next aerial
                     coverBrush = presetBrush,
+                    remoteCache = true,
                     // Stream failed — a dead clip, or (at power-on) the network
                     // isn't ready yet. Fall back to the gradient and retry via
                     // aerialError, instead of sitting on the gradient cover.
-                    onEnded = { wallpaperVersion++ },
-                    onError = { aerialError = true },
+                    onAdvanced = {
+                        aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size)
+                    },
+                    onEnded = {
+                        if (aerialPlaylist.size > 1) {
+                            aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size)
+                        } else {
+                            // A one-item source has no automatic transition to
+                            // drive a recomposition, so explicitly reload it.
+                            wallpaperVersion++
+                        }
+                    },
+                    onReady = ::recordAerialReady,
+                    onError = ::recordAerialFailure,
                 )
             } else if (config.useVideoWallpaper && config.videoUri.isNotEmpty()) {
-                VideoWallpaper(uri = config.videoUri, speed = videoSpeed, loop = true, coverBrush = presetBrush)
+                VideoWallpaper(
+                    uri = config.videoUri,
+                    speed = videoSpeed,
+                    loop = true,
+                    coverBrush = presetBrush,
+                )
             } else if (wallpaperSharp != null) {
                 Image(
                     bitmap = wallpaperSharp,
@@ -709,12 +903,20 @@ fun LauncherApp(rescanTick: Int) {
                         date = date,
                         showVpn = config.showVpnButton,
                         glass = config.statusBarGlass,
+                        weather = weather,
+                        weatherPlaceholder = if (needsGeoJs) R.string.weather_ip_enable
+                        else if (weatherStatus == null) null
+                        else if (weatherResult == null && weatherRequest != null) R.string.weather_loading_short
+                        else R.string.weather_unavailable_short,
+                        weatherDisplay = config.weatherDisplay,
                         onVpnClick = {
-                            if (config.vpnApp.isNotEmpty()) Actions.launchApp(context, config.vpnApp)
+                            if (config.vpnApp.isNotEmpty()) launchApp(config.vpnApp)
                             else Actions.openVpnSettings(context)
                         },
                         onNetworkClick = { Actions.openNetworkSettings(context) },
-                        onSettingsClick = { showSettings = true },
+                        onSettingsClick = { settingsStartAtWeather = false; settingsSuppressRelease = false; showSettings = true },
+                        onWeatherClick = { if (weather != null) onWeatherClick() else openWeatherSettings() },
+                        onWeatherLongClick = { openWeatherSettings(suppressRelease = true) },
                     )
                 }
                 when (config.layout) {
@@ -730,7 +932,7 @@ fun LauncherApp(rescanTick: Int) {
                         intro = introShown,
                         expanded = dockExpanded,
                         onExpandChange = { dockExpanded = it },
-                        onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
+                        onLaunch = { app -> if (movePkg == null) launchApp(app.pkg) },
                         onMenu = { app -> if (movePkg == null) menuFor = app },
                     )
                     else -> {
@@ -834,14 +1036,14 @@ fun LauncherApp(rescanTick: Int) {
                                     GridSection(
                                         catApps, config, accent, movePkg, moveFocus,
                                         cardWidth, gap, introShown,
-                                        onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
+                                        onLaunch = { app -> if (movePkg == null) launchApp(app.pkg) },
                                         onMenu = { app -> if (movePkg == null) menuFor = app },
                                     )
                                 } else {
                                     CarouselSection(
                                         catApps, config, accent, movePkg, moveFocus,
                                         cardWidth, gap,
-                                        onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
+                                        onLaunch = { app -> if (movePkg == null) launchApp(app.pkg) },
                                         onMenu = { app -> if (movePkg == null) menuFor = app },
                                     )
                                 }
@@ -859,7 +1061,7 @@ fun LauncherApp(rescanTick: Int) {
                     app = app,
                     isHidden = app.pkg in config.hidden,
                     onDismiss = { menuFor = null },
-                    onOpen = { menuFor = null; Actions.launchApp(context, app.pkg) },
+                    onOpen = { menuFor = null; launchApp(app.pkg) },
                     onMove = { menuFor = null; movePkg = app.pkg },
                     onToggleHide = {
                         menuFor = null
@@ -872,17 +1074,146 @@ fun LauncherApp(rescanTick: Int) {
                             }
                         }
                     },
-                    onAppInfo = { menuFor = null; Actions.openAppInfo(context, app.pkg) },
-                    onClose = { menuFor = null; Actions.close(context, app.pkg) },
-                    onUninstall = { menuFor = null; Actions.uninstall(context, app.pkg) },
+                    onCustomize = { menuFor = null; customizeFor = app },
+                    onAppInfo = { menuFor = null; appInfo(app.pkg) },
+                    onClose = { menuFor = null; closeApp(app.pkg) },
+                    onUninstall = { menuFor = null; uninstallApp(app.pkg) },
+                )
+            }
+
+            customizeFor?.let { app ->
+                AppCustomizeMenu(
+                    app = app,
+                    onRename = { customizeFor = null; renameFor = app },
+                    onPickIcon = {
+                        customizeFor = null
+                        iconSourceFor = app
+                    },
+                    onReset = {
+                        customizeFor = null
+                        scope.launch {
+                            withContext(Dispatchers.IO) { AppRepository.clearOverrideImages(context.applicationContext, app.pkg) }
+                            store.update { it.copy(labelOverrides = it.labelOverrides - app.pkg) }
+                            overrideVersion++
+                        }
+                    },
+                    lockAction = if (parentalState.enabled) {
+                        {
+                            customizeFor = null
+                            val lock = !parentalState.isLocked(app.pkg)
+                            val title = if (lock) R.string.parental_lock_app else R.string.parental_unlock_app
+                            pinPrompt = PinPrompt(title, verify = { parental.lock(it, app.pkg, lock) })
+                        }
+                    } else null,
+                    isLocked = parentalState.isLocked(app.pkg),
+                    onDismiss = { customizeFor = null },
+                )
+            }
+
+            // All icon sources land on the BANNER slot — this is a TV launcher,
+            // banners are the primary tile art, and a bare app icon stretched
+            // into a 16:9 tile looks wrong, so it's always the banner (an app's
+            // own banner verbatim, or an icon composited onto the same card
+            // IconPack.compositeOnCard uses for pack logos) that gets saved.
+            iconSourceFor?.let { app ->
+                IconSourceMenu(
+                    app = app,
+                    hasPacks = iconPacks.isNotEmpty(),
+                    onPhoto = {
+                        iconSourceFor = null
+                        bannerTargetPkg = app.pkg
+                        runCatching { bannerPicker.launch(arrayOf("image/*")) }
+                            .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
+                    },
+                    onFromApp = { iconSourceFor = null; appIconPickFor = app },
+                    onFromPack = { iconSourceFor = null; packIconPickFor = app },
+                    onFromLibrary = { iconSourceFor = null; libraryIconPickFor = app },
+                    onDismiss = { iconSourceFor = null },
+                )
+            }
+
+            appIconPickFor?.let { app ->
+                AppIconPickDialog(
+                    apps = apps.filter { it.pkg != app.pkg },
+                    onPick = { picked ->
+                        appIconPickFor = null
+                        val bitmap = picked.banner?.asAndroidBitmap()
+                            ?: picked.icon?.asAndroidBitmap()?.let { IconPack.compositeOnCard(it) }
+                        if (bitmap != null) {
+                            scope.launch {
+                                if (AppRepository.saveOverrideBannerBitmap(context.applicationContext, app.pkg, bitmap)) overrideVersion++
+                                else Actions.toast(context, context.getString(R.string.icon_save_failed))
+                            }
+                        }
+                    },
+                    onDismiss = { appIconPickFor = null },
+                )
+            }
+
+            packIconPickFor?.let { app ->
+                PackIconPickDialog(
+                    packs = iconPacks,
+                    apps = apps,
+                    onPick = { packPkg, drawableName ->
+                        packIconPickFor = null
+                        scope.launch {
+                            val bitmap = withContext(Dispatchers.IO) {
+                                IconPack.loadPackBanner(context.applicationContext, packPkg, drawableName)
+                            }
+                            if (bitmap != null && AppRepository.saveOverrideBannerBitmap(context.applicationContext, app.pkg, bitmap)) overrideVersion++
+                            else Actions.toast(context, context.getString(R.string.icon_save_failed))
+                        }
+                    },
+                    onDismiss = { packIconPickFor = null },
+                )
+            }
+
+            libraryIconPickFor?.let { app ->
+                LibraryIconPickDialog(
+                    onPick = { icon ->
+                        libraryIconPickFor = null
+                        scope.launch {
+                            val bitmap = withContext(Dispatchers.Default) {
+                                val glyph = icon.render(192)
+                                try { IconPack.compositeOnCard(glyph) }
+                                finally { glyph.recycle() }
+                            }
+                            try {
+                                if (AppRepository.saveOverrideBannerBitmap(context.applicationContext, app.pkg, bitmap)) overrideVersion++
+                                else Actions.toast(context, context.getString(R.string.icon_save_failed))
+                            } finally {
+                                bitmap.recycle()
+                            }
+                        }
+                    },
+                    onDismiss = { libraryIconPickFor = null },
+                )
+            }
+
+            renameFor?.let { app ->
+                TextEntryDialog(
+                    title = stringResource(R.string.menu_rename),
+                    initial = app.label,
+                    onSave = { newLabel ->
+                        scope.launch {
+                            store.update { it.copy(labelOverrides = it.labelOverrides + (app.pkg to newLabel.take(256))) }
+                        }
+                        renameFor = null
+                    },
+                    onDismiss = { renameFor = null },
                 )
             }
 
             if (showSettings) {
                 SettingsSheet(
                     config = config,
-                    apps = apps,
+                    apps = displayApps,
                     store = store,
+                    parental = parental,
+                    parentalState = parentalState,
+                    onLaunchApp = ::launchApp,
+                    onAppInfo = ::appInfo,
+                    onUninstallApp = ::uninstallApp,
                     onDismiss = { showSettings = false },
                     onWallpaperChanged = { wallpaperVersion++ },
                     // Runs on LauncherApp's scope, which survives the dialog
@@ -891,7 +1222,48 @@ fun LauncherApp(rescanTick: Int) {
                         showSettings = false
                         scope.launch { store.update { it.copy(setupDone = false) } }
                     },
+                    startAtWeather = settingsStartAtWeather,
+                    weatherStatus = weatherStatus,
+                    weatherLocationName = weatherResult?.ipLocationLabel,
+                    canRetryWeather = weatherRequest != null && weatherResult != null &&
+                        (weatherRequest.source != WEATHER_SRC_GEOIP ||
+                            weatherResult?.failure == WeatherFailure.ForecastUnavailable),
+                    onRetryWeather = { weatherRetryTick++ },
+                    suppressInitialRelease = settingsSuppressRelease,
                 )
+            }
+
+            closeFailure?.let { (pkg, message) ->
+                MenuDialog(
+                    title = stringResource(message),
+                    entries = buildList {
+                        if (message == R.string.adb_enable_required) {
+                            add(MenuEntry(stringResource(R.string.home_open_debugging), AppIcons.Gear) {
+                                closeFailure = null
+                                Actions.openDebuggingSettings(context)
+                            })
+                        }
+                        add(MenuEntry(stringResource(R.string.menu_app_info), AppIcons.Info) {
+                            closeFailure = null
+                            appInfo(pkg)
+                        })
+                        add(MenuEntry(stringResource(R.string.cancel), AppIcons.Stop) { closeFailure = null })
+                    },
+                    onDismiss = { closeFailure = null },
+                )
+            }
+            pinPrompt?.let { PinDialog(it) { pinPrompt = null } }
+
+            if (showForecast) {
+                weather?.let {
+                    WeatherForecastDialog(
+                        weather = it,
+                        view = config.weatherForecastView,
+                        iconStyle = config.weatherForecastIconStyle,
+                        h24 = config.h24,
+                        onDismiss = { showForecast = false },
+                    )
+                }
             }
         }
     }
@@ -1116,7 +1488,6 @@ private fun DockArea(
             animationSpec = tween(340, easing = FastOutSlowInEasing),
             label = "rowGap",
         )
-
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.weight(1f))
             // Glass panel + row-0 icons, DISSOCIATED so they animate apart: the
@@ -1174,8 +1545,6 @@ private fun DockArea(
                 slideOutVertically(tween(340, easing = FastOutSlowInEasing)) { dockRisePx },
             modifier = Modifier.fillMaxSize(),
         ) {
-            // Panel is gone; ALL icons over the blurred wallpaper, same column
-            // count and same centering as the dock. Up from row 0 returns.
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 24.dp),
@@ -1194,12 +1563,24 @@ private fun DockArea(
                                         accent = accent,
                                         cardWidth = cardWidth,
                                         showLabel = config.showAppLabels,
-                                        // No Up handler: Up from row 0 falls through to
-                                        // the status bar. The grid closes with Back.
-                                        modifier = when {
+                                        // At the top boundary, Up mirrors Back: the
+                                        // full library sinks into the dock instead of
+                                        // leaving focus stranded in the open grid.
+                                        modifier = (when {
                                             moving -> Modifier.focusRequester(moveFocus)
                                             r == targetRow && c == targetCol -> Modifier.focusRequester(gridFocus)
                                             else -> Modifier
+                                        }).onPreviewKeyEvent { event ->
+                                            if (
+                                                r == 0 && movePkg == null &&
+                                                event.type == KeyEventType.KeyDown &&
+                                                event.key == Key.DirectionUp
+                                            ) {
+                                                onExpandChange(false)
+                                                true
+                                            } else {
+                                                false
+                                            }
                                         },
                                         onLaunch = { onLaunch(app) },
                                         onLongPress = { onMenu(app) },
@@ -1324,25 +1705,9 @@ private fun PeekStrip(app: AppEntry, cardWidth: Dp, cardHeight: Dp, peekH: Dp) {
     }
 }
 
-/**
- * Shared OkHttp client (built once, lazily) that accepts any TLS cert — used
- * ONLY to stream decorative aerial video. Apple's sylvan.apple.com serves a
- * chain many Android-TV trust stores reject, so normal validation kills the
- * wallpaper. No credentials or private data ever go over this client, so
- * skipping validation is acceptable. One instance for the whole app lifetime —
- * OkHttpDataSource never closes it, so sharing is safe.
- */
-private val trustAllHttpClient: okhttp3.OkHttpClient by lazy {
-    val trustAll = object : javax.net.ssl.X509TrustManager {
-        override fun checkClientTrusted(c: Array<java.security.cert.X509Certificate>?, a: String?) {}
-        override fun checkServerTrusted(c: Array<java.security.cert.X509Certificate>?, a: String?) {}
-        override fun getAcceptedIssuers() = arrayOf<java.security.cert.X509Certificate>()
-    }
-    val ctx = javax.net.ssl.SSLContext.getInstance("TLS")
-    ctx.init(null, arrayOf<javax.net.ssl.TrustManager>(trustAll), java.security.SecureRandom())
+/** Process-wide, certificate- and hostname-validating client for public aerial video. */
+private val aerialHttpClient: okhttp3.OkHttpClient by lazy {
     okhttp3.OkHttpClient.Builder()
-        .sslSocketFactory(ctx.socketFactory, trustAll)
-        .hostnameVerifier { _, _ -> true }
         .connectTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
         .readTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
         .build()
@@ -1358,10 +1723,14 @@ private val trustAllHttpClient: okhttp3.OkHttpClient by lazy {
 @Composable
 private fun VideoWallpaper(
     uri: String,
+    nextUri: String? = null,
     speed: Float = 1f,
     loop: Boolean = true,
     coverBrush: Brush,
+    remoteCache: Boolean = false,
     onEnded: () -> Unit = {},
+    onAdvanced: () -> Unit = {},
+    onReady: (Long) -> Unit = {},
     onError: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -1372,27 +1741,30 @@ private fun VideoWallpaper(
     // clip fades out first, so rotations are a symmetric fade out → in instead
     // of a hard cut or a half-buffered pop.
     val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    val transitionVeil = remember { androidx.compose.animation.core.Animatable(0f) }
+    val playerScope = rememberCoroutineScope()
     var firstFrameGen by remember { mutableIntStateOf(0) }
 
     // The ExoPlayer — and its hardware video decoder, surface and buffers — is
-    // built when the launcher is visible (ON_START) and RELEASED the moment it's
-    // hidden (ON_STOP). Holding a scarce hardware codec for a wallpaper nobody's
-    // watching while another app is foreground is the launcher's biggest
-    // background cost and a needless kill risk; the grid stays warm from cache and
-    // the clip re-prepares in a few hundred ms on return. A released decoder also
-    // can't churn into a false stall while the SurfaceView has no surface.
+    // kept while Home is still visible (STARTED), including system overlays that
+    // only PAUSE it, and released once a full-screen app genuinely
+    // hides Home (STOPPED).
     var player by remember { mutableStateOf<androidx.media3.exoplayer.ExoPlayer?>(null) }
-    DisposableEffect(lifecycleOwner) {
+    var prepareStartedAt by remember { mutableStateOf(0L) }
+    val latestOnReady by androidx.compose.runtime.rememberUpdatedState(onReady)
+    val latestOnError by androidx.compose.runtime.rememberUpdatedState(onError)
+    val latestOnEnded by androidx.compose.runtime.rememberUpdatedState(onEnded)
+    val latestOnAdvanced by androidx.compose.runtime.rememberUpdatedState(onAdvanced)
+    val latestNextUri by androidx.compose.runtime.rememberUpdatedState(nextUri)
+    DisposableEffect(lifecycleOwner, remoteCache) {
         fun build(): androidx.media3.exoplayer.ExoPlayer {
             val renderers = androidx.media3.exoplayer.DefaultRenderersFactory(context)
                 .setEnableDecoderFallback(true) // fall back to SW decoder on odd clips
-            // Stream through a trust-all OkHttp client: Apple's sylvan.apple.com
-            // serves a cert chain many TV trust stores can't validate ("Trust
-            // anchor not found"), which fails the TLS handshake → the aerial never
-            // loads (black). Scoped to the wallpaper player only; it fetches
-            // nothing but decorative public video, so there's no data to protect.
-            val http = androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(trustAllHttpClient)
-            val dataSource = androidx.media3.datasource.DefaultDataSource.Factory(context, http)
+            // A failed certificate check falls back to the gradient; never bypass TLS validation.
+            val http = androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(aerialHttpClient)
+            val dataSource: androidx.media3.datasource.DataSource.Factory =
+                if (remoteCache) AerialVideoCache.dataSourceFactory(http)
+                else androidx.media3.datasource.DefaultDataSource.Factory(context, http)
             val sourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSource)
             return androidx.media3.exoplayer.ExoPlayer.Builder(context)
                 .setRenderersFactory(renderers)
@@ -1427,8 +1799,8 @@ private fun VideoWallpaper(
                 else -> {}
             }
         }
-        // Already visible when we enter composition (first launch, config change) →
-        // build now instead of waiting for the next ON_START.
+        // Already visible when we enter composition (first launch, config
+        // change) → build now instead of waiting for the next ON_START.
         if (player == null &&
             lifecycleOwner.lifecycle.currentState
                 .isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)
@@ -1451,14 +1823,38 @@ private fun VideoWallpaper(
     DisposableEffect(player) {
         val p = player ?: return@DisposableEffect onDispose { }
         val listener = object : androidx.media3.common.Player.Listener {
-            override fun onRenderedFirstFrame() { firstFrameGen++ }
+            override fun onRenderedFirstFrame() {
+                firstFrameGen++
+                latestOnReady(
+                    (android.os.SystemClock.elapsedRealtime() - prepareStartedAt).coerceAtLeast(0L)
+                )
+            }
             override fun onPlaybackStateChanged(state: Int) {
-                // Clip finished (loop off) → advance to the next aerial.
-                if (state == androidx.media3.common.Player.STATE_ENDED) onEnded()
+                // Fallback for a one-item queue or an exhausted source list.
+                if (state == androidx.media3.common.Player.STATE_ENDED) {
+                    latestOnEnded()
+                    if (latestNextUri == null) {
+                        p.seekToDefaultPosition()
+                        p.prepare()
+                        p.playWhenReady = true
+                    }
+                }
+            }
+            override fun onMediaItemTransition(
+                mediaItem: androidx.media3.common.MediaItem?,
+                reason: Int,
+            ) {
+                if (reason != androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) return
+                prepareStartedAt = android.os.SystemClock.elapsedRealtime()
+                latestOnAdvanced()
+                playerScope.launch {
+                    delay(70L)
+                    transitionVeil.animateTo(0f, tween(850, easing = FastOutSlowInEasing))
+                }
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 android.util.Log.w("LiteTV", "wallpaper play error ${error.errorCodeName}: $uri")
-                onError()
+                latestOnError()
             }
         }
         p.addListener(listener)
@@ -1466,28 +1862,58 @@ private fun VideoWallpaper(
     }
     // Load (or reload, after a rebuild on return) the current clip. Keyed on the
     // player too, so coming back from the background re-prepares on the fresh one.
-    LaunchedEffect(player, uri) {
+    LaunchedEffect(player, uri, nextUri) {
         val p = player ?: return@LaunchedEffect
-        // Fade the current clip out before swapping (skipped on the first load, or
-        // right after a rebuild, when the cover is already up).
+        val playingUri = p.currentMediaItem?.localConfiguration?.uri?.toString()
+        if (playingUri == uri && p.mediaItemCount > 0) {
+            // The queued item is already playing. Keep its decoded frame, discard
+            // playlist history, and append exactly one fresh successor.
+            val currentIndex = p.currentMediaItemIndex
+            if (currentIndex > 0) p.removeMediaItems(0, currentIndex)
+            if (p.mediaItemCount > 1) p.removeMediaItems(1, p.mediaItemCount)
+            nextUri?.let { p.addMediaItem(androidx.media3.common.MediaItem.fromUri(it)) }
+            return@LaunchedEffect
+        }
+        // First load or a genuine source change: cover until a frame is decoded.
         if (alpha.value > 0f) alpha.animateTo(0f, tween(450))
+        transitionVeil.snapTo(0f)
         val genBefore = firstFrameGen
         runCatching {
-            p.setMediaItem(androidx.media3.common.MediaItem.fromUri(uri))
+            val queue = buildList {
+                add(androidx.media3.common.MediaItem.fromUri(uri))
+                nextUri?.let { add(androidx.media3.common.MediaItem.fromUri(it)) }
+            }
+            p.setMediaItems(queue)
+            prepareStartedAt = android.os.SystemClock.elapsedRealtime()
             p.prepare()
         }
-        // Stall watchdog: if no frame has rendered in 2.5s (a dead/unreachable
+        // Stall watchdog: if no frame has rendered in 20s (a dead/unreachable
         // stream), skip to the next clip instead of sitting on the cover. Cancelled
         // automatically when the uri (or player) changes.
-        delay(2_500L)
+        delay(20_000L)
         // Only a real stall counts. While the app isn't RESUMED the SurfaceView may
         // have no surface, so NO clip can render — tripping here would falsely flag
         // an error and drop to the gradient. Skip unless resumed.
         val resumed = lifecycleOwner.lifecycle.currentState
             .isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
         if (firstFrameGen == genBefore && resumed) {
-            android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 2.5s), skipping: $uri")
-            onError()
+            android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 20s), skipping: $uri")
+            latestOnError()
+        }
+    }
+    // The successor is already queued. Near the cut, pass through a shallow
+    // black veil and reveal the next decoded frame; the static preset never
+    // appears between two playable aerials.
+    LaunchedEffect(player, nextUri, loop) {
+        val p = player ?: return@LaunchedEffect
+        if (loop || nextUri == null) return@LaunchedEffect
+        while (true) {
+            val duration = p.duration
+            val remaining = duration - p.currentPosition
+            if (duration > 0L && remaining in 1L..1_150L && transitionVeil.value < 0.05f) {
+                transitionVeil.animateTo(0.82f, tween(850, easing = FastOutSlowInEasing))
+            }
+            delay(180L)
         }
     }
     // The new clip's first frame is on screen → fade it in slowly.
@@ -1516,17 +1942,22 @@ private fun VideoWallpaper(
                 .graphicsLayer { this.alpha = 1f - alpha.value }
                 .background(coverBrush)
         )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer { this.alpha = transitionVeil.value }
+                .background(Color.Black)
+        )
     }
 }
 
-/** Sober startup screen: dark backdrop + a minimal spinning arc, nothing else. */
+/** Sober startup screen: dark backdrop + the launcher mark, nothing else. */
 @Composable
 private fun LoadingScreen() {
     Box(
         Modifier.fillMaxSize().background(Color(0xFF101216)),
         contentAlignment = Alignment.Center,
     ) {
-        // The couch logo, gently breathing, instead of a generic spinner.
         val transition = rememberInfiniteTransition(label = "load")
         val scale by transition.animateFloat(
             initialValue = 0.9f,

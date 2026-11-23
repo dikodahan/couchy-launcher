@@ -31,10 +31,11 @@ android {
 
     defaultConfig {
         applicationId = "com.conreo.couchytv"
-        minSdk = 21
+        minSdk = 28
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.0.6"
+        versionCode = 8
+        versionName = "1.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Telegram client (api_id + api_hash from https://my.telegram.org) for
         // optional Saved-Messages backup. Empty = Cloud options toast "not configured".
@@ -93,18 +94,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    bundle { language { enableSplit = false } }
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-    packaging {
-        jniLibs {
-            // API 21 TVs: extract .so so TDLib's JNI loads reliably.
-            useLegacyPackaging = true
-        }
     }
     sourceSets {
         getByName("main") {
@@ -113,7 +106,14 @@ android {
     }
 }
 
+kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
+
 dependencies {
+    // Media3's transitive Guava version predates the native-deserialization allocation fix.
+    constraints { implementation("com.google.guava:guava:33.8.0-android") }
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
     implementation(platform("androidx.compose:compose-bom:2024.09.03"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")
@@ -131,21 +131,20 @@ dependencies {
     // startup + scroll paths are AOT-compiled on first run instead of JIT'd —
     // the big cold-start "screen shows but not smooth yet" win.
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     // Video wallpaper playback — plays Apple .mov aerials that MediaPlayer can't
     implementation("androidx.media3:media3-exoplayer:1.4.1")
-    // OkHttp data source: lets us stream aerials through a trust-all TLS client
-    // so Apple's sylvan.apple.com (cert chain many TV trust stores reject) works.
+    // Public aerial streaming uses normal certificate and hostname validation.
     implementation("androidx.media3:media3-datasource-okhttp:1.4.1")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.1")
     // QR encoding for Telegram device-link on the TV (no camera on the box).
-    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:core:3.5.4")
     // Reach ActivityManager.forceStopPackage / PackageManager.deleteApplicationCacheFiles
     // (hidden on API 28+). Apache-2.0; F-Droid-safe. Permissions still required.
-    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1")
 }
 
-// TDLib natives only (the published AAR needs Kotlin 2.3 + compileSdk 36).
+// Native-only TDLib 1.8.69 / OpenSSL 3.5.9. The wrapper is alpha; its Kotlin/API-36 classes are not packaged.
+// Android 9/API 28 is the launcher minimum and also covers the native API-24 requirement.
 // We vendor a matching JNI shim in io.xbot.tdlib and unpack the .so files here.
 val tdlibAar by configurations.creating {
     isCanBeConsumed = false
@@ -154,7 +153,7 @@ val tdlibAar by configurations.creating {
 }
 
 dependencies {
-    tdlibAar("io.github.xephosbot:tdlib-kmp-android:1.8.62")
+    tdlibAar("io.github.xephosbot:tdlib-kmp-android:1.8.69-1.0.0-alpha03")
 }
 
 val extractTdlibJni by tasks.registering {
@@ -175,3 +174,26 @@ val extractTdlibJni by tasks.registering {
 }
 
 tasks.named("preBuild").configure { dependsOn(extractTdlibJni) }
+
+// Keep transitive versions reproducible; update deliberately with --write-locks.
+dependencyLocking { lockAllConfigurations() }
+
+// AGP creates isolated host-side UTP configurations; root buildscript patches do not reach them.
+configurations.configureEach {
+    if (name.startsWith("_internal-unified-test-platform-")) {
+        resolutionStrategy.eachDependency {
+            val patched = when (requested.group) {
+                "io.netty" -> "4.1.137.Final"
+                "com.google.testing.platform" -> "0.0.9-alpha04"
+                else -> when ("${requested.group}:${requested.name}") {
+                    "com.google.guava:guava" -> "33.8.0-jre"
+                    "com.google.protobuf:protobuf-java", "com.google.protobuf:protobuf-java-util",
+                    "com.google.protobuf:protobuf-kotlin", "com.google.protobuf:protobuf-kotlin-lite" -> "4.36.2"
+                    "commons-io:commons-io" -> "2.20.0"
+                    else -> null
+                }
+            }
+            if (patched != null) useVersion(patched)
+        }
+    }
+}
