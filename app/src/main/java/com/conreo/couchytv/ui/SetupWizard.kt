@@ -2,7 +2,6 @@ package com.conreo.couchytv.ui
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,29 +9,24 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -40,21 +34,21 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Button
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.conreo.couchytv.Actions
 import com.conreo.couchytv.R
+import com.conreo.couchytv.data.LauncherConfig
 
-/**
- * First-launch wizard. Detects the device type and guides the user to set
- * Couchy as the default home — including certified Google TV devices, where
- * the system UI does not allow changing the home app and ADB is required.
- * [onVpnChosen] receives the picked VPN package, or null to hide the VPN icon.
- */
 @Composable
-fun SetupWizard(onDone: () -> Unit, onVpnChosen: (String?) -> Unit) {
+fun SetupWizard(
+    config: LauncherConfig,
+    saving: Boolean,
+    onDone: (pressHome: Boolean, vpnPackage: String?, useIpWeather: Boolean?) -> Unit,
+) {
     val context = LocalContext.current
     var step by rememberSaveable { mutableIntStateOf(0) }
-    val isDefault = defaultHomePackage(context) == context.packageName
-    BackHandler(enabled = step > 0) { step-- }
+    var vpnPackage by rememberSaveable { mutableStateOf(config.vpnApp.takeIf { config.showVpnButton }) }
+    var useIpWeather by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    val scroll = key(step) { rememberScrollState() }
+    BackHandler(enabled = step == 1) { step = 0 }
 
     Box(
         Modifier
@@ -66,7 +60,7 @@ fun SetupWizard(onDone: () -> Unit, onVpnChosen: (String?) -> Unit) {
             Modifier
                 .width(680.dp)
                 .padding(horizontal = 36.dp, vertical = 24.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -88,43 +82,55 @@ fun SetupWizard(onDone: () -> Unit, onVpnChosen: (String?) -> Unit) {
             }
             when (step) {
                 0 -> {
-                    Title(stringResource(R.string.wizard_welcome_title))
-                    Body(stringResource(R.string.wizard_welcome_body))
-                    Body(stringResource(R.string.wizard_privacy_body))
-                    NavRow(nextLabel = stringResource(R.string.next)) { step = 1 }
-                }
-                1 -> {
-                    Title(stringResource(R.string.wizard_home_title))
-                    HomeLauncherControls(wizardContinue = { step = 2 })
-                }
-                2 -> {
                     Title(stringResource(R.string.wizard_vpn_title))
                     Body(stringResource(R.string.wizard_vpn_body))
-                    val vpns = remember { vpnApps(context) }
+                    val vpns = remember(context) { vpnApps(context) }
                     if (vpns.isEmpty()) {
                         Body(stringResource(R.string.wizard_vpn_none))
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             vpns.forEach { (pkg, label) ->
-                                Button(onClick = { onVpnChosen(pkg); step = 3 }) { Text(label) }
+                                Button(onClick = {
+                                    vpnPackage = pkg
+                                    step = 1
+                                }) { Text(label) }
                             }
                         }
                     }
+                    NavRow(nextLabel = stringResource(R.string.wizard_vpn_skip)) {
+                        vpnPackage = null
+                        step = 1
+                    }
+                }
+                1 -> {
+                    Title(stringResource(R.string.item_weather))
+                    Body(stringResource(R.string.weather_hint))
+                    Body(stringResource(R.string.weather_geoip_notice))
+                    Button(onClick = {
+                        useIpWeather = true
+                        step = 2
+                    }) { Text(stringResource(R.string.weather_ip_enable)) }
+                    if (config.weatherEnabled) {
+                        Button(onClick = {
+                            useIpWeather = false
+                            step = 2
+                        }) { Text(stringResource(R.string.off)) }
+                    }
                     NavRow(
-                        backAction = { step = 1 },
-                        nextLabel = stringResource(R.string.wizard_vpn_skip),
-                    ) { onVpnChosen(null); step = 3 }
+                        backAction = { step = 0 },
+                        nextLabel = stringResource(if (config.weatherEnabled) R.string.next else R.string.off),
+                    ) {
+                        useIpWeather = null
+                        step = 2
+                    }
                 }
                 else -> {
-                    Title(stringResource(R.string.wizard_done_title))
-                    Body(
-                        stringResource(R.string.wizard_tips) +
-                            if (!isDefault) "\n\n" + stringResource(R.string.wizard_rerun_note) else ""
+                    Title(stringResource(R.string.wizard_home_title))
+                    HomeLauncherControls(
+                        wizardBack = { step = 1 },
+                        wizardSaving = saving,
+                        onWizardDone = { pressHome -> onDone(pressHome, vpnPackage, useIpWeather) },
                     )
-                    NavRow(
-                        backAction = { step = 2 },
-                        nextLabel = stringResource(R.string.wizard_start),
-                    ) { onDone() }
                 }
             }
         }
@@ -155,11 +161,7 @@ private fun NavRow(
 ) {
     // Focus the primary (next) button on entry so every step opens with a
     // button selected and the D-pad ready.
-    val nextFocus = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        delay(80)
-        runCatching { nextFocus.requestFocus() }
-    }
+    val nextFocus = initialFocus()
     Row(
         Modifier.padding(top = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -174,13 +176,6 @@ private fun NavRow(
 }
 
 /* ------------------------------ helpers ------------------------------ */
-
-fun defaultHomePackage(context: Context): String? {
-    val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-    return context.packageManager
-        .resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
-        ?.activityInfo?.packageName
-}
 
 /** Installed VPN apps = anything implementing android.net.VpnService. */
 private fun vpnApps(context: Context): List<Pair<String, String>> {

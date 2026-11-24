@@ -55,6 +55,8 @@ data class LauncherConfig(
     val h24: Boolean = true,
     val showHidden: Boolean = false,
     val setupDone: Boolean = false,
+    val recommendedAppsEnabled: Boolean = false,
+    val recommendedAppsUrl: String = "",
     // ----- status bar -----
     val showStatusBar: Boolean = true,
     /** package of the app the VPN icon opens; empty = system VPN settings */

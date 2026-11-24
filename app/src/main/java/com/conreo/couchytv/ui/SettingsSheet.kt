@@ -59,6 +59,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDirection
+import com.conreo.couchytv.BuildConfig
+import com.conreo.couchytv.data.RecommendedApp
+import com.conreo.couchytv.data.RecommendedApps
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -104,7 +109,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 
-private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Weather, Apps, Categories, IconPack, Parental, Launcher, About }
+private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Weather, Apps, RecommendedApps, Categories, IconPack, Parental, Launcher, About }
 
 /**
  * Settings panel built entirely from focusable rows and buttons — every
@@ -124,6 +129,7 @@ internal fun SettingsSheet(
     onUninstallApp: (String) -> Unit,
     onWallpaperChanged: () -> Unit,
     onRerunWizard: () -> Unit,
+    updatePrompt: AppUpdatePrompt?,
     startAtWeather: Boolean = false,
     weatherStatus: Int? = null,
     weatherLocationName: String? = null,
@@ -138,6 +144,25 @@ internal fun SettingsSheet(
     val scope = rememberCoroutineScope()
     var screen by remember { mutableStateOf(if (startAtWeather) SettingsScreen.Weather else SettingsScreen.Main) }
     var released by remember { mutableStateOf(!suppressInitialRelease) }
+    val catalogUrl = config.recommendedAppsUrl.takeIf {
+        BuildConfig.GITHUB_UPDATES && !BuildConfig.DEBUG && config.recommendedAppsEnabled && it.isNotBlank()
+    }
+    val verifiedCatalog by produceState<Pair<String, List<RecommendedApp>>?>(null, catalogUrl) {
+        if (catalogUrl == null) {
+            value = null
+            return@produceState
+        }
+        val repository = RecommendedApps(context, catalogUrl)
+        val apps = repository.cached() ?: try {
+            repository.refresh()
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            null
+        }
+        value = apps?.let { catalogUrl to it }
+    }
+    val configuredApps = verifiedCatalog?.takeIf { it.first == catalogUrl }
 
     fun selectTopShelf() {
         scope.launch {
@@ -270,11 +295,15 @@ internal fun SettingsSheet(
                         onStatusBar = { screen = SettingsScreen.StatusBar },
                         onWeather = { screen = SettingsScreen.Weather },
                         onApps = { screen = SettingsScreen.Apps },
+                        onRecommendedApps = if (configuredApps != null) {
+                            { screen = SettingsScreen.RecommendedApps }
+                        } else null,
                         onCategories = { screen = SettingsScreen.Categories },
                         onIconPack = { screen = SettingsScreen.IconPack },
                         onParental = { screen = SettingsScreen.Parental },
                         onLauncher = { screen = SettingsScreen.Launcher },
                         onAndroidSettings = { Actions.openSystemSettings(context) },
+                        updatePrompt = updatePrompt,
                         onAbout = { screen = SettingsScreen.About },
                     )
                     SettingsScreen.Wallpaper -> WallpaperScreen(
@@ -354,6 +383,9 @@ internal fun SettingsSheet(
                         onBack = { screen = SettingsScreen.Main },
                     )
                     SettingsScreen.Parental -> ParentalSettings(parentalState, parental)
+                    SettingsScreen.RecommendedApps -> configuredApps?.let { (url, apps) ->
+                        androidx.compose.runtime.key(url) { RecommendedAppsScreen(url, apps) }
+                    }
                     SettingsScreen.Apps -> AppsScreen(
                         apps = apps,
                         config = config,
@@ -401,11 +433,13 @@ private fun MainScreen(
     onStatusBar: () -> Unit,
     onWeather: () -> Unit,
     onApps: () -> Unit,
+    onRecommendedApps: (() -> Unit)?,
     onCategories: () -> Unit,
     onIconPack: () -> Unit,
     onParental: () -> Unit,
     onLauncher: () -> Unit,
     onAndroidSettings: () -> Unit,
+    updatePrompt: AppUpdatePrompt?,
     onAbout: () -> Unit,
 ) {
     Column(
@@ -428,6 +462,13 @@ private fun MainScreen(
             leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
             modifier = Modifier.focusRequester(f),
         )
+        if (onRecommendedApps != null) {
+            SettingsItem(
+                onClick = onRecommendedApps,
+                headlineContent = { Text(stringResource(R.string.recommended_title)) },
+                leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
+            )
+        }
         SettingsItem(
             selected = false, onClick = onCategories,
             headlineContent = { Text(stringResource(R.string.item_sections)) },
@@ -488,6 +529,17 @@ private fun MainScreen(
             supportingContent = { Text(stringResource(R.string.item_android_settings_sub)) },
             leadingContent = { Icon(AppIcons.Gear, contentDescription = null) },
         )
+        if (updatePrompt != null) {
+            val status = updatePrompt.checkStatus
+            SettingsItem(
+                onClick = updatePrompt::checkNow,
+                headlineContent = { Text(stringResource(R.string.update_check_now)) },
+                supportingContent = status?.let { state ->
+                    { Text(stringResource(state.message)) }
+                },
+                leadingContent = { Icon(AppIcons.Bell, contentDescription = null) },
+            )
+        }
         SettingsItem(
             selected = false, onClick = onAbout,
             headlineContent = { Text(stringResource(R.string.item_about)) },
@@ -876,7 +928,7 @@ private fun SectionAppsDialog(
 
 /* ------------------------------ launcher settings ------------------------------ */
 
-private enum class LauncherPane { Menu, Home, Language, Save, Load }
+private enum class LauncherPane { Menu, Home, Language, RecommendedApps, Save, Load }
 
 @Composable
 private fun LauncherSettingsSubscreen(
@@ -1010,6 +1062,7 @@ private fun LauncherSettingsSubscreen(
 
     when (pane) {
         LauncherPane.Home -> HomeLauncherScreen()
+        LauncherPane.RecommendedApps -> RecommendedAppsSettings(config, store)
         LauncherPane.Language -> LanguageScreen(
             config = config, store = store, onBack = { pane = LauncherPane.Menu },
         )
@@ -1062,6 +1115,13 @@ private fun LauncherSettingsSubscreen(
                 supportingContent = { Text(stringResource(R.string.item_language_sub)) },
                 leadingContent = { Icon(AppIcons.Language, contentDescription = null) },
             )
+            if (BuildConfig.GITHUB_UPDATES && !BuildConfig.DEBUG) {
+                SettingsItem(
+                    onClick = { pane = LauncherPane.RecommendedApps },
+                    headlineContent = { Text(stringResource(R.string.recommended_settings)) },
+                    leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
+                )
+            }
             SettingsItem(
                 selected = false,
                 onClick = { pane = LauncherPane.Save },
@@ -1788,6 +1848,71 @@ private fun CategoriesScreen(
     }
 }
 
+@Composable
+private fun RecommendedAppsSettings(config: LauncherConfig, store: ConfigStore) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var editUrl by remember { mutableStateOf(false) }
+    var checking by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<Int?>(null) }
+    val focus = initialFocus()
+
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.recommended_settings), style = MaterialTheme.typography.titleLarge)
+        SettingsItem(
+            onClick = {
+                if (config.recommendedAppsEnabled) {
+                    scope.launch { store.update { it.copy(recommendedAppsEnabled = false) } }
+                } else {
+                    error = null
+                    editUrl = true
+                }
+            },
+            modifier = Modifier.focusRequester(focus),
+            headlineContent = { Text(stringResource(R.string.recommended_settings)) },
+            trailingContent = { CheckMark(config.recommendedAppsEnabled) },
+        )
+        if (config.recommendedAppsEnabled) {
+            SettingsItem(
+                onClick = { error = null; editUrl = true },
+                headlineContent = { Text(stringResource(R.string.recommended_catalog_url)) },
+                supportingContent = { Text(config.recommendedAppsUrl, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+            )
+        }
+    }
+
+    if (editUrl) {
+        TextEntryDialog(
+            title = stringResource(R.string.recommended_catalog_url),
+            initial = config.recommendedAppsUrl,
+            onSave = { url ->
+                if (!checking) {
+                    checking = true
+                    error = null
+                    scope.launch {
+                        try {
+                            RecommendedApps(context, url).refresh()
+                            store.update { it.copy(recommendedAppsEnabled = true, recommendedAppsUrl = url) }
+                            editUrl = false
+                        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                            throw cancelled
+                        } catch (_: Exception) {
+                            error = R.string.recommended_catalog_invalid
+                        } finally {
+                            checking = false
+                        }
+                    }
+                }
+            },
+            onDismiss = { if (!checking) editUrl = false },
+            busy = checking,
+            status = if (checking) R.string.recommended_loading else error,
+            urlInput = true,
+        )
+    }
+}
+
 /** The ONLY place with a text field, so D-pad browsing never lands in an editor. */
 @Composable
 internal fun TextEntryDialog(
@@ -1797,11 +1922,14 @@ internal fun TextEntryDialog(
     onDismiss: () -> Unit,
     submitLabel: Int = R.string.save,
     allowEmpty: Boolean = false,
+    busy: Boolean = false,
+    status: Int? = null,
+    urlInput: Boolean = false,
 ) {
     var name by remember { mutableStateOf(initial) }
     fun submit() {
         val trimmed = name.trim()
-        if (allowEmpty || trimmed.isNotEmpty()) onSave(trimmed)
+        if (!busy && (allowEmpty || trimmed.isNotEmpty())) onSave(trimmed)
     }
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -1821,18 +1949,27 @@ internal fun TextEntryDialog(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
-                        textStyle = TextStyle(color = Color.White, fontSize = 15.sp),
+                        enabled = !busy,
+                        textStyle = TextStyle(
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            textDirection = if (urlInput) TextDirection.Ltr else TextDirection.Unspecified,
+                        ),
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done,
+                            keyboardType = if (urlInput) KeyboardType.Uri else KeyboardType.Text,
+                        ),
                         keyboardActions = KeyboardActions(
                             onDone = { submit() }
                         ),
                         modifier = Modifier.fillMaxWidth().focusRequester(f),
                     )
                 }
+                if (status != null) Text(stringResource(status))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = ::submit) { Text(stringResource(submitLabel)) }
-                    Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                    Button(onClick = ::submit, enabled = !busy) { Text(stringResource(submitLabel)) }
+                    Button(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.cancel)) }
                 }
             }
         }

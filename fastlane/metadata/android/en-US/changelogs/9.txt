@@ -1,0 +1,1 @@
+Add a hosted Recommended apps catalog from Launcher settings. Couchy verifies the HTTPS link, including redirects, and includes the setting in backups. Check for app updates from Settings or reopen the prompt with the status-bar bell. First-run setup now asks about the Home launcher last.

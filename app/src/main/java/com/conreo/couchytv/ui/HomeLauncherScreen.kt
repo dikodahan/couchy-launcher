@@ -5,6 +5,7 @@ import android.content.Intent
 import java.io.IOException
 import java.net.ConnectException
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -56,7 +57,11 @@ internal fun HomeLauncherScreen() {
 
 /** Shared by first-run setup and Launcher settings; no network connection until a confirmed action. */
 @Composable
-internal fun HomeLauncherControls(wizardContinue: (() -> Unit)? = null) {
+internal fun HomeLauncherControls(
+    wizardBack: (() -> Unit)? = null,
+    wizardSaving: Boolean = false,
+    onWizardDone: ((pressHome: Boolean) -> Unit)? = null,
+) {
     val context = LocalContext.current
     val manager = remember { HomeLauncherManager.get(context) }
     val scope = rememberCoroutineScope()
@@ -71,6 +76,13 @@ internal fun HomeLauncherControls(wizardContinue: (() -> Unit)? = null) {
     var chooseOther by remember { mutableStateOf(false) }
     var showHomeCheck by rememberSaveable { mutableStateOf(false) }
     var confirmRecovery by remember { mutableStateOf(false) }
+    BackHandler(enabled = wizardBack != null) {
+        if (!busy && !wizardSaving) wizardBack?.invoke()
+    }
+    fun couchyIsHome() {
+        if (onWizardDone != null) onWizardDone(true)
+        else showHomeCheck = true
+    }
     val logDocument = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         if (uri != null) scope.launch {
             val saved = HomeDiagnostics.writeDocument(context, uri)
@@ -104,7 +116,7 @@ internal fun HomeLauncherControls(wizardContinue: (() -> Unit)? = null) {
             status = manager.status()
             HomeDiagnostics.record(context, "Android Home role result=${result.resultCode}; active=${status?.currentPackage}")
             HomeDiagnostics.publishToDownloads(context)
-            if (status?.currentPackage == context.packageName) showHomeCheck = true
+            if (status?.currentPackage == context.packageName) couchyIsHome()
             else if (result.resultCode == Activity.RESULT_OK) message = context.getString(R.string.home_wizard_debug_needed)
         }
     }
@@ -120,7 +132,9 @@ internal fun HomeLauncherControls(wizardContinue: (() -> Unit)? = null) {
                 status = manager.status()
                 HomeDiagnostics.record(context, "Home action verified; active=${status?.currentPackage}; paused=${status?.pausedPackages}")
                 message = context.getString(R.string.home_change_done)
-                if (choice?.component?.packageName == context.packageName) showHomeCheck = true
+                if (choice?.component?.packageName == context.packageName &&
+                    status?.currentPackage == context.packageName
+                ) couchyIsHome()
             } catch (override: StockHomeStillActive) {
                 status = manager.status()
                 HomeDiagnostics.record(context, "Stock Home still active: ${override.activeHome.flattenToShortString()}")
@@ -163,26 +177,31 @@ internal fun HomeLauncherControls(wizardContinue: (() -> Unit)? = null) {
         Text(stringResource(R.string.home_current, bidi.unicodeWrap(currentLabel)), style = MaterialTheme.typography.bodyMedium, color = Color.White,
             modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp))
         val couchy = status?.choices?.firstOrNull { it.component.packageName == context.packageName }
-        if (wizardContinue != null) {
+        if (onWizardDone != null) {
             val keepFocus = initialFocus()
             Row(
                 Modifier.padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Button(
-                    onClick = wizardContinue,
-                    enabled = !busy,
+                    onClick = { onWizardDone(false) },
+                    enabled = !busy && !wizardSaving,
                     modifier = Modifier.focusRequester(keepFocus),
                 ) { Text(stringResource(R.string.home_keep_current)) }
                 Button(
                     onClick = {
-                        if (status?.currentPackage == context.packageName) showHomeCheck = true
+                        if (status?.currentPackage == context.packageName) couchyIsHome()
                         else if (couchy != null) change(choice = couchy, allowRoleFallback = true) {
                             manager.switchTo(couchy, pauseStock = false)
                         }
                     },
-                    enabled = !busy && couchy != null,
+                    enabled = !busy && !wizardSaving && couchy != null,
                 ) { Text(stringResource(R.string.home_use_couchy)) }
+            }
+            if (wizardBack != null) {
+                Button(onClick = wizardBack, enabled = !busy && !wizardSaving) {
+                    Text(stringResource(R.string.back))
+                }
             }
         } else {
             val first = initialFocus()
@@ -301,28 +320,7 @@ internal fun HomeLauncherControls(wizardContinue: (() -> Unit)? = null) {
             },
         )
     }
-    if (showHomeCheck) {
-        val finish = {
-            showHomeCheck = false
-            wizardContinue?.invoke()
-            Unit
-        }
-        Dialog(onDismissRequest = finish) {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-            ) {
-                Column(Modifier.widthIn(max = 440.dp).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(stringResource(R.string.home_press_home_title), style = MaterialTheme.typography.titleMedium)
-                    Text(stringResource(R.string.home_press_home_body), style = MaterialTheme.typography.bodyMedium)
-                    val focus = initialFocus()
-                    Button(onClick = finish, modifier = Modifier.focusRequester(focus)) {
-                        Text(stringResource(if (wizardContinue != null) R.string.next else R.string.done))
-                    }
-                }
-            }
-        }
-    }
+    if (showHomeCheck) PressHomeDialog { showHomeCheck = false }
     if (confirmRecovery) HomeChangeConfirmation(
         title = stringResource(R.string.home_restore_stock), body = stringResource(R.string.home_restore_stock_sub),
         onCancel = { confirmRecovery = false }, onConfirm = {
@@ -330,6 +328,25 @@ internal fun HomeLauncherControls(wizardContinue: (() -> Unit)? = null) {
             change { manager.restorePausedPackages() }
         },
     )
+}
+
+@Composable
+internal fun PressHomeDialog(onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+        ) {
+            Column(Modifier.widthIn(max = 440.dp).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(stringResource(R.string.home_press_home_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.home_press_home_body), style = MaterialTheme.typography.bodyMedium)
+                val focus = initialFocus()
+                Button(onClick = onDismiss, modifier = Modifier.focusRequester(focus)) {
+                    Text(stringResource(R.string.done))
+                }
+            }
+        }
+    }
 }
 
 /** The copy stays readable while focus highlights only the trailing control. */

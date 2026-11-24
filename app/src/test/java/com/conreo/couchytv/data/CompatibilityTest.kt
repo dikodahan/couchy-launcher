@@ -9,6 +9,7 @@ class CompatibilityTest {
         val config = ConfigBackup.decode(old)
         assertFalse(config.weatherEnabled); assertTrue(config.labelOverrides.isEmpty()); assertEquals("", config.iconPackPkg)
         assertTrue(config.setupDone); assertEquals(2, config.layout)
+        assertFalse(config.recommendedAppsEnabled); assertEquals("", config.recommendedAppsUrl)
     }
     @Test fun portableSettingsRoundTripThroughTheTelegramDocumentCodec() {
         val config = LauncherConfig(
@@ -30,6 +31,7 @@ class CompatibilityTest {
             weatherForecastView = WEATHER_FORECAST_DAILY, weatherForecastIconStyle = WEATHER_ICONS_ANIMATED,
             weatherApp = "test.weather", labelOverrides = mapOf("test.app" to "My TV"),
             iconPackPkg = "test.pack",
+            recommendedAppsEnabled = true, recommendedAppsUrl = "https://example.org/catalog.json",
         )
         assertEquals(config, ConfigBackup.read(ConfigBackup.encode(config).byteInputStream()))
     }

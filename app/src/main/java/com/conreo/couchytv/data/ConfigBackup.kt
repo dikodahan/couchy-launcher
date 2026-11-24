@@ -47,6 +47,8 @@ object ConfigBackup {
             require(config.categories.map { it.id }.distinct().size == config.categories.size)
             require(config.categories.all { it.id.isNotBlank() && it.name.isNotBlank() })
             require(config.labelOverrides.all { (pkg, label) -> pkg.isNotBlank() && label.isNotBlank() && label.length <= 256 })
+            require(config.recommendedAppsUrl.isEmpty() || isRecommendedAppsUrl(config.recommendedAppsUrl))
+            require(!config.recommendedAppsEnabled || config.recommendedAppsUrl.isNotEmpty())
             require(config.weatherLat.isFinite() && config.weatherLon.isFinite())
         }
     }

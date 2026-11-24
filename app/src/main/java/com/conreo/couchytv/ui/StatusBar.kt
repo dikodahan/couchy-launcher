@@ -1,6 +1,11 @@
 package com.conreo.couchytv.ui
 
 import android.os.SystemClock
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -79,6 +86,7 @@ fun StatusBar(
     onSettingsClick: () -> Unit,
     onWeatherClick: () -> Unit,
     onWeatherLongClick: () -> Unit,
+    onUpdateClick: (() -> Unit)? = null,
 ) {
     // Optional glass panel behind the icon cluster — same look as the dock
     // panel, corners follow the roundness setting.
@@ -129,6 +137,7 @@ fun StatusBar(
             contentDescription = stringResource(R.string.cd_settings),
             onClick = onSettingsClick,
         )
+        if (onUpdateClick != null) UpdateBell(onUpdateClick)
         if (date.isNotEmpty()) {
             Text(
                 text = date,
@@ -231,6 +240,34 @@ private fun StatusIcon(
         scale = ClickableSurfaceDefaults.scale(focusedScale = STATUS_FOCUS_SCALE),
     ) {
         StatusGlyph(icon, contentDescription, active)
+    }
+}
+
+@Composable
+private fun UpdateBell(onClick: () -> Unit) {
+    val swing = rememberInfiniteTransition(label = "updateBell").animateFloat(
+        initialValue = -15f,
+        targetValue = 15f,
+        animationSpec = infiniteRepeatable(tween(750), RepeatMode.Reverse),
+        label = "bellRotation",
+    )
+    Surface(
+        onClick = onClick,
+        shape = ClickableSurfaceDefaults.shape(CircleShape),
+        colors = statusControlColors(),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = STATUS_FOCUS_SCALE),
+    ) {
+        Box(Modifier.size(STATUS_SLOT_SIZE), contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = AppIcons.Bell,
+                contentDescription = stringResource(R.string.update_bell),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp).graphicsLayer {
+                    rotationZ = swing.value
+                    transformOrigin = TransformOrigin(0.5f, 0.25f)
+                },
+            )
+        }
     }
 }
 

@@ -33,6 +33,8 @@ adb shell monkey -p com.conreo.couchytv -c android.intent.category.LAUNCHER 1
 
 (Without `-PlocalSign` the release is **unsigned**, which is what F-Droid builds and signs itself.)
 
+Build the GitHub distribution with `./gradlew assembleRelease -PgithubUpdates` and the release signing environment. That option includes the installation permission and the updater. Ordinary Gradle builds omit both. A Google Play distribution uses Google Play’s own update mechanism.
+
 For public GitHub releases, use the same Android release signing key across versions and upload the APK as `Couchy-Launcher.apk`. This stable name keeps the README’s latest-download URL working. The tag workflow publishes when the signing secrets are configured. Otherwise, build a signed release locally and upload the APK and its SHA-256 checksum to the tagged release.
 
 **Telegram Cloud backup** is optional and, like the rest of this version, requires Android 9/API 28 or newer. `api_id` / `api_hash` from [my.telegram.org](https://my.telegram.org) identify *this app* to Telegram (not a user's login). TV users only scan the QR. Set them in gitignored `local.properties` (`telegram.api.id` / `telegram.api.hash`) or env `TELEGRAM_API_ID` / `TELEGRAM_API_HASH`. GitHub release builds need the same values as repository secrets, or Cloud options toast "not configured".

@@ -22,6 +22,8 @@ class MainActivity : ComponentActivity() {
     var rescanTick by mutableIntStateOf(0)
         private set
 
+    private var homeIntentTick by mutableIntStateOf(0)
+
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val pkg = intent.data?.schemeSpecificPart
@@ -73,7 +75,15 @@ class MainActivity : ComponentActivity() {
         // language differs from the system language.
         window.decorView.layoutDirection = resources.configuration.layoutDirection
         setContent {
-            LauncherApp(rescanTick)
+            LauncherApp(rescanTick, homeIntentTick)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
+            homeIntentTick++
         }
     }
 

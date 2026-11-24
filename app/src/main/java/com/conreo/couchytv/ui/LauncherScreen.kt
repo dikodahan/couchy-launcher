@@ -110,6 +110,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -221,7 +222,7 @@ private fun android.content.Context.findActivity(): android.app.Activity? {
     androidx.compose.ui.ExperimentalComposeUiApi::class,
 )
 @Composable
-fun LauncherApp(rescanTick: Int) {
+fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     val context = LocalContext.current
     val store = remember(context) { ConfigStore(context) }
     val scope = rememberCoroutineScope()
@@ -278,19 +279,42 @@ fun LauncherApp(rescanTick: Int) {
         )
     }
 
+    var savingSetup by remember { mutableStateOf(false) }
+    var pressHomeAtTick by remember { mutableStateOf<Int?>(null) }
+    val showSetupHomePrompt = pressHomeAtTick == homeIntentTick
+    LaunchedEffect(homeIntentTick) {
+        if (pressHomeAtTick != homeIntentTick) pressHomeAtTick = null
+    }
     if (!config.setupDone) {
         ScaledUi(uiScale) {
             LiteTvTheme(accent = ACCENTS[0]) {
                 SetupWizard(
-                    onDone = {
-                        scope.launch { store.update { it.copy(setupDone = true) } }
-                    },
-                    onVpnChosen = { pkg ->
-                        scope.launch {
-                            store.update {
-                                // Picked an app → VPN button opens it; skipped → hide it.
-                                if (pkg == null) it.copy(showVpnButton = false, vpnApp = "")
-                                else it.copy(showVpnButton = true, vpnApp = pkg)
+                    config = config,
+                    saving = savingSetup,
+                    onDone = { pressHome, vpnPackage, useIpWeather ->
+                        if (!savingSetup) {
+                            savingSetup = true
+                            scope.launch {
+                                try {
+                                    store.update { current ->
+                                        current.copy(
+                                            setupDone = true,
+                                            showVpnButton = vpnPackage != null,
+                                            vpnApp = vpnPackage.orEmpty(),
+                                            weatherEnabled = useIpWeather ?: current.weatherEnabled,
+                                            weatherLocationSource = if (useIpWeather == true)
+                                                WEATHER_SRC_GEOIP else current.weatherLocationSource,
+                                            weatherGeoJsEnabled = useIpWeather ?: current.weatherGeoJsEnabled,
+                                        )
+                                    }
+                                    // Android can bring this activity to the front via Home.
+                                    // Commit setup before asking the user to press that button.
+                                    if (pressHome) pressHomeAtTick = homeIntentTick
+                                } catch (_: IOException) {
+                                    Actions.toast(context, context.getString(R.string.toast_config_save_failed))
+                                } finally {
+                                    savingSetup = false
+                                }
                             }
                         }
                     },
@@ -467,6 +491,13 @@ fun LauncherApp(rescanTick: Int) {
     var appIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
     var packIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
     var libraryIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
+    val updatePrompt = rememberAppUpdatePrompt(
+        connected = net.connected,
+        homeIdle = !showSetupHomePrompt && !showSettings && !showForecast && movePkg == null && menuFor == null &&
+            customizeFor == null && renameFor == null && pinPrompt == null &&
+            closeFailure == null && iconSourceFor == null && appIconPickFor == null &&
+            packIconPickFor == null && libraryIconPickFor == null,
+    )
     val iconPacks by produceState(initialValue = emptyList<com.conreo.couchytv.data.IconPackInfo>(), apps, resumeTick) {
         value = withContext(Dispatchers.IO) { IconPack.installedIconPacks(context.applicationContext) }
     }
@@ -881,7 +912,7 @@ fun LauncherApp(rescanTick: Int) {
                 // focusable: Up from the top row slides it back into view.
                 var statusBarFocused by remember { mutableStateOf(false) }
                 val statusBarHeight by animateDpAsState(
-                    targetValue = if (config.showStatusBar || statusBarFocused) 80.dp else 4.dp,
+                    targetValue = if (config.showStatusBar || statusBarFocused || updatePrompt?.available != null) 80.dp else 4.dp,
                     label = "statusBarHeight",
                 )
                 Box(
@@ -917,6 +948,7 @@ fun LauncherApp(rescanTick: Int) {
                         onSettingsClick = { settingsStartAtWeather = false; settingsSuppressRelease = false; showSettings = true },
                         onWeatherClick = { if (weather != null) onWeatherClick() else openWeatherSettings() },
                         onWeatherLongClick = { openWeatherSettings(suppressRelease = true) },
+                        onUpdateClick = updatePrompt?.takeIf { it.available != null }?.let { it::open },
                     )
                 }
                 when (config.layout) {
@@ -1222,6 +1254,7 @@ fun LauncherApp(rescanTick: Int) {
                         showSettings = false
                         scope.launch { store.update { it.copy(setupDone = false) } }
                     },
+                    updatePrompt = updatePrompt,
                     startAtWeather = settingsStartAtWeather,
                     weatherStatus = weatherStatus,
                     weatherLocationName = weatherResult?.ipLocationLabel,
@@ -1253,6 +1286,8 @@ fun LauncherApp(rescanTick: Int) {
                 )
             }
             pinPrompt?.let { PinDialog(it) { pinPrompt = null } }
+            updatePrompt?.let { AppUpdateDialog(it) }
+            if (showSetupHomePrompt) PressHomeDialog { pressHomeAtTick = null }
 
             if (showForecast) {
                 weather?.let {

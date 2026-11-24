@@ -25,6 +25,8 @@ fun oauthCredential(name: String, env: String): String {
 fun quotedBuildConfig(value: String): String =
     "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
+val githubUpdates = providers.gradleProperty("githubUpdates").isPresent
+
 android {
     namespace = "com.conreo.couchytv"
     compileSdk = 34
@@ -33,8 +35,9 @@ android {
         applicationId = "com.conreo.couchytv"
         minSdk = 28
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.1.0"
+        versionCode = 9
+        versionName = "1.1.1"
+        buildConfigField("boolean", "GITHUB_UPDATES", githubUpdates.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Telegram client (api_id + api_hash from https://my.telegram.org) for
@@ -63,6 +66,13 @@ android {
                 keyAlias = System.getenv("KEY_ALIAS")
                 keyPassword = System.getenv("KEY_PASSWORD")
             }
+        }
+    }
+
+    if (githubUpdates) {
+        sourceSets.getByName("release").apply {
+            manifest.srcFile("src/githubUpdates/AndroidManifest.xml")
+            res.srcDir("src/githubUpdates/res")
         }
     }
 
@@ -173,7 +183,9 @@ val extractTdlibJni by tasks.registering {
     }
 }
 
-tasks.named("preBuild").configure { dependsOn(extractTdlibJni) }
+tasks.named("preBuild").configure {
+    dependsOn(extractTdlibJni)
+}
 
 // Keep transitive versions reproducible; update deliberately with --write-locks.
 dependencyLocking { lockAllConfigurations() }

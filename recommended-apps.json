@@ -1,0 +1,13 @@
+[
+  {
+    "category": "Entertainment",
+    "name": "Example Video App",
+    "downloadUrl": "https://example.org/downloads/video-app.apk",
+    "iconUrl": "https://example.org/images/video-app.png"
+  },
+  {
+    "category": "Utilities",
+    "name": "Example TV Utility",
+    "downloadUrl": "https://example.org/downloads/tv-utility.apk"
+  }
+]

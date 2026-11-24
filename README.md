@@ -24,11 +24,11 @@ Thank you to **[conreo](https://github.com/conreo)** and all original Couchy con
 
 One screen, remote-driven, for 1080p and 4K TVs. Optional weather, aerial video and Telegram backup stay off until selected. Settings and custom artwork are stored locally.
 
-| Launcher Home with a custom icon | Offline icon library |
-| :---: | :---: |
-| <img src="docs/img/launcher-home.png" width="100%" alt="Couchy Home with the floating Dock and a custom satellite icon" /> | <img src="docs/img/library-picker.png" width="100%" alt="Choose from Library showing a scrollable grid of Material Symbols" /> |
-| Weather forecast with sample data | Parental controls |
-| <img src="docs/img/weather-forecast.png" width="100%" alt="Hourly and daily forecast columns with colored weather icons" /> | <img src="docs/img/parental-controls.png" width="100%" alt="Parental controls showing the empty PIN keypad" /> |
+|                                              Launcher Home with a custom icon                                               |                                                      Offline icon library                                                      |
+| :-------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------: |
+| <img src="docs/img/launcher-home.png" width="100%" alt="Couchy Home with the floating Dock and a custom satellite icon" />  | <img src="docs/img/library-picker.png" width="100%" alt="Choose from Library showing a scrollable grid of Material Symbols" /> |
+|                                              Weather forecast with sample data                                              |                                                       Parental controls                                                        |
+| <img src="docs/img/weather-forecast.png" width="100%" alt="Hourly and daily forecast columns with colored weather icons" /> |         <img src="docs/img/parental-controls.png" width="100%" alt="Parental controls showing the empty PIN keypad" />         |
 
 ---
 
@@ -80,41 +80,35 @@ Couchy reads imagery only. The app tile still launches the app normally. A TV’
 
 ## Install
 
-Couchy Launcher 1.1.0 requires Android TV or Google TV running **Android 9 (API 28) or newer**.
+Couchy Launcher requires Android TV or Google TV running **Android 9 (API 28) or newer**.
 
 ### Install with Downloader
 
-Open **Downloader** on your TV, enter code **`5058414`** to download the latest release, and follow the on-screen installation prompts.
-
-### Install with ADB
-
-1. **Get the APK and ADB.** Download [the latest signed APK](https://github.com/dikodahan/couchy-launcher/releases/latest/download/Couchy-Launcher.apk), choose a version on the [Releases page](https://github.com/dikodahan/couchy-launcher/releases), or build from source with `./gradlew assembleRelease -PlocalSign` (output: `app/build/outputs/apk/release/app-release.apk`). Install [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) on your computer so you can run `adb`. See [CONTRIBUTING.md](CONTRIBUTING.md) for build prerequisites.
+1. **Get the APK.** Open **Downloader** on your TV, enter code **`5058414`** to download the latest release, and follow the on-screen installation prompts.
 2. **Enable Developer options on the TV.** In **Settings → System → About** (sometimes **Device Preferences → About**), select **Android TV OS build** seven times. Open **Developer options** and find your TV's debugging option. For a network connection, put the computer and TV on the same local network.
-3. **Connect ADB using the option your TV exposes.** Replace the example addresses and ports with the values shown on your TV.
-   - **Network debugging on port 5555:** Enable it on the TV, run `adb connect 192.168.1.50:5555`, and approve the computer's debugging prompt on the TV if shown.
-   - **Wireless debugging with a pairing code:** Open **Pair device with pairing code** on the TV. Run `adb pair 192.168.1.50:37123` using the pairing dialog's address and port, then enter the displayed code. If the TV does not appear in `adb devices`, run `adb connect 192.168.1.50:41235` using the **IP address & port** on the main Wireless debugging screen. The connection port can differ from the pairing port.
-   - **USB debugging:** Enable it and connect a data cable if your TV or TV box supports USB ADB. Approve the computer's debugging prompt on the TV if shown.
-
-   See the [Android ADB guide](https://developer.android.com/tools/adb) for connection troubleshooting.
-
-4. **Install the APK.** Confirm the TV is listed as `device` and substitute its identifier and your APK's path:
-
-   ```sh
-   adb devices
-   adb -s "TV_SERIAL" install -r "/path/to/Couchy-Launcher.apk"
-   ```
-
-   An in-place update requires the same signing certificate as the installed app. The `-local.apk` build uses a local debug certificate. If the certificates differ, use a build signed with the matching key, or export your Couchy configuration and keep a copy before uninstalling the old app and installing the new APK. Uninstalling removes the app's local data.
-
-5. **Open Couchy Launcher** from your TV's apps list and follow the wizard. To make it your Home launcher, see [Set or switch the Home launcher](#set-or-switch-the-home-launcher).
+3. **Open Couchy Launcher** from your TV's apps list and follow the wizard. To make it your Home launcher, see [Set or switch the Home launcher](#set-or-switch-the-home-launcher).
 
 ---
 
 The GitHub APK uses this fork’s release signing key. Before switching from an upstream, F-Droid, or local test build signed with a different key, export your settings. Android requires replacing the old app before installing the differently signed APK. Restore the backup after installation.
 
+### In-app updates
+
+Starting with 1.1.1, the GitHub APK checks for newer stable releases on launch and every six hours while Couchy Home is open. Choose **Update** to download and open Android’s installer, or **Later** to dismiss that version’s prompt. Select the bell in the status bar to reopen it. To check immediately, open **Settings → System → Check for updates**, just above **About**. Android may ask you to allow installs from Couchy and confirm the installation. The GitHub updater checks the APK checksum and requires the same signing key as the installed app.
+
+### Recommended apps
+
+In the GitHub build, open **Settings → Launcher settings → Add recommended apps**. Enable it and enter the public HTTPS URL of a JSON catalog you host. Couchy checks the file before enabling the feature. Once verified, **Recommended apps** appears directly below **Apps**. Return to Launcher settings to change the link or disable the catalog.
+
+Use [recommended-apps.json](recommended-apps.json) as a template. The example URLs are placeholders. Host your own JSON file anywhere that serves it over HTTPS. For GitHub, use the raw file URL. HTTPS short links such as Bitly work when they redirect over HTTPS to the JSON file. The catalog is a JSON array. Each entry has a `category`, a unique English `name`, and an HTTPS `downloadUrl` pointing to the publisher’s APK. The `iconUrl` is optional. If you omit it or the image fails to load, Couchy picks a bundled icon for that app and keeps the choice consistent for that catalog.
+
+Couchy refreshes the catalog when you open **Recommended apps** and uses the last verified copy if the host is temporarily unavailable. Editing the hosted JSON needs no Couchy update. Local and Telegram backups remember the link and whether it is enabled. After restoring on another TV, Couchy verifies the link before showing the menu.
+
+Use **Download** to save an APK to the TV’s Downloads folder, **Install** to open Android’s installer, and **Delete** to remove the downloaded APK. Android may ask you to allow Couchy to install apps and confirm the installation.
+
 ## Set or switch the Home launcher
 
-During setup, choose **Use Couchy as Home** or **Keep current launcher**. Once Couchy verifies the switch, it asks you to press Home on your remote to check that Couchy opens. Select **Next** to finish the rest of setup. If the TV keeps a known stock launcher active after accepting the switch, Couchy offers to pause it after you confirm. Later, open **Settings → Launcher settings → Home launcher** for the Android picker, other launchers, and recovery.
+First, choose whether to show a VPN button and enable weather. Weather starts off. You can opt in to approximate IP location during setup or configure a different location later in **Settings → Weather**. The final step offers **Use Couchy as Home** or **Keep current launcher**. If Couchy verifies the switch, press Home on your remote to open Couchy Home. Setup is already saved at that point. If the TV keeps a known stock launcher active after accepting the switch, Couchy offers to pause it after you confirm. Later, open **Settings → Launcher settings → Home launcher** for the Android picker, other launchers, and recovery.
 
 For a locked-down TV, expand **TV debugging controls**. Enable network/ADB debugging on that TV and approve Couchy’s debugging prompt with **Always allow from this computer**, then choose **Use Couchy as Home** or **Switch to another Home launcher**. Couchy contains its own authenticated local ADB client, so a separate Launcher Manager app is not required. It connects only to the same TV at `127.0.0.1:5555`; it cannot silently enable debugging or authorize itself. Pairing-based wireless debugging works for installing the APK from a computer. For Home switching on a pairing-only TV, use the system picker. Advanced controls require a TV that exposes TCP ADB on port 5555.
 
