@@ -150,7 +150,7 @@ The log records Couchy's Home-switch commands, results, timing, and recovery ste
 
 ## Move settings between TVs with Telegram
 
-Both TVs need internet access and a Couchy build with Telegram enabled. If the Cloud option says Telegram is not configured, use a build configured with a Telegram API ID and hash or transfer a local backup instead. Build configuration is described in [CONTRIBUTING.md](CONTRIBUTING.md).
+Both TVs need internet access and a Couchy build with Telegram enabled. The GitHub release includes Telegram support starting with v1.1.1. For custom builds, see the Telegram app configuration in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 1. On the **source TV**, open **Settings → Launcher settings → Save configuration → Save in the Cloud**.
 2. When Couchy displays a QR code, open Telegram on your phone and go to **Settings → Devices → Link Desktop Device**. Scan the TV code with the Telegram app, then enter your Telegram two-step verification password on the TV if prompted. Couchy resumes the selected action after linking.
@@ -201,7 +201,7 @@ Optional custom path: add `--es path /sdcard/Download/my-backup.json` to either 
 
 No ads, analytics or tracking. Network features are opt-in: aerial streaming, weather, Top Shelf artwork, and Telegram Saved Messages backup. Top Shelf reads the focused app’s published TV listings on the device and may load images from the HTTPS hosts named in those listings. GeoJS receives the public IP address to estimate the location only when the GeoJS option is enabled. Third-party endpoints receive ordinary network connection information; manual/selected weather coordinates are sent to Open-Meteo. Settings and custom artwork remain local unless you export settings.
 
-Aerial HTTPS now validates certificates and hostnames. A TV with an outdated trust store may fall back to a gradient; update its firmware or choose local media rather than disabling TLS checks. Telegram session files are excluded from Android cloud backup and device transfer. Telegram API credentials are build-time options; without them, local backup still works and cloud actions explain that cloud is unavailable.
+Aerial HTTPS now validates certificates and hostnames. A TV with an outdated trust store may fall back to a gradient; update its firmware or choose local media rather than disabling TLS checks. Telegram session files are excluded from Android cloud backup and device transfer. Telegram app credentials are set when building Couchy. Telegram account linking happens on each TV.
 
 Dependency versions and checksums are pinned. See [the dependency risk review](docs/DEPENDENCY-REVIEW.md) for coverage, the native Telegram update, compatibility decisions and remaining limitations.
 

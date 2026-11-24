@@ -5,6 +5,7 @@ import android.os.Build
 import com.conreo.couchytv.R
 import com.conreo.couchytv.BuildConfig
 import io.xbot.tdlib.TdLib
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -59,13 +60,13 @@ class TelegramCloudBackup private constructor(private val app: Context) {
     private val pending = ConcurrentHashMap<String, CompletableDeferred<JsonObject>>()
     private val started = AtomicBoolean(false)
 
-    private var clientId: Int = 0
+    @Volatile private var clientId: Int = 0
     private var receiveJob: Job? = null
-    private var lastAuthType: String = ""
+    @Volatile private var lastAuthType: String = ""
     private var lastQrLink: String = ""
     private var lastPasswordHint: String = ""
     private var userId: Long = 0L
-    private var loginRequested: Boolean = false
+    @Volatile private var loginRequested: Boolean = false
 
     private val _session = MutableStateFlow(CloudSession.Empty)
     val session: StateFlow<CloudSession> = _session.asStateFlow()
@@ -94,7 +95,21 @@ class TelegramCloudBackup private constructor(private val app: Context) {
                 if (lastQrLink.isNotBlank()) _authUi.value = TelegramAuthUi.Qr(lastQrLink)
             "authorizationStateWaitPhoneNumber" -> requestQr()
         }
-        scope.launch { ensureStarted() }
+        scope.launch {
+            try {
+                ensureStarted()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                if (loginRequested) _authUi.value = TelegramAuthUi.Failed("")
+            } catch (_: LinkageError) {
+                if (loginRequested) _authUi.value = TelegramAuthUi.Failed("")
+            }
+        }
+    }
+
+    fun endLogin() {
+        loginRequested = false
     }
 
     suspend fun awaitLoggedIn() {
@@ -278,7 +293,9 @@ class TelegramCloudBackup private constructor(private val app: Context) {
             if (started.get()) return
             TdLib.execute("""{"@type":"setLogVerbosityLevel","new_verbosity_level":1}""")
             clientId = TdLib.createClientId()
-            receiveJob = scope.launch { receiveLoop() }
+            lastAuthType = ""
+            TdLib.requestAuthorizationState(clientId)
+            if (receiveJob?.isActive != true) receiveJob = scope.launch { receiveLoop() }
             started.set(true)
         }
     }
@@ -304,7 +321,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
             if (raw.isNullOrBlank()) continue
             val obj = runCatching {
                 kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonObject
-            }.getOrNull() ?: continue
+            }.getOrNull()?.takeIf { it.int("@client_id") == clientId } ?: continue
             val extra = obj.str("@extra")
             if (extra.isNotBlank()) pending.remove(extra)?.complete(obj)
             when (obj.str("@type")) {

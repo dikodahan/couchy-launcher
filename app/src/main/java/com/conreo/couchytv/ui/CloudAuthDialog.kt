@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,10 +78,13 @@ fun TelegramAuthDialog(
             .onSuccess { onSuccess() }
     }
 
+    DisposableEffect(backup) {
+        onDispose { backup.endLogin() }
+    }
+
     val qrLink = (ui as? TelegramAuthUi.Qr)?.link
     val qr by produceState<ImageBitmap?>(initialValue = null, qrLink) {
-        val link = qrLink ?: return@produceState
-        value = withContext(Dispatchers.Default) { encodeQrBitmap(link) }
+        value = qrLink?.let { link -> withContext(Dispatchers.Default) { encodeQrBitmap(link) } }
     }
 
     val status = when (val s = ui) {
@@ -88,7 +92,7 @@ fun TelegramAuthDialog(
         is TelegramAuthUi.Qr -> waiting
         is TelegramAuthUi.Password -> s.error?.let { wrongPw } ?: ""
         is TelegramAuthUi.Failed ->
-            if (s.message.startsWith("authorizationStateWait")) unsupported else s.message.ifBlank { genericFail }
+            if (s.message.startsWith("authorizationStateWait")) unsupported else genericFail
         else -> ""
     }
 

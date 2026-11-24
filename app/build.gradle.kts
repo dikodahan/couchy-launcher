@@ -26,6 +26,14 @@ fun quotedBuildConfig(value: String): String =
     "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 val githubUpdates = providers.gradleProperty("githubUpdates").isPresent
+val telegramApiId = oauthCredential("telegram.api.id", "TELEGRAM_API_ID").toIntOrNull() ?: 0
+val telegramApiHash = oauthCredential("telegram.api.hash", "TELEGRAM_API_HASH")
+if (providers.gradleProperty("requireTelegramCloud").isPresent) {
+    check(telegramApiId > 0 && telegramApiHash.matches(Regex("[0-9a-fA-F]{32}"))) {
+        "Telegram Cloud requires Couchy's API ID and hash. Configure the build credentials before publishing."
+    }
+}
+
 
 android {
     namespace = "com.conreo.couchytv"
@@ -46,12 +54,12 @@ android {
         buildConfigField(
             "int",
             "TELEGRAM_API_ID",
-            (oauthCredential("telegram.api.id", "TELEGRAM_API_ID").toIntOrNull() ?: 0).toString(),
+            telegramApiId.toString(),
         )
         buildConfigField(
             "String",
             "TELEGRAM_API_HASH",
-            quotedBuildConfig(oauthCredential("telegram.api.hash", "TELEGRAM_API_HASH")),
+            quotedBuildConfig(telegramApiHash),
         )
     }
 

@@ -61,7 +61,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
-        run: ./gradlew assembleRelease -PgithubUpdates --no-daemon
+        run: ./gradlew assembleRelease -PgithubUpdates -PrequireTelegramCloud --no-daemon
       - name: Upload release APK
         if: steps.signing.outputs.configured == 'true'
         env:

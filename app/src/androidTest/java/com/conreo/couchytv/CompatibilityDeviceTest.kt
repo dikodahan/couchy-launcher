@@ -25,18 +25,22 @@ class CompatibilityDeviceTest {
         val file = File(context.cacheDir, "compatibility-test.json")
         try {
             store.update { it.copy(knownApps = setOf("test.seen"), weatherEnabled = true,
-                weatherUnit = 1, labelOverrides = mapOf("test.app" to "My app")) }
+                weatherUnit = 1, labelOverrides = mapOf("test.app" to "My app"),
+                recommendedAppsEnabled = true, recommendedAppsUrl = "https://example.org/catalog.json") }
             store.exportTo(file)
             val exported = store.flow.first()
             file.writeText("{}")
             assertFalse(store.importFrom(file)); assertEquals(exported, store.flow.first())
             store.exportTo(file)
-            store.update { it.copy(knownApps = setOf("test.new"), weatherUnit = 0) }
+            store.update { it.copy(knownApps = setOf("test.new"), weatherUnit = 0,
+                recommendedAppsEnabled = false, recommendedAppsUrl = "") }
             assertTrue(store.importFrom(file))
             val imported = store.flow.first()
             assertEquals(1, imported.weatherUnit)
             assertEquals(setOf("test.new"), imported.knownApps)
             assertEquals("My app", imported.labelOverrides["test.app"])
+            assertTrue(imported.recommendedAppsEnabled)
+            assertEquals("https://example.org/catalog.json", imported.recommendedAppsUrl)
         } finally { store.update { original }; file.delete() }
     }
 
