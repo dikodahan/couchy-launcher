@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.provider.Settings
 import com.conreo.couchytv.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -16,7 +15,13 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 internal data class HomeChoice(val component: ComponentName, val label: String, val system: Boolean, val enabled: Boolean)
-internal data class HomeStatus(val currentPackage: String?, val currentLabel: String, val choices: List<HomeChoice>, val pausedPackages: Set<String>)
+internal data class HomeStatus(
+    val currentPackage: String?,
+    val currentLabel: String,
+    val choices: List<HomeChoice>,
+    val pausedPackages: Set<String>,
+    val stockHome: HomeChoice?,
+)
 
 internal class StockHomeStillActive(val activeHome: ComponentName) : IllegalStateException()
 
@@ -80,17 +85,23 @@ internal class HomeLauncherManager(
                     activity.enabled && activity.applicationInfo.enabled)
             }.distinctBy { it.component }.sortedBy { it.label.lowercase() }
         val current = currentHome()
+        val systemChoices = choices.filter {
+            it.system && it.component.packageName != app.packageName &&
+                it.component.packageName != "com.google.android.tungsten.setupwraith"
+        }
+        val previousStock = prefs.getString("last_stock_home", null)
+        val stockHome = systemChoices.firstOrNull { it.component.flattenToString() == previousStock }
+            ?: systemChoices.firstOrNull { it.enabled && it.component.packageName in stockLaunchers }
+            ?: systemChoices.firstOrNull { it.component.packageName in stockLaunchers }
+            ?: systemChoices.firstOrNull { it.enabled }
+            ?: systemChoices.firstOrNull()
         HomeStatus(current?.packageName,
             current?.let { c -> runCatching { pm.getApplicationLabel(pm.getApplicationInfo(c.packageName, 0)).toString() }.getOrNull() }.orEmpty(),
-            choices, readJournal().keys)
+            choices, readJournal().keys, stockHome)
     }
 
     fun currentHome(): ComponentName? = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
         ?.activityInfo?.let { if (it.packageName == "android") null else ComponentName(it.packageName, it.name) }
-
-    fun systemPickerIntent(): Intent {
-        return couchyRoleIntent() ?: Intent(Settings.ACTION_HOME_SETTINGS)
-    }
 
     fun couchyRoleIntent(): Intent? {
         if (Build.VERSION.SDK_INT < 29) return null
@@ -102,14 +113,18 @@ internal class HomeLauncherManager(
     /** Restores stock packages before changing away from Couchy. Never disables an arbitrary app. */
     suspend fun switchTo(choice: HomeChoice, pauseStock: Boolean) = mutex.withLock {
         withContext(Dispatchers.IO) {
-            val installed = status().choices.firstOrNull { it.component == choice.component }
+            val status = status()
+            val installed = status.choices.firstOrNull { it.component == choice.component }
                 ?: error(app.getString(R.string.home_error_removed))
             val target = installed.component
             val ownHome = target.packageName == app.packageName
             require(!pauseStock || ownHome)
+            val previous = currentHome()
+            if (ownHome && previous != null && status.choices.any { it.component == previous && it.system }) {
+                prefs.edit().putString("last_stock_home", previous.flattenToString()).apply()
+            }
             val user = foregroundAppUser()
             if (readJournal().isNotEmpty()) check(journalUser() == user) { app.getString(R.string.home_error_user) }
-            val previous = currentHome()
             val originalJournal = readJournal()
             val targetWasDisabled = !installed.enabled
             try {

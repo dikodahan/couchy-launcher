@@ -62,7 +62,6 @@
     <string name="item_android_settings">Android-instellingen</string>
     <string name="item_android_settings_sub">Open de systeeminstellingen van dit apparaat</string>
     <string name="item_sections">Secties</string>
-    <string name="item_sections_sub">Kies apps per sectie, hernoem, herschik</string>
     <string name="item_display">Weergave</string>
     <string name="item_display_sub">Lay-outmodus, namen, pictogramgrootte, afstand</string>
     <string name="item_wallpaper">Achtergrond</string>
@@ -99,11 +98,9 @@
     <string name="no_section">geen sectie</string>
     <string name="hidden_tag">verborgen</string>
 
-    <string name="section_row_sub">OK: kies de apps van deze sectie</string>
     <string name="add_section">Sectie toevoegen</string>
     <string name="new_section">Nieuwe sectie</string>
     <string name="rename_section">Sectie hernoemen</string>
-    <string name="section_apps_sub">OK schakelt of een app in deze sectie verschijnt</string>
 
     <string name="dim_label">Dimmen</string>
     <string name="dim_top_bottom">Boven &amp; onder</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">Weerlocatie: %1$s</string>
     <string name="weather_using_saved_ip_city">De laatst opgeslagen IP-locatie wordt gebruikt. Er volgt geen nieuwe IP-zoekopdracht in deze sessie.</string>
     <string name="home_launcher_title">Startscherm</string>
-    <string name="home_launcher_settings_sub">Kies het startscherm, gebruik Couchy of herstel de systeemlauncher.</string>
     <string name="home_current">Huidig startscherm: %1$s</string>
     <string name="home_not_selected">Niet geselecteerd</string>
-    <string name="home_system_picker">Startscherm kiezen in Android</string>
-    <string name="home_system_picker_sub">Open de standaardkiezer van de tv, indien beschikbaar.</string>
-    <string name="home_picker_unavailable">Deze tv heeft geen startschermkiezer. Gebruik de foutopsporingsopties hieronder.</string>
-    <string name="home_debugging_controls">Foutopsporing op de tv</string>
-    <string name="home_debugging_controls_sub">Wissel van launcher zonder aparte Launcher Manager-app.</string>
-    <string name="home_debugging_help">Schakel ADB via het netwerk in en geef Couchy toestemming met Altijd toestaan. Couchy verbindt alleen met deze tv op poort 5555. Als draadloos koppelen vereist is, moet je eerst TCP-ADB op een computer inschakelen.</string>
     <string name="home_use_couchy">Couchy als startscherm gebruiken</string>
-    <string name="home_use_couchy_sub">Pas de wijziging toe via geautoriseerde foutopsporing en controleer het resultaat.</string>
-    <string name="home_pause_stock">Voorkom dat de standaardlauncher het overneemt</string>
-    <string name="home_pause_stock_sub">Bekende onderdelen kunnen worden gepauzeerd. Ze worden hersteld bij een wissel.</string>
-    <string name="home_choose_other">Andere launcher kiezen</string>
-    <string name="home_choose_other_sub">Inclusief systeemlaunchers die Launcher Manager heeft uitgeschakeld.</string>
     <string name="home_restore_stock">Gepauzeerde systeemlaunchers herstellen</string>
     <string name="home_restore_stock_sub">Herstel de door Couchy opgeslagen onderdelen. Kies daarna zo nodig een andere launcher.</string>
     <string name="home_confirm_title">%1$s gebruiken als startscherm?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">Huidige launcher behouden</string>
     <string name="home_stock_still_active">De standaardlauncher is nog actief.</string>
     <string name="home_wizard_debug_needed">Schakel ADB via het netwerk in en kies opnieuw Couchy als startscherm gebruiken. Je kunt de huidige launcher behouden en later wisselen.</string>
-    <string name="home_control_open">Openen</string>
-    <string name="home_control_on">Aan</string>
     <string name="home_press_home_title">Druk op Home op de afstandsbediening</string>
     <string name="home_press_home_body">Controleer of de Home-knop Couchy opent.</string>
     <string name="home_debug_export">Foutopsporingslogboek exporteren</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">Aanbevolen apps toevoegen</string>
     <string name="recommended_catalog_url">JSON-URL van catalogus</string>
     <string name="recommended_catalog_invalid">Voer een geldige HTTPS-link naar een compatibel JSON-bestand met aanbevolen apps in.</string>
+    <string name="apps_reorder_mode">Apps herschikken</string>
+    <string name="apps_reorder_help">Druk op OK om een app op te pakken of neer te zetten. Druk op Terug om op te slaan en af te sluiten.</string>
+    <string name="edit_section">Sectie bewerken</string>
+    <string name="section_icon">Sectiepictogram tonen</string>
+    <string name="section_choose_icon">Sectiepictogram kiezen</string>
+    <string name="aerial_quality">Videokwaliteit</string>
+    <string name="home_switch_to">Overschakelen naar %1$s</string>
+    <string name="home_stock_launcher">Systeemlauncher</string>
+    <string name="home_adb_enabled">ADB-foutopsporing via netwerk ingeschakeld</string>
+    <string name="home_adb_disabled">ADB-foutopsporing via netwerk uitgeschakeld</string>
+    <string name="home_launcher_settings_sub">Schakel tussen Couchy en de systeemlauncher van je tv</string>
+    <string name="android_shortcuts">Android-snelkoppelingen</string>
+    <string name="screen_resize">Schermgrootte aanpassen</string>
+    <string name="shortcut_keyboard_languages">Toetsenbordtalen</string>
+    <string name="shortcut_screensaver">Schermbeveiliging kiezen</string>
+    <string name="shortcut_power_timeout">Automatisch uitschakelen</string>
 </resources>

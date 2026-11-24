@@ -62,7 +62,6 @@
     <string name="item_android_settings">Android ayarları</string>
     <string name="item_android_settings_sub">Bu cihazın sistem ayarlarını aç</string>
     <string name="item_sections">Bölümler</string>
-    <string name="item_sections_sub">Bölüm başına uygulama seç, yeniden adlandır, sırala</string>
     <string name="item_display">Ekran</string>
     <string name="item_display_sub">Düzen modu, isimler, simge boyutu, aralık</string>
     <string name="item_wallpaper">Duvar kağıdı</string>
@@ -99,11 +98,9 @@
     <string name="no_section">bölüm yok</string>
     <string name="hidden_tag">gizli</string>
 
-    <string name="section_row_sub">OK: bu bölümün uygulamalarını seç</string>
     <string name="add_section">Bölüm ekle</string>
     <string name="new_section">Yeni bölüm</string>
     <string name="rename_section">Bölümü yeniden adlandır</string>
-    <string name="section_apps_sub">OK, uygulamanın bu bölümde görünüp görünmemesini değiştirir</string>
 
     <string name="dim_label">Karartma</string>
     <string name="dim_top_bottom">Üst &amp; alt</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">Tahmin konumu: %1$s</string>
     <string name="weather_using_saved_ip_city">Son kaydedilen IP konumu kullanılıyor. Bu oturumda tekrar IP araması yapılmayacak.</string>
     <string name="home_launcher_title">Ana ekran</string>
-    <string name="home_launcher_settings_sub">Ana ekranı seçin, Couchy’yi kullanın veya sistem başlatıcısını geri yükleyin.</string>
     <string name="home_current">Geçerli ana ekran: %1$s</string>
     <string name="home_not_selected">Seçilmedi</string>
-    <string name="home_system_picker">Android’de ana ekranı seç</string>
-    <string name="home_system_picker_sub">Varsa TV’nin standart ana ekran seçicisini açın.</string>
-    <string name="home_picker_unavailable">Bu TV’de ana ekran seçicisi yok. Aşağıdaki hata ayıklama denetimlerini kullanın.</string>
-    <string name="home_debugging_controls">TV hata ayıklama denetimleri</string>
-    <string name="home_debugging_controls_sub">Ayrı bir Launcher Manager uygulaması olmadan başlatıcı değiştirin.</string>
-    <string name="home_debugging_help">Ağ üzerinden ADB’yi açın ve Couchy’ye Her zaman izin ver seçeneğiyle yetki verin. Couchy yalnızca bu TV’ye 5555 numaralı bağlantı noktasından bağlanır. Kablosuz hata ayıklama yalnızca eşleştirmeyi destekliyorsa önce bir bilgisayardan TCP ADB’yi açın.</string>
     <string name="home_use_couchy">Couchy’yi ana ekran olarak kullan</string>
-    <string name="home_use_couchy_sub">Onaylı hata ayıklama ile uygulayın ve sonucu doğrulayın.</string>
-    <string name="home_pause_stock">Varsayılan başlatıcının geri dönmesini engelle</string>
-    <string name="home_pause_stock_sub">Bilinen bileşenleri geçici olarak durdurabilirsiniz. Başlatıcı değiştiğinde geri yüklenirler.</string>
-    <string name="home_choose_other">Başka başlatıcıya geç</string>
-    <string name="home_choose_other_sub">Launcher Manager tarafından devre dışı bırakılan sistem başlatıcılarını içerir.</string>
     <string name="home_restore_stock">Durdurulan sistem başlatıcılarını geri yükle</string>
     <string name="home_restore_stock_sub">Couchy’nin kaydettiği bileşenleri geri yükleyin. Ardından başka bir başlatıcı seçebilirsiniz.</string>
     <string name="home_confirm_title">%1$s ana ekran olarak kullanılsın mı?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">Geçerli başlatıcıyı koru</string>
     <string name="home_stock_still_active">Varsayılan başlatıcı hâlâ etkin.</string>
     <string name="home_wizard_debug_needed">Ağ ADB’yi açın ve Couchy’yi ana ekran olarak kullan seçeneğini tekrar seçin. Mevcut başlatıcıyı koruyup daha sonra değiştirebilirsiniz.</string>
-    <string name="home_control_open">Aç</string>
-    <string name="home_control_on">Açık</string>
     <string name="home_press_home_title">Kumandada Ana ekran’a basın</string>
     <string name="home_press_home_body">Ana ekran düğmesinin Couchy’yi açtığını kontrol edin.</string>
     <string name="home_debug_export">Hata ayıklama günlüğünü dışa aktar</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">Önerilen uygulamaları ekle</string>
     <string name="recommended_catalog_url">Katalog JSON URL’si</string>
     <string name="recommended_catalog_invalid">Uyumlu bir önerilen uygulamalar JSON dosyasına ait geçerli bir HTTPS bağlantısı girin.</string>
+    <string name="apps_reorder_mode">Uygulamaları yeniden sıralama modu</string>
+    <string name="apps_reorder_help">Bir uygulamayı almak veya bırakmak için Tamam’a basın. Kaydedip çıkmak için Geri’ye basın.</string>
+    <string name="edit_section">Bölümü düzenle</string>
+    <string name="section_icon">Bölüm simgesini göster</string>
+    <string name="section_choose_icon">Bölüm simgesi seç</string>
+    <string name="aerial_quality">Video kalitesi</string>
+    <string name="home_switch_to">%1$s uygulamasına geç</string>
+    <string name="home_stock_launcher">Sistem başlatıcısı</string>
+    <string name="home_adb_enabled">Ağ üzerinden ADB hata ayıklama açık</string>
+    <string name="home_adb_disabled">Ağ üzerinden ADB hata ayıklama kapalı</string>
+    <string name="home_launcher_settings_sub">Couchy ile TV’nin sistem başlatıcısı arasında geçiş yap</string>
+    <string name="android_shortcuts">Android kısayolları</string>
+    <string name="screen_resize">Ekran boyutunu ayarla</string>
+    <string name="shortcut_keyboard_languages">Klavye dilleri</string>
+    <string name="shortcut_screensaver">Ekran koruyucu seç</string>
+    <string name="shortcut_power_timeout">Otomatik kapat</string>
 </resources>

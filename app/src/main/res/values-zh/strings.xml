@@ -101,7 +101,6 @@
     <string name="item_android_settings">Android 设置</string>
     <string name="item_android_settings_sub">打开此设备的系统设置</string>
     <string name="item_sections">分类</string>
-    <string name="item_sections_sub">为每个分类选择应用、重命名、排序</string>
     <string name="item_display">显示</string>
     <string name="item_display_sub">布局模式、名称、图标大小、间距</string>
     <string name="item_wallpaper">壁纸</string>
@@ -141,11 +140,9 @@
     <string name="hidden_tag">已隐藏</string>
 
     <!-- 设置：分类 -->
-    <string name="section_row_sub">OK：选择此分类中的应用</string>
     <string name="add_section">添加分类</string>
     <string name="new_section">新分类</string>
     <string name="rename_section">重命名分类</string>
-    <string name="section_apps_sub">OK 切换应用是否出现在此分类中</string>
 
     <!-- 设置：壁纸 -->
     <string name="dim_label">暗化</string>
@@ -320,21 +317,9 @@
     <string name="weather_ip_city">预报地点：%1$s</string>
     <string name="weather_using_saved_ip_city">正在使用最近保存的 IP 位置。本次使用期间不会再次查询 IP。</string>
     <string name="home_launcher_title">主屏幕启动器</string>
-    <string name="home_launcher_settings_sub">选择主屏幕、使用 Couchy 或恢复系统启动器。</string>
     <string name="home_current">当前主屏幕：%1$s</string>
     <string name="home_not_selected">未选择</string>
-    <string name="home_system_picker">在 Android 中选择主屏幕</string>
-    <string name="home_system_picker_sub">如果可用，打开电视的标准主屏幕选择器。</string>
-    <string name="home_picker_unavailable">此电视未提供主屏幕选择器。请使用下方的电视调试功能。</string>
-    <string name="home_debugging_controls">电视调试控制</string>
-    <string name="home_debugging_controls_sub">无需单独的 Launcher Manager 应用即可切换启动器。</string>
-    <string name="home_debugging_help">启用网络 ADB 并选择始终允许以授权 Couchy。Couchy 只通过端口 5555 连接当前电视。如果无线调试必须配对，请先通过电脑启用 TCP ADB。</string>
     <string name="home_use_couchy">将 Couchy 设为主屏幕</string>
-    <string name="home_use_couchy_sub">通过已授权的调试连接应用更改，然后验证结果。</string>
-    <string name="home_pause_stock">防止默认启动器重新接管</string>
-    <string name="home_pause_stock_sub">可以暂停已知系统组件，切换启动器时会恢复。</string>
-    <string name="home_choose_other">切换到其他启动器</string>
-    <string name="home_choose_other_sub">包括由 Launcher Manager 禁用的系统启动器。</string>
     <string name="home_restore_stock">恢复已暂停的系统启动器</string>
     <string name="home_restore_stock_sub">恢复 Couchy 记录的系统组件，之后可按需选择其他启动器。</string>
     <string name="home_confirm_title">将 %1$s 设为主屏幕吗？</string>
@@ -351,8 +336,6 @@
     <string name="home_keep_current">保留当前启动器</string>
     <string name="home_stock_still_active">默认启动器仍在运行。</string>
     <string name="home_wizard_debug_needed">启用网络 ADB 后重新选择将 Couchy 设为主屏幕。也可以保留当前启动器，稍后在设置中更改。</string>
-    <string name="home_control_open">打开</string>
-    <string name="home_control_on">开启</string>
     <string name="home_press_home_title">按遥控器的主屏幕键</string>
     <string name="home_press_home_body">确认主屏幕键能打开 Couchy。</string>
     <string name="home_debug_export">导出调试日志</string>
@@ -396,4 +379,20 @@
     <string name="recommended_settings">添加推荐应用</string>
     <string name="recommended_catalog_url">目录 JSON 网址</string>
     <string name="recommended_catalog_invalid">请输入指向兼容推荐应用 JSON 文件的有效 HTTPS 链接。</string>
+    <string name="apps_reorder_mode">应用排序模式</string>
+    <string name="apps_reorder_help">按确定键拿起或放下应用。按返回键保存并退出。</string>
+    <string name="edit_section">编辑分区</string>
+    <string name="section_icon">显示分区图标</string>
+    <string name="section_choose_icon">选择分区图标</string>
+    <string name="aerial_quality">视频画质</string>
+    <string name="home_switch_to">切换到 %1$s</string>
+    <string name="home_stock_launcher">系统启动器</string>
+    <string name="home_adb_enabled">已启用网络 ADB 调试</string>
+    <string name="home_adb_disabled">未启用网络 ADB 调试</string>
+    <string name="home_launcher_settings_sub">在 Couchy 和电视的系统启动器之间切换</string>
+    <string name="android_shortcuts">Android 快捷入口</string>
+    <string name="screen_resize">调整屏幕大小</string>
+    <string name="shortcut_keyboard_languages">键盘语言</string>
+    <string name="shortcut_screensaver">选择屏幕保护程序</string>
+    <string name="shortcut_power_timeout">自动关闭</string>
 </resources>

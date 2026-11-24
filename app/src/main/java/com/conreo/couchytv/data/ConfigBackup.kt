@@ -45,7 +45,10 @@ object ConfigBackup {
         return json.decodeFromString<LauncherConfig>(text).also { config ->
             require(config.categories.isNotEmpty() && config.categories.size <= 128)
             require(config.categories.map { it.id }.distinct().size == config.categories.size)
-            require(config.categories.all { it.id.isNotBlank() && it.name.isNotBlank() })
+            require(config.categories.all {
+                it.id.isNotBlank() && it.name.isNotBlank() &&
+                    (it.iconName == null || it.iconName.length in 1..128)
+            })
             require(config.labelOverrides.all { (pkg, label) -> pkg.isNotBlank() && label.isNotBlank() && label.length <= 256 })
             require(config.recommendedAppsUrl.isEmpty() || isRecommendedAppsUrl(config.recommendedAppsUrl))
             require(!config.recommendedAppsEnabled || config.recommendedAppsUrl.isNotEmpty())

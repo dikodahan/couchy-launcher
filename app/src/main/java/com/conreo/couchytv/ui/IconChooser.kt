@@ -171,6 +171,7 @@ internal fun LibraryIconPickDialog(
             onDismiss = { editingSearch = false },
             submitLabel = R.string.icon_pick_search_hint,
             allowEmpty = true,
+            positionAboveKeyboard = true,
         )
     }
 }

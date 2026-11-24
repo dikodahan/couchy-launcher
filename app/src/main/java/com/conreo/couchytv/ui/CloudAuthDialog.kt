@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +32,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -96,54 +103,62 @@ fun TelegramAuthDialog(
         else -> ""
     }
 
+    val passwordPrompt = ui as? TelegramAuthUi.Password
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
+        if (passwordPrompt != null) PositionDialogAboveKeyboard()
+        val contentScroll = if (passwordPrompt != null) {
+            Modifier.verticalScroll(rememberScrollState())
+        } else Modifier
         Surface(
             shape = RoundedCornerShape(20.dp),
             colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(
                 Modifier
-                    .width(520.dp)
-                    .padding(28.dp),
+                    .width(if (passwordPrompt != null) 400.dp else 520.dp)
+                    .then(contentScroll)
+                    .padding(if (passwordPrompt != null) 18.dp else 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(if (passwordPrompt != null) 8.dp else 12.dp),
             ) {
                 Text(
                     stringResource(
-                        if (ui is TelegramAuthUi.Password) R.string.cloud_auth_password_title
+                        if (passwordPrompt != null) R.string.cloud_auth_password_title
                         else R.string.cloud_auth_title,
                     ),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = if (passwordPrompt != null) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
                     color = Color.White,
                 )
                 Text(
                     stringResource(
-                        if (ui is TelegramAuthUi.Password) R.string.cloud_auth_password_body
+                        if (passwordPrompt != null) R.string.cloud_auth_password_body
                         else R.string.cloud_auth_body,
                     ),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = if (passwordPrompt != null) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center,
                 )
-                val pw = ui as? TelegramAuthUi.Password
-                if (pw != null) {
-                    if (pw.hint.isNotBlank()) {
+                if (passwordPrompt != null) {
+                    if (passwordPrompt.hint.isNotBlank()) {
                         Text(
-                            stringResource(R.string.cloud_auth_password_hint, pw.hint),
+                            stringResource(R.string.cloud_auth_password_hint, passwordPrompt.hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.65f),
                         )
                     }
-                    val fieldFocus = remember { FocusRequester() }
-                    LaunchedEffect(Unit) { runCatching { fieldFocus.requestFocus() } }
+                    val fieldFocus = initialFocus()
+                    val submitFocus = remember { FocusRequester() }
+                    fun submitPassword() {
+                        if (password.isNotBlank()) scope.launch { backup.submitPassword(password) }
+                    }
                     Box(
                         Modifier
                             .fillMaxWidth()
                             .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         BasicTextField(
                             value = password,
@@ -156,23 +171,19 @@ fun TelegramAuthDialog(
                                 keyboardType = KeyboardType.Password,
                                 imeAction = ImeAction.Done,
                             ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    if (password.isNotBlank()) {
-                                        scope.launch { backup.submitPassword(password) }
-                                    }
-                                },
-                            ),
-                            modifier = Modifier.fillMaxWidth().focusRequester(fieldFocus),
+                            keyboardActions = KeyboardActions(onDone = { submitPassword() }),
+                            modifier = Modifier.fillMaxWidth().focusRequester(fieldFocus).onPreviewKeyEvent {
+                                if (it.type == KeyEventType.KeyDown && it.key == Key.DirectionDown) {
+                                    submitFocus.requestFocus()
+                                    true
+                                } else false
+                            },
                         )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
-                            onClick = {
-                                if (password.isNotBlank()) {
-                                    scope.launch { backup.submitPassword(password) }
-                                }
-                            },
+                            onClick = ::submitPassword,
+                            modifier = Modifier.focusRequester(submitFocus),
                         ) { Text(stringResource(R.string.cloud_auth_password_submit)) }
                         Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                     }

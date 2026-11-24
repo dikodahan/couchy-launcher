@@ -22,6 +22,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonNull
@@ -65,7 +66,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
     @Volatile private var lastAuthType: String = ""
     private var lastQrLink: String = ""
     private var lastPasswordHint: String = ""
-    private var userId: Long = 0L
+    @Volatile private var userId: Long = 0L
     @Volatile private var loginRequested: Boolean = false
 
     private val _session = MutableStateFlow(CloudSession.Empty)
@@ -162,30 +163,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
             // Listen before sending so a fast upload cannot race the sendMessage response.
             uploadUpdates = updates
             val sent = sendAwait(
-                buildJsonObject {
-                    put("@type", JsonPrimitive("sendMessage"))
-                    put("chat_id", JsonPrimitive(chatId))
-                    put(
-                        "input_message_content",
-                        buildJsonObject {
-                            put("@type", JsonPrimitive("inputMessageDocument"))
-                            put(
-                                "document",
-                                buildJsonObject {
-                                    put("@type", JsonPrimitive("inputFileLocal"))
-                                    put("path", JsonPrimitive(file.absolutePath))
-                                },
-                            )
-                            put(
-                                "caption",
-                                buildJsonObject {
-                                    put("@type", JsonPrimitive("formattedText"))
-                                    put("text", JsonPrimitive(caption))
-                                },
-                            )
-                        },
-                    )
-                },
+                telegramBackupMessage(chatId, file.absolutePath, caption),
                 timeoutMs = 90_000,
             )
             awaitBackupUpload(sent, chatId, updates)
@@ -260,8 +238,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
                 delay(50)
             }
         }
-        if (!_session.value.signedIn) runCatching { refreshMe() }
-        if (!_session.value.signedIn) throw NeedTelegramLogin()
+        if (!_session.value.signedIn) refreshMe()
     }
 
     private suspend fun savedMessagesChatId(): Long {
@@ -269,17 +246,21 @@ class TelegramCloudBackup private constructor(private val app: Context) {
         val request = buildJsonObject {
             put("@type", JsonPrimitive("createPrivateChat"))
             put("user_id", JsonPrimitive(userId))
-            put("force", JsonPrimitive(true))
+            // Resolve the self chat with its current server metadata before sending.
+            put("force", JsonPrimitive(false))
         }
         val chat = sendAwait(request)
         val id = chat.long("id")
-        return if (id != 0L) id else userId
+        check(chat.str("@type") == "chat" && id != 0L) { "Telegram did not return Saved Messages" }
+        return id
     }
 
     private suspend fun refreshMe() {
         val me = sendAwait(buildJsonObject { put("@type", JsonPrimitive("getMe")) })
-        userId = me.long("id")
-        val username = me["usernames"]?.jsonObject?.str("editable_username")
+        val id = me.long("id")
+        check(me.str("@type") == "user" && id > 0L) { "Telegram did not return the signed-in user" }
+        userId = id
+        val username = (me["usernames"] as? JsonObject)?.str("editable_username")
             ?.ifBlank { null }
             ?.let { "@$it" }
         val name = me.str("first_name").trim()
@@ -412,15 +393,16 @@ class TelegramCloudBackup private constructor(private val app: Context) {
             body.forEach { (k, v) -> put(k, v) }
             put("@extra", JsonPrimitive(extra))
         }
-        TdLib.send(clientId, payload.toString())
+        val method = body.str("@type")
         val result = try {
-            withTimeout(timeoutMs) { deferred.await() }
-        } catch (t: Throwable) {
+            TdLib.send(clientId, payload.toString())
+            withTimeoutOrNull(timeoutMs) { deferred.await() }
+                ?: throw TelegramRequestFailure(method, detail = "Timed out")
+        } finally {
             pending.remove(extra)
-            throw t
         }
         if (result.str("@type") == "error") {
-            error("${result.int("code")} ${result.str("message")}".trim())
+            throw TelegramRequestFailure(method, result.int("code"), result.str("message"))
         }
         return result
     }
@@ -477,6 +459,24 @@ sealed class TelegramAuthUi {
 class NeedTelegramLogin : Exception()
 class CloudNotConfigured : Exception()
 
+internal class TelegramRequestFailure(
+    val method: String,
+    val code: Int? = null,
+    detail: String,
+) : IllegalStateException(detail) {
+    // Exclude paths, links, handles and long numeric identifiers from a shareable log.
+    val reason: String? = detail.trim().takeIf {
+        it.length in 1..120 && it.matches(Regex("[A-Za-z][A-Za-z0-9_ .,!'()?-]*")) &&
+            !Regex("[0-9]{5,}").containsMatchIn(it)
+    }
+    val diagnostic: String
+        get() {
+            if (code == null) return "$method timed out"
+            val base = "$method failed (Telegram code $code)"
+            return reason?.let { "$base: $it" } ?: base
+        }
+}
+
 private fun JsonObject.str(key: String): String =
     this[key]?.jsonPrimitive?.contentOrNull.orEmpty()
 
@@ -490,6 +490,28 @@ private fun JsonObject.long(key: String): Long =
 
 private fun JsonObject.isSentMessage(): Boolean =
     this["sending_state"] == null || this["sending_state"] == JsonNull
+
+internal fun telegramBackupMessage(chatId: Long, path: String, caption: String): JsonObject = buildJsonObject {
+    put("@type", JsonPrimitive("sendMessage"))
+    put("chat_id", JsonPrimitive(chatId))
+    put("input_message_content", buildJsonObject {
+        put("@type", JsonPrimitive("inputMessageDocument"))
+        // TDLib 1.8.69 expects inputDocument to contain the actual InputFile.
+        put("document", buildJsonObject {
+            put("@type", JsonPrimitive("inputDocument"))
+            put("disable_content_type_detection", JsonPrimitive(true))
+            put("document", buildJsonObject {
+                put("@type", JsonPrimitive("inputFileLocal"))
+                put("path", JsonPrimitive(path))
+            })
+        })
+        put("caption", buildJsonObject {
+            put("@type", JsonPrimitive("formattedText"))
+            put("text", JsonPrimitive(caption))
+            put("entities", buildJsonArray {})
+        })
+    })
+}
 
 internal suspend fun awaitBackupUpload(
     message: JsonObject,
@@ -509,7 +531,12 @@ internal suspend fun awaitBackupUpload(
             val update = updates.receive()
             val sent = update["message"]?.jsonObject ?: continue
             if (update.long("old_message_id") != messageId || sent.long("chat_id") != chatId) continue
-            check(update.str("@type") == "updateMessageSendSucceeded") { "Telegram failed to send the backup" }
+            if (update.str("@type") != "updateMessageSendSucceeded") {
+                val error = update["error"] as? JsonObject
+                val code = error?.int("code") ?: update.int("error_code")
+                val reason = error?.str("message")?.takeIf { it.isNotBlank() } ?: update.str("error_message")
+                throw TelegramRequestFailure("sendMessage", code, reason)
+            }
             return@withTimeout
         }
     }

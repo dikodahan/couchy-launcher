@@ -47,7 +47,7 @@ internal class LocalAdb private constructor(
 ) {
     constructor(context: Context) : this(
         { AndroidAdbAuthKey(context.applicationContext.packageName + ".local-adb.v1") },
-        ::Socket, 5555, 45_000, 15_000,
+        ::Socket, NETWORK_PORT, 45_000, 15_000,
     )
 
     /** Test-only injection keeps the destination loopback-only, including in fake-server tests. */
@@ -75,7 +75,7 @@ internal class LocalAdb private constructor(
                         continuation.context.ensureActive()
                         socket.soTimeout = READ_POLL_MS
                         socket.tcpNoDelay = true
-                        socket.connect(InetSocketAddress(InetAddress.getByAddress(byteArrayOf(127, 0, 0, 1)), port), CONNECT_TIMEOUT_MS)
+                        socket.connect(InetSocketAddress(LOOPBACK, port), CONNECT_TIMEOUT_MS)
                         val session = AdbSession(socket.getInputStream(), socket.getOutputStream(), continuation.context)
                         val result = session.shell(command, { key }, authTimeoutMs, operationTimeoutMs)
                         if (continuation.isActive) continuation.resume(result)
@@ -91,11 +91,24 @@ internal class LocalAdb private constructor(
         }
     }
 
-    private companion object {
-        const val CONNECT_TIMEOUT_MS = 4_000
-        const val TIMEOUT_HEADROOM_MS = 1_000L
-        const val MAX_COMMAND_BYTES = 8 * 1024
-        const val READ_POLL_MS = 1_000
+    companion object {
+        private val LOOPBACK = InetAddress.getByAddress(byteArrayOf(127, 0, 0, 1))
+        private const val NETWORK_PORT = 5555
+
+        /** Check the local listener without sending ADB traffic or requesting authorization. */
+        suspend fun isNetworkDebuggingAvailable(): Boolean = withContext(Dispatchers.IO) {
+            try {
+                Socket().use { it.connect(InetSocketAddress(LOOPBACK, NETWORK_PORT), 500) }
+                true
+            } catch (_: IOException) {
+                false
+            }
+        }
+
+        private const val CONNECT_TIMEOUT_MS = 4_000
+        private const val TIMEOUT_HEADROOM_MS = 1_000L
+        private const val MAX_COMMAND_BYTES = 8 * 1024
+        private const val READ_POLL_MS = 1_000
     }
 }
 

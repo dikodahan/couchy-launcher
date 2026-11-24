@@ -7,8 +7,8 @@ import kotlinx.serialization.json.Json
 /**
  * Built-in aerial-videos wallpaper source — the video manifests ship WITH the
  * launcher, so no companion app or plugin needs to be installed or configured.
- * 289 videos, 1080p H.264, streamed: Apple (139), Amazon Fire TV (112),
- * community collections (38).
+ * 289 streamed videos from Apple, Amazon Fire TV and community collections.
+ * Amazon Fire TV supplies the lower-resolution 720p variants.
  */
 object BuiltinAerials {
     private val format = Json { ignoreUnknownKeys = true }
@@ -16,30 +16,31 @@ object BuiltinAerials {
     /** Source filter values (config.builtinSource). */
     val SOURCES = listOf("", "A", "Z", "C1", "C2") // "" = all
 
+    const val QUALITY_1080P = 0
+    const val QUALITY_720P = 1
+
     @Serializable
-    private data class Entry(val t: String = "", val u: String, val s: String = "A")
+    private data class Entry(val u: String, val s: String = "A", val u720: String? = null)
 
-    // source-key -> video URI
     @Volatile
-    private var cache: List<Pair<String, String>>? = null
+    private var cache: List<Entry>? = null
 
-    private fun loadAll(context: Context): List<Pair<String, String>> {
+    private fun loadAll(context: Context): List<Entry> {
         cache?.let { return it }
         val list = runCatching {
             val json = context.assets.open("aerials.json")
                 .bufferedReader().use { it.readText() }
             format.decodeFromString<List<Entry>>(json)
-                .map { it.s to it.u }
         }.getOrDefault(emptyList())
         cache = list
         return list
     }
 
-    /** Video URIs for a collection. [sourceIndex] indexes SOURCES; 0 = every collection. */
-    fun load(context: Context, sourceIndex: Int = 0): List<String> {
-        val key = SOURCES.getOrElse(sourceIndex) { "" }
+    /** 720p uses only genuine lower-resolution variants. The 1080p collection choice is preserved. */
+    fun load(context: Context, sourceIndex: Int, quality: Int): List<String> {
         val all = loadAll(context)
-        return if (key.isEmpty()) all.map { it.second }
-        else all.filter { it.first == key }.map { it.second }
+        if (quality == QUALITY_720P) return all.mapNotNull { it.u720 }
+        val key = SOURCES.getOrElse(sourceIndex) { "" }
+        return all.filter { key.isEmpty() || it.s == key }.map { it.u }
     }
 }

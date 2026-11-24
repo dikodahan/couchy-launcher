@@ -62,7 +62,6 @@
     <string name="item_android_settings">Android 설정</string>
     <string name="item_android_settings_sub">이 기기의 시스템 설정 열기</string>
     <string name="item_sections">섹션</string>
-    <string name="item_sections_sub">섹션별 앱 선택, 이름 변경, 순서 조정</string>
     <string name="item_display">디스플레이</string>
     <string name="item_display_sub">레이아웃 모드, 이름, 아이콘 크기, 간격</string>
     <string name="item_wallpaper">배경화면</string>
@@ -99,11 +98,9 @@
     <string name="no_section">섹션 없음</string>
     <string name="hidden_tag">숨김</string>
 
-    <string name="section_row_sub">OK: 이 섹션의 앱 선택</string>
     <string name="add_section">섹션 추가</string>
     <string name="new_section">새 섹션</string>
     <string name="rename_section">섹션 이름 변경</string>
-    <string name="section_apps_sub">OK를 누르면 앱이 이 섹션에 표시될지 전환됩니다</string>
 
     <string name="dim_label">어둡게</string>
     <string name="dim_top_bottom">위 &amp; 아래</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">예보 위치: %1$s</string>
     <string name="weather_using_saved_ip_city">마지막으로 저장한 IP 위치를 사용합니다. 이번 세션에서는 추가 IP 조회를 하지 않습니다.</string>
     <string name="home_launcher_title">홈 런처</string>
-    <string name="home_launcher_settings_sub">홈을 선택하거나 Couchy를 사용하거나 시스템 런처를 복원하세요.</string>
     <string name="home_current">현재 홈: %1$s</string>
     <string name="home_not_selected">선택되지 않음</string>
-    <string name="home_system_picker">Android에서 홈 선택</string>
-    <string name="home_system_picker_sub">가능한 경우 TV의 기본 홈 선택기를 엽니다.</string>
-    <string name="home_picker_unavailable">이 TV에는 홈 선택기가 없습니다. 아래의 디버깅 기능을 사용하세요.</string>
-    <string name="home_debugging_controls">TV 디버깅 제어</string>
-    <string name="home_debugging_controls_sub">별도의 Launcher Manager 앱 없이 홈 런처를 바꿉니다.</string>
-    <string name="home_debugging_help">네트워크 ADB를 켜고 항상 허용을 선택해 Couchy를 승인하세요. Couchy는 이 TV의 5555 포트에만 연결합니다. 무선 디버깅에 페어링이 필요한 경우 컴퓨터에서 먼저 TCP ADB를 켜세요.</string>
     <string name="home_use_couchy">Couchy를 홈으로 사용</string>
-    <string name="home_use_couchy_sub">승인된 디버깅으로 적용한 뒤 결과를 확인합니다.</string>
-    <string name="home_pause_stock">기본 런처가 다시 활성화되지 않도록 설정</string>
-    <string name="home_pause_stock_sub">알려진 시스템 구성요소를 일시 중지할 수 있습니다. 런처를 전환하면 복원됩니다.</string>
-    <string name="home_choose_other">다른 홈 런처로 전환</string>
-    <string name="home_choose_other_sub">Launcher Manager에서 비활성화한 시스템 런처도 포함합니다.</string>
     <string name="home_restore_stock">일시 중지된 시스템 런처 복원</string>
     <string name="home_restore_stock_sub">Couchy가 기록한 구성요소를 복원한 다음 원하는 런처를 선택할 수 있습니다.</string>
     <string name="home_confirm_title">%1$s을(를) 홈으로 사용할까요?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">현재 런처 유지</string>
     <string name="home_stock_still_active">기본 런처가 아직 활성화되어 있습니다.</string>
     <string name="home_wizard_debug_needed">네트워크 ADB를 켜고 Couchy를 홈으로 사용을 다시 선택하세요. 현재 런처를 유지하고 나중에 변경할 수도 있습니다.</string>
-    <string name="home_control_open">열기</string>
-    <string name="home_control_on">켜짐</string>
     <string name="home_press_home_title">리모컨의 홈 버튼을 누르세요</string>
     <string name="home_press_home_body">홈 버튼으로 Couchy가 열리는지 확인하세요.</string>
     <string name="home_debug_export">디버그 로그 내보내기</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">추천 앱 추가</string>
     <string name="recommended_catalog_url">카탈로그 JSON URL</string>
     <string name="recommended_catalog_invalid">호환되는 추천 앱 JSON 파일의 유효한 HTTPS 링크를 입력하세요.</string>
+    <string name="apps_reorder_mode">앱 순서 변경 모드</string>
+    <string name="apps_reorder_help">확인을 눌러 앱을 선택하거나 놓으세요. 저장하고 나가려면 뒤로를 누르세요.</string>
+    <string name="edit_section">섹션 수정</string>
+    <string name="section_icon">섹션 아이콘 표시</string>
+    <string name="section_choose_icon">섹션 아이콘 선택</string>
+    <string name="aerial_quality">동영상 화질</string>
+    <string name="home_switch_to">%1$s(으)로 전환</string>
+    <string name="home_stock_launcher">기본 런처</string>
+    <string name="home_adb_enabled">네트워크 ADB 디버깅이 켜져 있습니다</string>
+    <string name="home_adb_disabled">네트워크 ADB 디버깅이 꺼져 있습니다</string>
+    <string name="home_launcher_settings_sub">Couchy와 TV 기본 런처 간에 전환</string>
+    <string name="android_shortcuts">Android 바로가기</string>
+    <string name="screen_resize">화면 크기 조정</string>
+    <string name="shortcut_keyboard_languages">키보드 언어</string>
+    <string name="shortcut_screensaver">화면 보호기 선택</string>
+    <string name="shortcut_power_timeout">자동으로 끄기</string>
 </resources>

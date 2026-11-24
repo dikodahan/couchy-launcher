@@ -70,7 +70,6 @@
     <string name="item_android_settings">Android settings</string>
     <string name="item_android_settings_sub">Open the system settings of this device</string>
     <string name="item_sections">Sections</string>
-    <string name="item_sections_sub">Pick apps per section, rename, reorder</string>
     <string name="item_display">Display</string>
     <string name="item_display_sub">Layout mode, names, icon size, spacing</string>
     <string name="item_wallpaper">Wallpaper</string>
@@ -156,11 +155,9 @@
     <string name="hidden_tag">hidden</string>
 
     <!-- Settings: sections -->
-    <string name="section_row_sub">OK: choose the apps of this section</string>
     <string name="add_section">Add section</string>
     <string name="new_section">New section</string>
     <string name="rename_section">Rename section</string>
-    <string name="section_apps_sub">OK toggles whether an app appears in this section</string>
 
     <!-- Settings: wallpaper -->
     <string name="dim_label">Dimming</string>
@@ -273,22 +270,10 @@
     <string name="weather_invalid_input" tools:ignore="MissingTranslation">Enter a valid coordinate, postal code, or two-letter country code</string>
     <string name="icon_save_failed" tools:ignore="MissingTranslation">Could not save the selected image</string>
     <string name="home_launcher_title" tools:ignore="MissingTranslation">Home launcher</string>
-    <string name="home_launcher_settings_sub" tools:ignore="MissingTranslation">Choose Home, use Couchy, or restore the system launcher</string>
     <string name="home_current" tools:ignore="MissingTranslation">Current Home: %1$s</string>
     <string name="home_not_selected" tools:ignore="MissingTranslation">Not selected</string>
-    <string name="home_system_picker" tools:ignore="MissingTranslation">Choose Home in Android</string>
-    <string name="home_system_picker_sub" tools:ignore="MissingTranslation">Open the TV’s standard Home picker when available</string>
-    <string name="home_picker_unavailable" tools:ignore="MissingTranslation">This TV does not expose a Home picker. Use the TV debugging controls below.</string>
-    <string name="home_debugging_controls" tools:ignore="MissingTranslation">TV debugging controls</string>
-    <string name="home_debugging_controls_sub" tools:ignore="MissingTranslation">Switch Home without a separate Launcher Manager app</string>
-    <string name="home_debugging_help" tools:ignore="MissingTranslation">Enable network/ADB debugging on this TV and approve Couchy’s prompt with Always allow so verification and recovery can reuse the authorization. Couchy connects only to this TV on port 5555. Pairing-only wireless debugging needs a computer to enable TCP ADB first.</string>
     <string name="home_open_debugging">Open debugging settings</string>
     <string name="home_use_couchy" tools:ignore="MissingTranslation">Use Couchy as Home</string>
-    <string name="home_use_couchy_sub" tools:ignore="MissingTranslation">Apply through approved TV debugging, then verify the result</string>
-    <string name="home_pause_stock" tools:ignore="MissingTranslation">Stop the stock launcher taking over</string>
-    <string name="home_pause_stock_sub" tools:ignore="MissingTranslation">Optionally pause known stock launcher components while Couchy is Home. They are restored when switching away.</string>
-    <string name="home_choose_other" tools:ignore="MissingTranslation">Switch to another Home launcher</string>
-    <string name="home_choose_other_sub" tools:ignore="MissingTranslation">Includes installed system launchers that Launcher Manager disabled</string>
     <string name="home_restore_stock" tools:ignore="MissingTranslation">Restore paused system launchers</string>
     <string name="home_restore_stock_sub" tools:ignore="MissingTranslation">Restore the system launcher components recorded by Couchy. Choose another Home afterwards if you want to switch away.</string>
     <string name="home_confirm_title" tools:ignore="MissingTranslation">Use %1$s as Home?</string>
@@ -306,8 +291,6 @@
     <string name="home_keep_current" tools:ignore="MissingTranslation">Keep current launcher</string>
     <string name="home_stock_still_active" tools:ignore="MissingTranslation">The stock launcher is still active</string>
     <string name="home_wizard_debug_needed" tools:ignore="MissingTranslation">To finish switching Home, enable network ADB debugging on this TV, then choose Use Couchy as Home again. You can also keep your current launcher and make the change later in Launcher settings.</string>
-    <string name="home_control_open" tools:ignore="MissingTranslation">Open</string>
-    <string name="home_control_on" tools:ignore="MissingTranslation">On</string>
     <string name="home_press_home_title" tools:ignore="MissingTranslation">Press Home on your remote</string>
     <string name="home_press_home_body" tools:ignore="MissingTranslation">Check that pressing Home opens Couchy.</string>
     <string name="home_debug_export" tools:ignore="MissingTranslation">Export debug log</string>
@@ -399,4 +382,21 @@
     <string name="recommended_settings">Add recommended apps</string>
     <string name="recommended_catalog_url">Catalog JSON URL</string>
     <string name="recommended_catalog_invalid">Enter a valid HTTPS link to a compatible recommended apps JSON file.</string>
+    <string name="apps_reorder_mode">Apps reorder mode</string>
+    <string name="apps_reorder_help">Press OK to pick up or drop an app. Press Back to save and exit.</string>
+    <string name="edit_section">Edit section</string>
+    <string name="section_icon">Show section icon</string>
+    <string name="section_choose_icon">Choose section icon</string>
+    <string name="aerial_quality">Video quality</string>
+    <string name="aerial_quality_amazon" translatable="false">Amazon Fire TV</string>
+    <string name="home_switch_to">Switch to %1$s</string>
+    <string name="home_stock_launcher">Stock launcher</string>
+    <string name="home_adb_enabled">Network ADB debugging enabled</string>
+    <string name="home_adb_disabled">Network ADB debugging disabled</string>
+    <string name="home_launcher_settings_sub">Switch between Couchy and your TV’s stock launcher</string>
+    <string name="android_shortcuts">Android shortcuts</string>
+    <string name="screen_resize">Screen resize</string>
+    <string name="shortcut_keyboard_languages">Keyboard languages</string>
+    <string name="shortcut_screensaver">Choose screen saver</string>
+    <string name="shortcut_power_timeout">Automatically turn off</string>
 </resources>

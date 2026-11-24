@@ -62,7 +62,6 @@
     <string name="item_android_settings">การตั้งค่า Android</string>
     <string name="item_android_settings_sub">เปิดการตั้งค่าระบบของอุปกรณ์นี้</string>
     <string name="item_sections">หมวดหมู่</string>
-    <string name="item_sections_sub">เลือกแอปตามหมวดหมู่ เปลี่ยนชื่อ จัดเรียงใหม่</string>
     <string name="item_display">การแสดงผล</string>
     <string name="item_display_sub">โหมดเค้าโครง ชื่อ ขนาดไอคอน ระยะห่าง</string>
     <string name="item_wallpaper">วอลเปเปอร์</string>
@@ -99,11 +98,9 @@
     <string name="no_section">ไม่มีหมวดหมู่</string>
     <string name="hidden_tag">ซ่อนอยู่</string>
 
-    <string name="section_row_sub">OK: เลือกแอปของหมวดหมู่นี้</string>
     <string name="add_section">เพิ่มหมวดหมู่</string>
     <string name="new_section">หมวดหมู่ใหม่</string>
     <string name="rename_section">เปลี่ยนชื่อหมวดหมู่</string>
-    <string name="section_apps_sub">OK สลับว่าแอปจะปรากฏในหมวดหมู่นี้หรือไม่</string>
 
     <string name="dim_label">การทำให้มืด</string>
     <string name="dim_top_bottom">บน &amp; ล่าง</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">สถานที่สำหรับพยากรณ์อากาศ: %1$s</string>
     <string name="weather_using_saved_ip_city">ใช้ตำแหน่งจาก IP ที่บันทึกไว้ล่าสุด จะไม่ค้นหาจาก IP ซ้ำในเซสชันนี้</string>
     <string name="home_launcher_title">ตัวเรียกใช้หน้าหลัก</string>
-    <string name="home_launcher_settings_sub">เลือกหน้าหลัก ใช้ Couchy หรือกู้คืนตัวเรียกใช้ของระบบ</string>
     <string name="home_current">หน้าหลักปัจจุบัน: %1$s</string>
     <string name="home_not_selected">ยังไม่ได้เลือก</string>
-    <string name="home_system_picker">เลือกหน้าหลักใน Android</string>
-    <string name="home_system_picker_sub">เปิดตัวเลือกมาตรฐานของทีวีหากมี</string>
-    <string name="home_picker_unavailable">ทีวีนี้ไม่มีตัวเลือกหน้าหลัก ให้ใช้การควบคุมการแก้ไขข้อบกพร่องด้านล่าง</string>
-    <string name="home_debugging_controls">การควบคุมการแก้ไขข้อบกพร่องของทีวี</string>
-    <string name="home_debugging_controls_sub">สลับหน้าหลักโดยไม่ต้องใช้แอป Launcher Manager แยกต่างหาก</string>
-    <string name="home_debugging_help">เปิด ADB ผ่านเครือข่ายและเลือกอนุญาตเสมอสำหรับ Couchy แอปเชื่อมต่อเฉพาะทีวีเครื่องนี้ผ่านพอร์ต 5555 หากการแก้ไขข้อบกพร่องไร้สายต้องจับคู่ ให้เปิด TCP ADB จากคอมพิวเตอร์ก่อน</string>
     <string name="home_use_couchy">ใช้ Couchy เป็นหน้าหลัก</string>
-    <string name="home_use_couchy_sub">ใช้การแก้ไขข้อบกพร่องที่ได้รับอนุญาต แล้วตรวจสอบผล</string>
-    <string name="home_pause_stock">ป้องกันไม่ให้ตัวเรียกใช้เดิมกลับมาทำงาน</string>
-    <string name="home_pause_stock_sub">พักส่วนประกอบที่รู้จักได้ ระบบจะกู้คืนเมื่อเปลี่ยนตัวเรียกใช้</string>
-    <string name="home_choose_other">สลับไปยังตัวเรียกใช้อื่น</string>
-    <string name="home_choose_other_sub">รวมตัวเรียกใช้ของระบบที่ Launcher Manager ปิดไว้</string>
     <string name="home_restore_stock">กู้คืนตัวเรียกใช้ของระบบที่พักไว้</string>
     <string name="home_restore_stock_sub">กู้คืนส่วนประกอบที่ Couchy บันทึกไว้ จากนั้นเลือกตัวเรียกใช้อื่นได้</string>
     <string name="home_confirm_title">ใช้ %1$s เป็นหน้าหลักหรือไม่</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">ใช้ตัวเรียกใช้ปัจจุบันต่อไป</string>
     <string name="home_stock_still_active">ตัวเรียกใช้เดิมยังทำงานอยู่</string>
     <string name="home_wizard_debug_needed">เปิด ADB ผ่านเครือข่ายแล้วเลือกใช้ Couchy เป็นหน้าหลักอีกครั้ง หรือใช้ตัวเรียกใช้ปัจจุบันต่อและเปลี่ยนภายหลัง</string>
-    <string name="home_control_open">เปิด</string>
-    <string name="home_control_on">เปิดอยู่</string>
     <string name="home_press_home_title">กดปุ่ม Home บนรีโมต</string>
     <string name="home_press_home_body">ตรวจสอบว่าปุ่ม Home เปิด Couchy</string>
     <string name="home_debug_export">ส่งออกบันทึกการแก้ไขข้อบกพร่อง</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">เพิ่มแอปแนะนำ</string>
     <string name="recommended_catalog_url">URL ของแค็ตตาล็อก JSON</string>
     <string name="recommended_catalog_invalid">ป้อนลิงก์ HTTPS ที่ถูกต้องไปยังไฟล์ JSON ของแอปแนะนำที่รองรับ</string>
+    <string name="apps_reorder_mode">โหมดจัดลำดับแอป</string>
+    <string name="apps_reorder_help">กดตกลงเพื่อเลือกหรือวางแอป กดย้อนกลับเพื่อบันทึกและออก</string>
+    <string name="edit_section">แก้ไขส่วน</string>
+    <string name="section_icon">แสดงไอคอนส่วน</string>
+    <string name="section_choose_icon">เลือกไอคอนส่วน</string>
+    <string name="aerial_quality">คุณภาพวิดีโอ</string>
+    <string name="home_switch_to">สลับไปยัง %1$s</string>
+    <string name="home_stock_launcher">ตัวเปิดระบบ</string>
+    <string name="home_adb_enabled">เปิดการแก้ไขข้อบกพร่อง ADB ผ่านเครือข่ายแล้ว</string>
+    <string name="home_adb_disabled">ปิดการแก้ไขข้อบกพร่อง ADB ผ่านเครือข่ายอยู่</string>
+    <string name="home_launcher_settings_sub">สลับระหว่าง Couchy กับตัวเปิดระบบของทีวี</string>
+    <string name="android_shortcuts">ทางลัด Android</string>
+    <string name="screen_resize">ปรับขนาดหน้าจอ</string>
+    <string name="shortcut_keyboard_languages">ภาษาของแป้นพิมพ์</string>
+    <string name="shortcut_screensaver">เลือกโปรแกรมรักษาหน้าจอ</string>
+    <string name="shortcut_power_timeout">ปิดอัตโนมัติ</string>
 </resources>

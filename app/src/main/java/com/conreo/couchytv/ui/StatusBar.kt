@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -92,9 +90,7 @@ fun StatusBar(
     // panel, corners follow the roundness setting.
     val cluster = if (glass) {
         Modifier
-            .clip(SmoothCornerShape(LocalCornerRadius.current))
-            .background(Color(0xB3121418))
-            .background(Color.White.copy(alpha = 0.06f))
+            .launcherGlass(LocalCornerRadius.current)
             .padding(horizontal = 12.dp, vertical = 4.dp)
     } else Modifier
     Row(

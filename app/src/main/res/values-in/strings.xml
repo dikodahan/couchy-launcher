@@ -62,7 +62,6 @@
     <string name="item_android_settings">Pengaturan Android</string>
     <string name="item_android_settings_sub">Buka pengaturan sistem perangkat ini</string>
     <string name="item_sections">Bagian</string>
-    <string name="item_sections_sub">Pilih aplikasi per bagian, ganti nama, urutkan ulang</string>
     <string name="item_display">Tampilan</string>
     <string name="item_display_sub">Mode tata letak, nama, ukuran ikon, jarak</string>
     <string name="item_wallpaper">Wallpaper</string>
@@ -99,11 +98,9 @@
     <string name="no_section">tanpa bagian</string>
     <string name="hidden_tag">tersembunyi</string>
 
-    <string name="section_row_sub">OK: pilih aplikasi bagian ini</string>
     <string name="add_section">Tambah bagian</string>
     <string name="new_section">Bagian baru</string>
     <string name="rename_section">Ganti nama bagian</string>
-    <string name="section_apps_sub">OK mengalihkan apakah aplikasi muncul di bagian ini</string>
 
     <string name="dim_label">Peredupan</string>
     <string name="dim_top_bottom">Atas &amp; bawah</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">Lokasi prakiraan: %1$s</string>
     <string name="weather_using_saved_ip_city">Menggunakan lokasi IP terakhir yang disimpan. Tidak ada pencarian IP lain dalam sesi ini.</string>
     <string name="home_launcher_title">Peluncur layar utama</string>
-    <string name="home_launcher_settings_sub">Pilih layar utama, gunakan Couchy, atau pulihkan peluncur sistem.</string>
     <string name="home_current">Layar utama saat ini: %1$s</string>
     <string name="home_not_selected">Belum dipilih</string>
-    <string name="home_system_picker">Pilih layar utama di Android</string>
-    <string name="home_system_picker_sub">Buka pemilih standar TV jika tersedia.</string>
-    <string name="home_picker_unavailable">TV ini tidak menyediakan pemilih. Gunakan kontrol debugging di bawah.</string>
-    <string name="home_debugging_controls">Kontrol debugging TV</string>
-    <string name="home_debugging_controls_sub">Ganti peluncur tanpa aplikasi Launcher Manager terpisah.</string>
-    <string name="home_debugging_help">Aktifkan ADB melalui jaringan dan izinkan Couchy melalui Selalu izinkan. Couchy hanya terhubung ke TV ini di port 5555. Jika debugging nirkabel mengharuskan pemasangan, aktifkan TCP ADB dari komputer terlebih dahulu.</string>
     <string name="home_use_couchy">Gunakan Couchy sebagai layar utama</string>
-    <string name="home_use_couchy_sub">Terapkan melalui debugging yang disetujui dan periksa hasilnya.</string>
-    <string name="home_pause_stock">Cegah peluncur bawaan mengambil alih</string>
-    <string name="home_pause_stock_sub">Komponen sistem yang dikenal dapat dijeda dan akan dipulihkan saat beralih peluncur.</string>
-    <string name="home_choose_other">Beralih ke peluncur lain</string>
-    <string name="home_choose_other_sub">Termasuk peluncur sistem yang dinonaktifkan oleh Launcher Manager.</string>
     <string name="home_restore_stock">Pulihkan peluncur sistem yang dijeda</string>
     <string name="home_restore_stock_sub">Pulihkan komponen yang dicatat Couchy, lalu pilih peluncur lain jika perlu.</string>
     <string name="home_confirm_title">Gunakan %1$s sebagai layar utama?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">Pertahankan peluncur saat ini</string>
     <string name="home_stock_still_active">Peluncur bawaan masih aktif.</string>
     <string name="home_wizard_debug_needed">Aktifkan ADB jaringan, lalu pilih lagi Gunakan Couchy sebagai layar utama. Anda juga dapat mempertahankan peluncur saat ini dan beralih nanti.</string>
-    <string name="home_control_open">Buka</string>
-    <string name="home_control_on">Aktif</string>
     <string name="home_press_home_title">Tekan Home di remote</string>
     <string name="home_press_home_body">Pastikan tombol Home membuka Couchy.</string>
     <string name="home_debug_export">Ekspor log debugging</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">Tambahkan aplikasi yang direkomendasikan</string>
     <string name="recommended_catalog_url">URL JSON katalog</string>
     <string name="recommended_catalog_invalid">Masukkan tautan HTTPS yang valid ke file JSON aplikasi yang direkomendasikan dan kompatibel.</string>
+    <string name="apps_reorder_mode">Mode susun ulang aplikasi</string>
+    <string name="apps_reorder_help">Tekan OK untuk memilih atau meletakkan aplikasi. Tekan Kembali untuk menyimpan dan keluar.</string>
+    <string name="edit_section">Edit bagian</string>
+    <string name="section_icon">Tampilkan ikon bagian</string>
+    <string name="section_choose_icon">Pilih ikon bagian</string>
+    <string name="aerial_quality">Kualitas video</string>
+    <string name="home_switch_to">Beralih ke %1$s</string>
+    <string name="home_stock_launcher">Peluncur bawaan</string>
+    <string name="home_adb_enabled">Debugging ADB jaringan aktif</string>
+    <string name="home_adb_disabled">Debugging ADB jaringan nonaktif</string>
+    <string name="home_launcher_settings_sub">Beralih antara Couchy dan peluncur bawaan TV</string>
+    <string name="android_shortcuts">Pintasan Android</string>
+    <string name="screen_resize">Ubah ukuran layar</string>
+    <string name="shortcut_keyboard_languages">Bahasa keyboard</string>
+    <string name="shortcut_screensaver">Pilih screensaver</string>
+    <string name="shortcut_power_timeout">Matikan otomatis</string>
 </resources>

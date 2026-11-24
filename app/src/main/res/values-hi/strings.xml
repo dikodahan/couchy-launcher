@@ -62,7 +62,6 @@
     <string name="item_android_settings">Android सेटिंग्स</string>
     <string name="item_android_settings_sub">इस डिवाइस की सिस्टम सेटिंग्स खोलें</string>
     <string name="item_sections">अनुभाग</string>
-    <string name="item_sections_sub">प्रति अनुभाग ऐप्स चुनें, नाम बदलें, पुनर्व्यवस्थित करें</string>
     <string name="item_display">डिस्प्ले</string>
     <string name="item_display_sub">लेआउट मोड, नाम, आइकन आकार, अंतराल</string>
     <string name="item_wallpaper">वॉलपेपर</string>
@@ -99,11 +98,9 @@
     <string name="no_section">कोई अनुभाग नहीं</string>
     <string name="hidden_tag">छिपा हुआ</string>
 
-    <string name="section_row_sub">OK: इस अनुभाग के ऐप्स चुनें</string>
     <string name="add_section">अनुभाग जोड़ें</string>
     <string name="new_section">नया अनुभाग</string>
     <string name="rename_section">अनुभाग का नाम बदलें</string>
-    <string name="section_apps_sub">OK टॉगल करता है कि कोई ऐप इस अनुभाग में दिखे या नहीं</string>
 
     <string name="dim_label">मंदता</string>
     <string name="dim_top_bottom">ऊपर &amp; नीचे</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">पूर्वानुमान का स्थान: %1$s</string>
     <string name="weather_using_saved_ip_city">पिछला सेव किया गया IP स्थान इस्तेमाल हो रहा है। इस सत्र में और IP खोज नहीं होगी।</string>
     <string name="home_launcher_title">होम लॉन्चर</string>
-    <string name="home_launcher_settings_sub">होम चुनें, Couchy इस्तेमाल करें या सिस्टम लॉन्चर बहाल करें।</string>
     <string name="home_current">मौजूदा होम: %1$s</string>
     <string name="home_not_selected">चुना नहीं गया</string>
-    <string name="home_system_picker">Android में होम चुनें</string>
-    <string name="home_system_picker_sub">उपलब्ध होने पर टीवी का मानक होम चयन खोलें।</string>
-    <string name="home_picker_unavailable">इस टीवी में होम चयन उपलब्ध नहीं है। नीचे दिए डीबगिंग विकल्प इस्तेमाल करें।</string>
-    <string name="home_debugging_controls">टीवी डीबगिंग नियंत्रण</string>
-    <string name="home_debugging_controls_sub">अलग Launcher Manager ऐप के बिना होम बदलें।</string>
-    <string name="home_debugging_help">नेटवर्क से ADB चालू करें और Couchy को हमेशा अनुमति दें। Couchy केवल इसी टीवी के पोर्ट 5555 से जुड़ता है। अगर वायरलेस डीबगिंग में पेयरिंग ज़रूरी है, तो कंप्यूटर से पहले TCP ADB चालू करें।</string>
     <string name="home_use_couchy">Couchy को होम बनाएँ</string>
-    <string name="home_use_couchy_sub">अनुमति वाले डीबगिंग कनेक्शन से बदलाव लागू करें और नतीजा जाँचें।</string>
-    <string name="home_pause_stock">डिफ़ॉल्ट लॉन्चर को फिर सक्रिय होने से रोकें</string>
-    <string name="home_pause_stock_sub">पहचाने गए सिस्टम घटकों को रोक सकते हैं। लॉन्चर बदलने पर वे बहाल होंगे।</string>
-    <string name="home_choose_other">दूसरे होम लॉन्चर पर जाएँ</string>
-    <string name="home_choose_other_sub">इसमें Launcher Manager से बंद किए गए सिस्टम लॉन्चर भी शामिल हैं।</string>
     <string name="home_restore_stock">रोके गए सिस्टम लॉन्चर बहाल करें</string>
     <string name="home_restore_stock_sub">Couchy के दर्ज किए घटक बहाल करें। इसके बाद दूसरा होम चुन सकते हैं।</string>
     <string name="home_confirm_title">%1$s को होम बनाएँ?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">मौजूदा लॉन्चर रखें</string>
     <string name="home_stock_still_active">डिफ़ॉल्ट लॉन्चर अभी सक्रिय है।</string>
     <string name="home_wizard_debug_needed">टीवी पर नेटवर्क ADB चालू करें और Couchy को होम बनाएँ फिर चुनें। आप मौजूदा लॉन्चर रखकर बाद में भी बदल सकते हैं।</string>
-    <string name="home_control_open">खोलें</string>
-    <string name="home_control_on">चालू</string>
     <string name="home_press_home_title">रिमोट पर होम दबाएँ</string>
     <string name="home_press_home_body">जाँचें कि होम बटन Couchy खोलता है।</string>
     <string name="home_debug_export">डीबग लॉग निर्यात करें</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">सुझाए गए ऐप्लिकेशन जोड़ें</string>
     <string name="recommended_catalog_url">कैटलॉग JSON का यूआरएल</string>
     <string name="recommended_catalog_invalid">सुझाए गए ऐप्लिकेशन की संगत JSON फ़ाइल का मान्य HTTPS लिंक डालें।</string>
+    <string name="apps_reorder_mode">ऐप्लिकेशन क्रम बदलने का मोड</string>
+    <string name="apps_reorder_help">ऐप्लिकेशन चुनने या रखने के लिए OK दबाएँ। सेव करके बाहर निकलने के लिए वापस दबाएँ।</string>
+    <string name="edit_section">सेक्शन में बदलाव करें</string>
+    <string name="section_icon">सेक्शन आइकॉन दिखाएँ</string>
+    <string name="section_choose_icon">सेक्शन आइकॉन चुनें</string>
+    <string name="aerial_quality">वीडियो की गुणवत्ता</string>
+    <string name="home_switch_to">%1$s पर स्विच करें</string>
+    <string name="home_stock_launcher">सिस्टम लॉन्चर</string>
+    <string name="home_adb_enabled">नेटवर्क ADB डीबगिंग चालू है</string>
+    <string name="home_adb_disabled">नेटवर्क ADB डीबगिंग बंद है</string>
+    <string name="home_launcher_settings_sub">Couchy और टीवी के सिस्टम लॉन्चर के बीच स्विच करें</string>
+    <string name="android_shortcuts">Android शॉर्टकट</string>
+    <string name="screen_resize">स्क्रीन का आकार बदलें</string>
+    <string name="shortcut_keyboard_languages">कीबोर्ड की भाषाएँ</string>
+    <string name="shortcut_screensaver">स्क्रीन सेवर चुनें</string>
+    <string name="shortcut_power_timeout">अपने आप बंद करें</string>
 </resources>

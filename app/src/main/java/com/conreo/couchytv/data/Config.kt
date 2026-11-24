@@ -3,6 +3,7 @@ package com.conreo.couchytv.data
 import android.content.Context
 import android.os.Environment
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.conreo.couchytv.R
@@ -21,7 +22,11 @@ import java.io.File
 data class CategoryCfg(
     val id: String,
     val name: String,
-)
+    val iconName: String? = null,
+    val iconEnabled: Boolean = false,
+) {
+    val visibleIcon: String? get() = iconName.takeIf { iconEnabled }
+}
 
 @Immutable
 @Serializable
@@ -49,6 +54,7 @@ data class LauncherConfig(
     val useBuiltinAerials: Boolean = false,
     /** which built-in collection (index into BuiltinAerials.SOURCES; 0 = all) */
     val builtinSource: Int = 0,
+    val aerialQuality: Int = BuiltinAerials.QUALITY_1080P,
     /** video wallpaper playback speed: index into VIDEO_SPEEDS */
     val videoSpeed: Int = 3, // 1x
     val accent: Int = 0,
@@ -160,15 +166,22 @@ val LANGUAGES = listOf(
 
 private val Context.dataStore by preferencesDataStore(name = "launcher")
 private val KEY_CONFIG = stringPreferencesKey("config")
+private val KEY_RESTORE_REVISION = longPreferencesKey("restore_revision")
+
+internal data class StoredConfig(val config: LauncherConfig, val restoreRevision: Long)
 private val json = Json { ignoreUnknownKeys = true }
 
 class ConfigStore(private val context: Context) {
 
-    val flow: Flow<LauncherConfig> = context.dataStore.data.map { prefs ->
-        prefs[KEY_CONFIG]?.let {
-            runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
-        } ?: LauncherConfig(categories = defaultCategories(context))
+    internal val storedConfig: Flow<StoredConfig> = context.dataStore.data.map { prefs ->
+        StoredConfig(decodeConfig(prefs[KEY_CONFIG]), prefs[KEY_RESTORE_REVISION] ?: 0L)
     }
+
+    val flow: Flow<LauncherConfig> = storedConfig.map { it.config }
+
+    private fun decodeConfig(saved: String?): LauncherConfig = saved?.let {
+        runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
+    } ?: LauncherConfig(categories = defaultCategories(context))
 
     private fun defaultCategories(ctx: Context) = listOf(
         CategoryCfg("streaming", ctx.getString(R.string.cat_streaming)),
@@ -179,10 +192,7 @@ class ConfigStore(private val context: Context) {
 
     suspend fun update(transform: (LauncherConfig) -> LauncherConfig) {
         context.dataStore.edit { prefs ->
-            val current = prefs[KEY_CONFIG]?.let {
-                runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
-            } ?: LauncherConfig(categories = defaultCategories(context))
-            prefs[KEY_CONFIG] = json.encodeToString(transform(current))
+            prefs[KEY_CONFIG] = json.encodeToString(transform(decodeConfig(prefs[KEY_CONFIG])))
         }
     }
 
@@ -190,7 +200,12 @@ class ConfigStore(private val context: Context) {
 
     /** Apply portable settings atomically while keeping destination scan state. */
     suspend fun restore(loaded: LauncherConfig) {
-        update { current -> loaded.copy(knownApps = current.knownApps, setupDone = true) }
+        context.dataStore.edit { prefs ->
+            val current = decodeConfig(prefs[KEY_CONFIG])
+            prefs[KEY_CONFIG] = json.encodeToString(loaded.copy(knownApps = current.knownApps, setupDone = true))
+            // A restore must refresh runtime state even when the settings are identical.
+            prefs[KEY_RESTORE_REVISION] = (prefs[KEY_RESTORE_REVISION] ?: 0L) + 1L
+        }
     }
 
     /** Same JSON the settings Save locally button writes. */

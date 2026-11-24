@@ -101,7 +101,6 @@
     <string name="item_android_settings">Paramètres Android</string>
     <string name="item_android_settings_sub">Ouvrir les paramètres système de l\'appareil</string>
     <string name="item_sections">Sections</string>
-    <string name="item_sections_sub">Choisir les applis par section, renommer, réordonner</string>
     <string name="item_display">Affichage</string>
     <string name="item_display_sub">Mode d\'affichage, noms, taille des icônes, espacement</string>
     <string name="item_wallpaper">Fond d\'écran</string>
@@ -147,11 +146,9 @@
     <string name="hidden_tag">masquée</string>
 
     <!-- Paramètres : sections -->
-    <string name="section_row_sub">OK : choisir les applis de cette section</string>
     <string name="add_section">Ajouter une section</string>
     <string name="new_section">Nouvelle section</string>
     <string name="rename_section">Renommer la section</string>
-    <string name="section_apps_sub">OK ajoute ou retire l\'appli de cette section</string>
 
     <!-- Paramètres : fond d'écran -->
     <string name="dim_label">Assombrissement</string>
@@ -320,21 +317,9 @@
     <string name="weather_ip_city">Lieu des prévisions : %1$s</string>
     <string name="weather_using_saved_ip_city">La dernière localisation par IP enregistrée est utilisée. Aucune autre recherche par IP ne sera lancée durant cette session.</string>
     <string name="home_launcher_title">Écran d’accueil</string>
-    <string name="home_launcher_settings_sub">Choisissez l’accueil, utilisez Couchy ou restaurez le lanceur système.</string>
     <string name="home_current">Accueil actuel : %1$s</string>
     <string name="home_not_selected">Aucune sélection</string>
-    <string name="home_system_picker">Choisir l’accueil dans Android</string>
-    <string name="home_system_picker_sub">Ouvrez le sélecteur standard du téléviseur s’il est disponible.</string>
-    <string name="home_picker_unavailable">Ce téléviseur ne propose pas de sélecteur. Utilisez les commandes de débogage ci-dessous.</string>
-    <string name="home_debugging_controls">Commandes de débogage du téléviseur</string>
-    <string name="home_debugging_controls_sub">Changez le lanceur sans application Launcher Manager distincte.</string>
-    <string name="home_debugging_help">Activez ADB via le réseau et autorisez Couchy avec Toujours autoriser. Couchy se connecte uniquement à ce téléviseur sur le port 5555. Si le débogage sans fil exige un jumelage, activez d’abord ADB sur TCP depuis un ordinateur.</string>
     <string name="home_use_couchy">Utiliser Couchy comme accueil</string>
-    <string name="home_use_couchy_sub">Appliquez le changement via le débogage autorisé, puis vérifiez le résultat.</string>
-    <string name="home_pause_stock">Empêcher le lanceur d’origine de reprendre la main</string>
-    <string name="home_pause_stock_sub">Vous pouvez suspendre les composants connus et les restaurer au prochain changement de lanceur.</string>
-    <string name="home_choose_other">Choisir un autre lanceur</string>
-    <string name="home_choose_other_sub">Inclut les lanceurs système désactivés par Launcher Manager.</string>
     <string name="home_restore_stock">Restaurer les lanceurs système suspendus</string>
     <string name="home_restore_stock_sub">Restaurez les composants enregistrés par Couchy. Vous pourrez ensuite choisir un autre lanceur.</string>
     <string name="home_confirm_title">Utiliser %1$s comme accueil ?</string>
@@ -351,8 +336,6 @@
     <string name="home_keep_current">Garder le lanceur actuel</string>
     <string name="home_stock_still_active">Le lanceur d’origine est toujours actif.</string>
     <string name="home_wizard_debug_needed">Activez ADB via le réseau et sélectionnez de nouveau Utiliser Couchy comme accueil. Vous pouvez garder le lanceur actuel et effectuer le changement plus tard.</string>
-    <string name="home_control_open">Ouvrir</string>
-    <string name="home_control_on">Activé</string>
     <string name="home_press_home_title">Appuyez sur Accueil sur la télécommande</string>
     <string name="home_press_home_body">Vérifiez que le bouton Accueil ouvre Couchy.</string>
     <string name="home_debug_export">Exporter le journal de débogage</string>
@@ -396,4 +379,20 @@
     <string name="recommended_settings">Ajouter des applications recommandées</string>
     <string name="recommended_catalog_url">URL JSON du catalogue</string>
     <string name="recommended_catalog_invalid">Saisissez un lien HTTPS valide vers un fichier JSON compatible d’applications recommandées.</string>
+    <string name="apps_reorder_mode">Mode de réorganisation des applications</string>
+    <string name="apps_reorder_help">Appuyez sur OK pour saisir ou déposer une application. Appuyez sur Retour pour enregistrer et quitter.</string>
+    <string name="edit_section">Modifier la section</string>
+    <string name="section_icon">Afficher l’icône de section</string>
+    <string name="section_choose_icon">Choisir l’icône de section</string>
+    <string name="aerial_quality">Qualité vidéo</string>
+    <string name="home_switch_to">Passer à %1$s</string>
+    <string name="home_stock_launcher">Lanceur système</string>
+    <string name="home_adb_enabled">Débogage ADB réseau activé</string>
+    <string name="home_adb_disabled">Débogage ADB réseau désactivé</string>
+    <string name="home_launcher_settings_sub">Passez de Couchy au lanceur système de la TV</string>
+    <string name="android_shortcuts">Raccourcis Android</string>
+    <string name="screen_resize">Ajuster la taille de l’écran</string>
+    <string name="shortcut_keyboard_languages">Langues du clavier</string>
+    <string name="shortcut_screensaver">Choisir un économiseur d’écran</string>
+    <string name="shortcut_power_timeout">Éteindre automatiquement</string>
 </resources>

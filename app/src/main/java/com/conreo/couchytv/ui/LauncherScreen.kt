@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.withFrameNanos
@@ -50,8 +51,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
@@ -78,7 +77,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
@@ -87,8 +85,13 @@ import com.conreo.couchytv.Actions
 import com.conreo.couchytv.R
 import com.conreo.couchytv.data.reconcileInstalledApps
 import com.conreo.couchytv.data.AppEntry
+import com.conreo.couchytv.data.AppPlacement
+import com.conreo.couchytv.data.applyReorder
 import com.conreo.couchytv.data.AppRepository
 import com.conreo.couchytv.data.AerialVideoCache
+import com.conreo.couchytv.data.AerialLoadErrorPolicy
+import com.conreo.couchytv.data.BuiltinAerials
+import com.conreo.couchytv.data.StoredConfig
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.IconPack
 import com.conreo.couchytv.data.LAYOUT_DOCK
@@ -233,8 +236,8 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     val parentalOrNull by produceState<ParentalState?>(null) {
         parental.state.collect { value = it }
     }
-    val configOrNull by produceState<LauncherConfig?>(initialValue = null) {
-        store.flow.collect { value = it }
+    val storedConfig by produceState<StoredConfig?>(initialValue = null, store) {
+        store.storedConfig.collect { value = it }
     }
     // Kick off the app scan on the FIRST composition — concurrent with the
     // DataStore config read, not serialized after it (scan takes no config).
@@ -247,7 +250,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
         LoadingScreen()
         return
     }
-    val config = configOrNull ?: run {
+    val (config, restoreRevision) = storedConfig ?: run {
         LoadingScreen()
         return
     }
@@ -422,7 +425,13 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     var menuFor by remember { mutableStateOf<AppEntry?>(null) }
     var customizeFor by remember { mutableStateOf<AppEntry?>(null) }
     var renameFor by remember { mutableStateOf<AppEntry?>(null) }
-    var movePkg by remember { mutableStateOf<String?>(null) }
+    var reorderFrom by remember { mutableStateOf<AppPlacement?>(null) }
+    var menuSectionId by remember { mutableStateOf<String?>(null) }
+    var savingReorder by remember { mutableStateOf(false) }
+    fun openAppMenu(app: AppEntry, section: String? = null) {
+        menuSectionId = section
+        menuFor = app
+    }
     var showSettings by remember { mutableStateOf(false) }
     var settingsStartAtWeather by remember { mutableStateOf(false) }
     // Only true when Settings was opened by a still-held long-press (the
@@ -493,7 +502,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     var libraryIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
     val updatePrompt = rememberAppUpdatePrompt(
         connected = net.connected,
-        homeIdle = !showSetupHomePrompt && !showSettings && !showForecast && movePkg == null && menuFor == null &&
+        homeIdle = !showSetupHomePrompt && !showSettings && !showForecast && reorderFrom == null && menuFor == null &&
             customizeFor == null && renameFor == null && pinPrompt == null &&
             closeFailure == null && iconSourceFor == null && appIconPickFor == null &&
             packIconPickFor == null && libraryIconPickFor == null,
@@ -513,9 +522,8 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
 
     // Drop empty sections: an empty row is dead space AND a focus trap that
     // stops D-pad navigation from reaching the section below it.
-    val categorized = remember(displayApps, config) {
-        AppRepository.categorize(displayApps, config).filter { it.second.isNotEmpty() }
-    }
+    val sectionRows = remember(displayApps, config) { AppRepository.categorize(displayApps, config) }
+    val categorized = remember(sectionRows) { sectionRows.filter { it.second.isNotEmpty() } }
     // The dock's flat app list (all sections concatenated, de-duped). Hoisted &
     // remembered so its identity stays stable across recompositions — otherwise a
     // fresh list on every clock tick blocks DockArea from strong-skipping.
@@ -529,153 +537,15 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     val cardWidth: Dp = ICON_SIZES[config.iconScale.coerceIn(0, ICON_SIZES.size - 1)]
     val gap: Dp = GAP_SIZES[config.spacing.coerceIn(0, GAP_SIZES.size - 1)]
 
-    // Columns as laid out on screen (mirrors the padding used by GridSection /
-    // DockArea) — move mode needs them to shift an icon up/down by a full row.
-    val screenW: Dp = LocalConfiguration.current.screenWidthDp.dp
-    val gridCols = fitRow(screenW - 88.dp, cardWidth, gap).first
-    val dockCols = fitRow(screenW - 116.dp, cardWidth, gap).first
-
     var dockExpanded by remember { mutableStateOf(false) }
     LaunchedEffect(config.layout) { if (config.layout != LAYOUT_DOCK) dockExpanded = false }
-
-    // ----- move-mode helpers -----
-    fun findMoving(): Triple<Int, List<AppEntry>, Int>? {
-        val pkg = movePkg ?: return null
-        categorized.forEachIndexed { catIndex, (_, list) ->
-            val i = list.indexOfFirst { it.pkg == pkg }
-            if (i >= 0) return Triple(catIndex, list, i)
-        }
-        return null
-    }
-
-    fun moveWithinRow(delta: Int) {
-        val (catIndex, list, i) = findMoving() ?: return
-        val j = i + delta
-        if (j < 0 || j >= list.size) return
-        val catId = categorized[catIndex].first.id
-        val newOrder = list.map { it.pkg }.toMutableList().also { l ->
-            val tmp = l[i]; l[i] = l[j]; l[j] = tmp
-        }
-        scope.launch { store.update { it.copy(order = it.order + (catId to newOrder)) } }
-    }
-
-    fun moveAcrossRows(delta: Int) {
-        val (catIndex, list, i) = findMoving() ?: return
-        val target = catIndex + delta
-        if (target < 0 || target >= categorized.size) return
-        val pkg = movePkg ?: return
-        val app = displayApps.firstOrNull { it.pkg == pkg } ?: return
-        val sourceId = categorized[catIndex].first.id
-        val targetId = categorized[target].first.id
-        val targetList = categorized[target].second
-        if (targetList.any { it.pkg == pkg }) return // already in target section
-        val insertAt = i.coerceAtMost(targetList.size)
-        val newTargetOrder = targetList.map { it.pkg }.toMutableList().also { it.add(insertAt, pkg) }
-        val newSourceOrder = list.map { it.pkg }.filter { it != pkg }
-        scope.launch {
-            store.update { cfg ->
-                val effective = AppRepository.sectionsOf(app, cfg)
-                cfg.copy(
-                    sections = cfg.sections + (pkg to (effective - sourceId + targetId)),
-                    order = cfg.order + (sourceId to newSourceOrder) + (targetId to newTargetOrder),
-                )
-            }
-        }
-    }
-
-    // Reorder the moving app within its own section to a new index.
-    fun reorderWithin(catIndex: Int, list: List<AppEntry>, from: Int, to: Int) {
-        if (from == to) return
-        val catId = categorized[catIndex].first.id
-        val seq = list.map { it.pkg }.toMutableList()
-        val p = seq.removeAt(from)
-        seq.add(to.coerceIn(0, seq.size), p)
-        scope.launch { store.update { it.copy(order = it.order + (catId to seq)) } }
-    }
-
-    // Grid: up/down move by a full row (±cols) inside the section; past the
-    // top/bottom edge it hops to the neighbouring section.
-    fun moveGridVertical(delta: Int, cols: Int) {
-        val (catIndex, list, i) = findMoving() ?: return
-        val size = list.size
-        if (delta < 0) {
-            if (i < cols) moveAcrossRows(-1) else reorderWithin(catIndex, list, i, i - cols)
-        } else {
-            val lastRowStart = ((size - 1) / cols) * cols
-            if (i >= lastRowStart) moveAcrossRows(1)
-            else reorderWithin(catIndex, list, i, minOf(i + cols, size - 1))
-        }
-    }
-
-    // Dock: one flat sequence (all sections concatenated). Moving by [delta]
-    // positions may cross a section block, so the moved app is re-homed into
-    // its new neighbour's section and every affected order list is rebuilt from
-    // the resulting sequence.
-    // ponytail: a multi-section app (shown once in the dock) is re-homed only
-    // for its displayed section; its other memberships are left as-is.
-    fun moveDock(delta: Int) {
-        val pkg = movePkg ?: return
-        val fi = dockApps.indexOfFirst { it.pkg == pkg }
-        if (fi < 0) return
-        val target = fi + delta
-        if (target < 0 || target >= dockApps.size) return
-        val flat = dockApps.map { it.pkg }.toMutableList()
-        flat.removeAt(fi)
-        flat.add(target, pkg)
-
-        val orderCats = config.categories.map { it.id }
-        fun dockCatOf(p: String): String {
-            val app = displayApps.firstOrNull { it.pkg == p } ?: return orderCats.last()
-            val secs = AppRepository.sectionsOf(app, config)
-            return orderCats.firstOrNull { it in secs } ?: orderCats.last()
-        }
-        val sourceCat = dockCatOf(pkg)
-        val targetCat = flat.getOrNull(target - 1)?.let { dockCatOf(it) }
-            ?: flat.getOrNull(target + 1)?.let { dockCatOf(it) }
-            ?: sourceCat
-        val movedApp = displayApps.firstOrNull { it.pkg == pkg }
-
-        scope.launch {
-            store.update { cfg ->
-                val newSections = if (movedApp != null && sourceCat != targetCat) {
-                    val eff = AppRepository.sectionsOf(movedApp, cfg)
-                    cfg.sections + (pkg to (eff - sourceCat + targetCat))
-                } else cfg.sections
-                val catOf = { p: String -> if (p == pkg) targetCat else dockCatOf(p) }
-                val newOrder = cfg.order.toMutableMap()
-                for (cid in orderCats) {
-                    val seq = flat.filter { catOf(it) == cid }
-                    if (seq.isEmpty()) continue
-                    // keep any stored (e.g. hidden) packages not on screen
-                    val extras = cfg.order[cid].orEmpty().filter { it !in seq }
-                    newOrder[cid] = seq + extras
-                }
-                cfg.copy(sections = newSections, order = newOrder)
-            }
-        }
-    }
-
-    val towardEnd = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
-    fun moveHorizontal(delta: Int) =
-        if (config.layout == LAYOUT_DOCK) moveDock(delta) else moveWithinRow(delta)
-
-    fun moveVertical(delta: Int) = when (config.layout) {
-        LAYOUT_GRID -> moveGridVertical(delta, gridCols)
-        LAYOUT_DOCK -> moveDock(if (delta < 0) -dockCols else dockCols)
-        else -> moveAcrossRows(delta)
-    }
-
-    val moveFocus = remember { FocusRequester() }
-    LaunchedEffect(categorized, movePkg) {
-        if (movePkg != null) runCatching { moveFocus.requestFocus() }
-    }
 
     // ----- wallpaper: decoded off the main thread, downsampled, cached.
     // A ~100px copy is decoded alongside: upscaled by the GPU it looks
     // blurred, and crossfading it in costs one texture blend per frame
     // instead of a full-screen RenderEffect blur (heavy on TV GPUs). -----
     val wallpaperPair by produceState<Pair<ImageBitmap?, ImageBitmap?>>(
-        initialValue = null to null, config.useCustomWallpaper, wallpaperVersion
+        initialValue = null to null, config.useCustomWallpaper, wallpaperVersion, restoreRevision
     ) {
         value = if (!config.useCustomWallpaper) null to null
         else withContext(Dispatchers.IO) {
@@ -701,64 +571,58 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
 
     // ----- Built-in aerial videos: keep a shuffled queue so ExoPlayer can
     // prepare the successor before the current clip reaches its last frame. -----
-    val aerialPlaylist by produceState<List<String>>(
-        initialValue = emptyList(),
-        config.useBuiltinAerials, config.builtinSource, wallpaperVersion,
-    ) {
-        if (!config.useBuiltinAerials) {
-            value = emptyList()
-            return@produceState
+    val aerialPlaylist by key(config.useBuiltinAerials, config.builtinSource, config.aerialQuality, wallpaperVersion, restoreRevision) {
+        produceState<List<String>>(initialValue = emptyList()) {
+            if (!config.useBuiltinAerials) return@produceState
+            value = withContext(Dispatchers.IO) {
+                AerialVideoCache.warm(context.applicationContext)
+                BuiltinAerials.load(context, config.builtinSource, config.aerialQuality).shuffled()
+            }
         }
-        val aerials = withContext(Dispatchers.IO) {
-            AerialVideoCache.warm(context.applicationContext)
-            com.conreo.couchytv.data.BuiltinAerials.load(context, config.builtinSource)
-        }
-        if (aerials.isEmpty()) { value = emptyList(); return@produceState }
-        value = aerials.shuffled()
     }
-    var aerialPosition by remember(config.builtinSource) { mutableIntStateOf(0) }
-    LaunchedEffect(aerialPlaylist) { aerialPosition = 0 }
+    var aerialPosition by remember(aerialPlaylist) { mutableIntStateOf(0) }
     val aerialWallpaper = if (aerialPlaylist.isEmpty()) null
         else aerialPlaylist[aerialPosition.mod(aerialPlaylist.size)]
     val nextAerialWallpaper = if (aerialPlaylist.size < 2) null
         else aerialPlaylist[(aerialPosition + 1).mod(aerialPlaylist.size)]
 
-    // Aerials stream from a CDN. Right after the TV powers on, the network/DNS
-    // isn't up yet, so the first clip fails to load — show the gradient instead
-    // of a black screen, and retry: quickly once the network reconnects,
-    // otherwise backing off, until a clip streams.
-    var aerialError by remember { mutableStateOf(false) }
-    var aerialFailureStreak by remember { mutableIntStateOf(0) }
-    var aerialCoolingDown by remember { mutableStateOf(false) }
+    // Keep the player and its surface during a quick skip. Repeated failures
+    // fall back to the gradient briefly before trying the next clip.
+    // Give a restored wallpaper the same fresh playback state as a newly selected source.
+    var aerialError by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected) {
+        mutableStateOf(false)
+    }
+    var aerialFailureStreak by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected) {
+        mutableIntStateOf(0)
+    }
+    var aerialCoolingDown by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected) {
+        mutableStateOf(false)
+    }
     fun recordAerialFailure() {
+        if (aerialError || aerialCoolingDown) return
         aerialFailureStreak++
-        if (aerialFailureStreak >= 3) aerialCoolingDown = true else aerialError = true
+        if (aerialFailureStreak >= 6 || aerialPlaylist.size < 2) {
+            aerialCoolingDown = true
+        } else {
+            aerialError = true
+        }
     }
     fun recordAerialReady(firstFrameMs: Long) {
         aerialFailureStreak = 0
         android.util.Log.d("Couchy", "Aerial ready in ${firstFrameMs}ms; cache=${AerialVideoCache.bytesUsed()}")
     }
-    // A deliberate source change or reconnect should recover immediately from an old failure.
-    LaunchedEffect(config.useBuiltinAerials, config.builtinSource, net.connected) {
-        aerialFailureStreak = 0
-        aerialCoolingDown = false
-        aerialError = false
-    }
-    LaunchedEffect(aerialCoolingDown) {
+    LaunchedEffect(aerialCoolingDown, restoreRevision) {
         if (!aerialCoolingDown) return@LaunchedEffect
-        // Three consecutive failures mean the decoder or network is unhealthy.
-        // Rest on the lightweight gradient rather than retry-looping forever.
-        aerialError = false
-        delay(30 * 60_000L)
+        delay(30_000L)
+        aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size.coerceAtLeast(1))
         aerialFailureStreak = 0
         aerialCoolingDown = false
-        wallpaperVersion++
     }
-    LaunchedEffect(aerialError, net.connected) {
-        if (!aerialError) return@LaunchedEffect
-        delay(if (net.connected) 2500L else 6000L)
+    LaunchedEffect(aerialError, net.connected, aerialPlaylist, restoreRevision) {
+        if (!aerialError || !net.connected || aerialPlaylist.isEmpty()) return@LaunchedEffect
+        delay(200L)
+        aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size)
         aerialError = false
-        wallpaperVersion++
     }
 
     var shelfFocus by remember { mutableStateOf<Pair<Any, String>?>(null) }
@@ -768,15 +632,23 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
             else if (shelfFocus?.first == token) shelfFocus = null
         }
     }
-    val shelfPackage = if (config.useTopShelf && movePkg == null && LocalWindowInfo.current.isWindowFocused) {
+    val shelfPackage = if (config.useTopShelf && reorderFrom == null && LocalWindowInfo.current.isWindowFocused) {
         shelfFocus?.second?.takeUnless(parentalState::isLocked)
     } else null
+
+    val backdropPhoto = wallpaperBlurred.takeUnless { config.useTopShelf || videoWallpaper }
+    val glassBackdrop = remember(backdropPhoto, presetBrush, config.useTopShelf, videoWallpaper) {
+        LauncherBackdrop(backdropPhoto, presetBrush)
+    }
+    val sampleGlassVideo = reorderFrom == null && LocalWindowInfo.current.isWindowFocused &&
+        (config.statusBarGlass || (config.layout == LAYOUT_DOCK && !dockExpanded))
 
     val corner: Dp = CORNER_RADII[config.cornerRadius.coerceIn(0, CORNER_RADII.size - 1)]
     Box(Modifier.fillMaxSize()) {
     ScaledUi(uiScale) {
     androidx.compose.runtime.CompositionLocalProvider(
         LocalCornerRadius provides corner,
+        LocalLauncherBackdrop provides glassBackdrop,
         LocalTopShelfFocus provides reportShelfFocus.takeIf { config.useTopShelf },
     ) {
     LiteTvTheme(accent = accent) {
@@ -784,32 +656,10 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
             Modifier
                 .fillMaxSize()
                 .onPreviewKeyEvent { event ->
-                    // MENU always opens launcher settings — the only entry point
-                    // when the user hides the status bar.
-                    if (event.type == KeyEventType.KeyDown && event.key == Key.Menu) {
+                    if (reorderFrom == null && event.type == KeyEventType.KeyDown && event.key == Key.Menu) {
                         showSettings = true
-                        return@onPreviewKeyEvent true
-                    }
-                    if (movePkg == null) return@onPreviewKeyEvent false
-                    // Move mode owns EVERY key event. Ending it must happen on
-                    // the KEY-UP: ending on key-down let the release fall
-                    // through to the card underneath as a click → app launch.
-                    if (event.type == KeyEventType.KeyUp) {
-                        when (event.key) {
-                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter,
-                            Key.Back, Key.Escape,
-                            -> movePkg = null // drop (or cancel) on release
-                            else -> {}
-                        }
-                        return@onPreviewKeyEvent true
-                    }
-                    when (event.key) {
-                        Key.DirectionLeft -> { moveHorizontal(-towardEnd); true }
-                        Key.DirectionRight -> { moveHorizontal(towardEnd); true }
-                        Key.DirectionUp -> { moveVertical(-1); true }
-                        Key.DirectionDown -> { moveVertical(1); true }
-                        else -> true // swallow select/cancel key-downs too
-                    }
+                        true
+                    } else false
                 }
         ) {
             // Wallpaper + readability scrim.
@@ -818,18 +668,16 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
             val aerial = aerialWallpaper
             if (config.useTopShelf) {
                 Box(Modifier.fillMaxSize().background(presetBrush))
-                TopShelfWallpaper(shelfPackage)
-            } else if (aerial != null && net.connected && !aerialError && !aerialCoolingDown) {
+                TopShelfWallpaper(shelfPackage, glassBackdrop)
+            } else if (aerial != null && net.connected && !aerialCoolingDown) {
                 VideoWallpaper(
                     uri = aerial,
                     nextUri = nextAerialWallpaper,
                     speed = videoSpeed,
                     loop = false, // play once, then shuffle to the next aerial
                     coverBrush = presetBrush,
+                    sampleGlass = sampleGlassVideo,
                     remoteCache = true,
-                    // Stream failed — a dead clip, or (at power-on) the network
-                    // isn't ready yet. Fall back to the gradient and retry via
-                    // aerialError, instead of sitting on the gradient cover.
                     onAdvanced = {
                         aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size)
                     },
@@ -851,6 +699,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                     speed = videoSpeed,
                     loop = true,
                     coverBrush = presetBrush,
+                    sampleGlass = sampleGlassVideo,
                 )
             } else if (wallpaperSharp != null) {
                 Image(
@@ -865,7 +714,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
             // Dock-expanded overlay: cheap pseudo-blur (tiny bitmap upscaled)
             // + dim, crossfaded. Works identically on every Android version.
             val overlayAlpha by animateFloatAsState(
-                targetValue = if (dockExpanded) 1f else 0f,
+                targetValue = if (dockExpanded || reorderFrom != null) 1f else 0f,
                 animationSpec = tween(1000),
                 label = "dockOverlay",
             )
@@ -904,7 +753,26 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                 label = "introTop",
             )
 
-            Column(Modifier.fillMaxSize()) {
+            val reorderStart = reorderFrom
+            if (reorderStart != null) {
+                AppReorderScreen(sectionRows, reorderStart, config, accent, cardWidth, gap, savingReorder) { original, reordered ->
+                    if (original == reordered) {
+                        reorderFrom = null
+                    } else if (!savingReorder) {
+                        savingReorder = true
+                        scope.launch {
+                            try {
+                                store.update { it.applyReorder(original, reordered) }
+                                reorderFrom = null
+                            } catch (_: java.io.IOException) {
+                                Actions.toast(context, context.getString(R.string.toast_config_save_failed))
+                            } finally {
+                                savingReorder = false
+                            }
+                        }
+                    }
+                }
+            } else Column(Modifier.fillMaxSize()) {
                 // The status bar sits ABOVE the content, so Up from the top row
                 // reaches it — and its height IS the content's top inset (the top
                 // padding is a function of the bar's height, nothing hardcoded).
@@ -957,15 +825,13 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                         apps = dockApps,
                         config = config,
                         accent = accent,
-                        movePkg = movePkg,
-                        moveFocus = moveFocus,
                         cardWidth = cardWidth,
                         gap = gap,
                         intro = introShown,
                         expanded = dockExpanded,
                         onExpandChange = { dockExpanded = it },
-                        onLaunch = { app -> if (movePkg == null) launchApp(app.pkg) },
-                        onMenu = { app -> if (movePkg == null) menuFor = app },
+                        onLaunch = { app -> launchApp(app.pkg) },
+                        onMenu = { app -> openAppMenu(app) },
                     )
                     else -> {
                         // Magnetic vertical scroll: the focused row is pinned to a
@@ -978,7 +844,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                         val cardHeightPx = with(density) { (cardWidth * 9f / 16f).toPx() }
                         val peekPx = cardHeightPx * 0.15f
                         val labelPx = with(density) {
-                            if (config.showCategoryNames) 34.dp.toPx() else 0f
+                            if (config.showCategoryNames || categorized.any { it.first.visibleIcon != null }) 34.dp.toPx() else 0f
                         }
                         val pivotPx = peekPx + labelPx
                         val vPivot = remember(pivotPx) {
@@ -1048,35 +914,26 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                                     alpha = rowEnter
                                 } else Modifier
                             ) {
-                                if (config.showCategoryNames) {
-                                    Text(
-                                        // Quiet uppercase divider, not competing with
-                                        // the icons below it.
-                                        text = cat.name.uppercase(),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = Color.White.copy(alpha = 0.6f),
-                                        letterSpacing = 1.5.sp,
-                                        // Both grid and carousel start their content at
-                                        // the 44dp margin, so the label sits above the
-                                        // first icon.
-                                        modifier = Modifier
-                                            .graphicsLayer { alpha = labelAlpha }
+                                if (config.showCategoryNames || cat.visibleIcon != null) {
+                                    SectionHeading(
+                                        cat, config.showCategoryNames,
+                                        Modifier.graphicsLayer { alpha = labelAlpha }
                                             .padding(start = 44.dp, bottom = 10.dp),
                                     )
                                 }
                                 if (isGrid) {
                                     GridSection(
-                                        catApps, config, accent, movePkg, moveFocus,
+                                        catApps, config, accent,
                                         cardWidth, gap, introShown,
-                                        onLaunch = { app -> if (movePkg == null) launchApp(app.pkg) },
-                                        onMenu = { app -> if (movePkg == null) menuFor = app },
+                                        onLaunch = { app -> launchApp(app.pkg) },
+                                        onMenu = { app -> openAppMenu(app, cat.id) },
                                     )
                                 } else {
                                     CarouselSection(
-                                        catApps, config, accent, movePkg, moveFocus,
+                                        catApps, config, accent,
                                         cardWidth, gap,
-                                        onLaunch = { app -> if (movePkg == null) launchApp(app.pkg) },
-                                        onMenu = { app -> if (movePkg == null) menuFor = app },
+                                        onLaunch = { app -> launchApp(app.pkg) },
+                                        onMenu = { app -> openAppMenu(app, cat.id) },
                                     )
                                 }
                             }
@@ -1094,7 +951,13 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                     isHidden = app.pkg in config.hidden,
                     onDismiss = { menuFor = null },
                     onOpen = { menuFor = null; launchApp(app.pkg) },
-                    onMove = { menuFor = null; movePkg = app.pkg },
+                    onMove = {
+                        menuFor = null
+                        val section = menuSectionId ?: categorized.firstOrNull { (_, apps) ->
+                            apps.any { it.pkg == app.pkg }
+                        }?.first?.id
+                        if (section != null) reorderFrom = AppPlacement(section, app.pkg)
+                    },
                     onToggleHide = {
                         menuFor = null
                         scope.launch {
@@ -1327,8 +1190,6 @@ private fun CarouselSection(
     catApps: List<AppEntry>,
     config: LauncherConfig,
     accent: Color,
-    movePkg: String?,
-    moveFocus: FocusRequester,
     cardWidth: Dp,
     gap: Dp,
     onLaunch: (AppEntry) -> Unit,
@@ -1360,15 +1221,13 @@ private fun CarouselSection(
         ) {
             items(catApps.size, key = { catApps[it].pkg }) { i ->
                 val app = catApps[i]
-                val moving = app.pkg == movePkg
                 AppCard(
                     app = app,
-                    isMoving = moving,
+                    isMoving = false,
                     isHidden = app.pkg in config.hidden,
                     accent = accent,
                     cardWidth = cardWidth,
                     showLabel = config.showAppLabels,
-                    modifier = if (moving) Modifier.focusRequester(moveFocus) else Modifier,
                     onLaunch = { onLaunch(app) },
                     onLongPress = { onMenu(app) },
                 )
@@ -1386,8 +1245,6 @@ private fun GridSection(
     catApps: List<AppEntry>,
     config: LauncherConfig,
     accent: Color,
-    movePkg: String?,
-    moveFocus: FocusRequester,
     cardWidth: Dp,
     gap: Dp,
     intro: Boolean,
@@ -1419,7 +1276,6 @@ private fun GridSection(
             rows.forEachIndexed { r, rowApps ->
                 Row(horizontalArrangement = Arrangement.spacedBy(gapUsed)) {
                     rowApps.forEachIndexed { c, app ->
-                        val moving = app.pkg == movePkg
                         val dist = kotlin.math.hypot((c - centerC).toDouble(), (r - centerR).toDouble()).toFloat()
                         val bloom by animateFloatAsState(
                             targetValue = if (intro) 1f else 0f,
@@ -1432,13 +1288,12 @@ private fun GridSection(
                         )
                         AppCard(
                             app = app,
-                            isMoving = moving,
+                            isMoving = false,
                             isHidden = app.pkg in config.hidden,
                             accent = accent,
                             cardWidth = cardWidth,
                             showLabel = config.showAppLabels,
-                            modifier = (if (moving) Modifier.focusRequester(moveFocus) else Modifier)
-                                .graphicsLayer {
+                            modifier = Modifier.graphicsLayer {
                                     alpha = bloom
                                     val s = 0.8f + 0.2f * bloom
                                     scaleX = s
@@ -1462,8 +1317,6 @@ private fun DockArea(
     apps: List<AppEntry>,
     config: LauncherConfig,
     accent: Color,
-    movePkg: String?,
-    moveFocus: FocusRequester,
     cardWidth: Dp,
     gap: Dp,
     intro: Boolean,
@@ -1537,8 +1390,6 @@ private fun DockArea(
                     rowApps = rows.firstOrNull().orEmpty(),
                     config = config,
                     accent = accent,
-                    movePkg = movePkg,
-                    moveFocus = moveFocus,
                     dockFocus = dockFocus,
                     cardWidth = cardWidth,
                     gapUsed = gapUsed,
@@ -1590,10 +1441,9 @@ private fun DockArea(
                         Box(Modifier.width(blockWidth)) {
                             Row(horizontalArrangement = Arrangement.spacedBy(gapUsed)) {
                                 rows[r].forEachIndexed { c, app ->
-                                    val moving = app.pkg == movePkg
                                     AppCard(
                                         app = app,
-                                        isMoving = moving,
+                                        isMoving = false,
                                         isHidden = app.pkg in config.hidden,
                                         accent = accent,
                                         cardWidth = cardWidth,
@@ -1602,12 +1452,11 @@ private fun DockArea(
                                         // full library sinks into the dock instead of
                                         // leaving focus stranded in the open grid.
                                         modifier = (when {
-                                            moving -> Modifier.focusRequester(moveFocus)
                                             r == targetRow && c == targetCol -> Modifier.focusRequester(gridFocus)
                                             else -> Modifier
                                         }).onPreviewKeyEvent { event ->
                                             if (
-                                                r == 0 && movePkg == null &&
+                                                r == 0 &&
                                                 event.type == KeyEventType.KeyDown &&
                                                 event.key == Key.DirectionUp
                                             ) {
@@ -1643,8 +1492,6 @@ private fun DockGlassPanel(
     rowApps: List<AppEntry>,
     config: LauncherConfig,
     accent: Color,
-    movePkg: String?,
-    moveFocus: FocusRequester,
     dockFocus: FocusRequester,
     cardWidth: Dp,
     gapUsed: Dp,
@@ -1668,9 +1515,7 @@ private fun DockGlassPanel(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .clip(SmoothCornerShape(LocalCornerRadius.current + 14.dp))
-                    .background(Color(0xB3121418))
-                    .background(Color.White.copy(alpha = 0.06f))
+                    .launcherGlass(LocalCornerRadius.current + 14.dp)
             )
         }
         // Icons — on OPEN they vanish almost instantly (the rising grid takes
@@ -1685,20 +1530,18 @@ private fun DockGlassPanel(
                 horizontalArrangement = Arrangement.spacedBy(gapUsed),
             ) {
                 rowApps.forEachIndexed { i, app ->
-                    val moving = app.pkg == movePkg
                     AppCard(
                         app = app,
-                        isMoving = moving,
+                        isMoving = false,
                         isHidden = app.pkg in config.hidden,
                         accent = accent,
                         cardWidth = cardWidth,
                         showLabel = config.showAppLabels,
                         modifier = (when {
-                            moving -> Modifier.focusRequester(moveFocus)
                             i == 0 -> Modifier.focusRequester(dockFocus)
                             else -> Modifier
                         }).onPreviewKeyEvent { e ->
-                            if (movePkg == null &&
+                            if (
                                 e.type == KeyEventType.KeyDown &&
                                 e.key == Key.DirectionDown
                             ) { onExpandFrom(i); true } else false
@@ -1762,6 +1605,7 @@ private fun VideoWallpaper(
     speed: Float = 1f,
     loop: Boolean = true,
     coverBrush: Brush,
+    sampleGlass: Boolean,
     remoteCache: Boolean = false,
     onEnded: () -> Unit = {},
     onAdvanced: () -> Unit = {},
@@ -1770,6 +1614,12 @@ private fun VideoWallpaper(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val backdrop = LocalLauncherBackdrop.current
+    var videoSurface by remember { mutableStateOf<android.view.SurfaceView?>(null) }
+    DisposableEffect(backdrop) {
+        onDispose { backdrop?.frame = null }
+    }
+    SampleGlassVideo(videoSurface, backdrop, sampleGlass)
 
     // Slow fondu: a clip is hidden until its FIRST FRAME is actually rendered
     // (i.e. buffered enough to show), then fades up. On a source change the old
@@ -1785,7 +1635,8 @@ private fun VideoWallpaper(
     // only PAUSE it, and released once a full-screen app genuinely
     // hides Home (STOPPED).
     var player by remember { mutableStateOf<androidx.media3.exoplayer.ExoPlayer?>(null) }
-    var prepareStartedAt by remember { mutableStateOf(0L) }
+    var prepareStartedAt by remember(player) { mutableStateOf(0L) }
+    var awaitingFrameAt by remember(player) { mutableStateOf<Int?>(null) }
     val latestOnReady by androidx.compose.runtime.rememberUpdatedState(onReady)
     val latestOnError by androidx.compose.runtime.rememberUpdatedState(onError)
     val latestOnEnded by androidx.compose.runtime.rememberUpdatedState(onEnded)
@@ -1801,6 +1652,7 @@ private fun VideoWallpaper(
                 if (remoteCache) AerialVideoCache.dataSourceFactory(http)
                 else androidx.media3.datasource.DefaultDataSource.Factory(context, http)
             val sourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSource)
+            if (remoteCache) sourceFactory.setLoadErrorHandlingPolicy(AerialLoadErrorPolicy)
             return androidx.media3.exoplayer.ExoPlayer.Builder(context)
                 .setRenderersFactory(renderers)
                 .setMediaSourceFactory(sourceFactory)
@@ -1850,19 +1702,25 @@ private fun VideoWallpaper(
         }
     }
 
+    val activePlayer = player
     // On release the cover is snapped back opaque so the NEXT visible state shows
     // the gradient (not a black hole) until the rebuilt player renders its frame.
-    LaunchedEffect(player == null) { if (player == null) alpha.snapTo(0f) }
-    LaunchedEffect(player, speed) { player?.setPlaybackSpeed(speed) }
+    LaunchedEffect(activePlayer == null) { if (activePlayer == null) alpha.snapTo(0f) }
+    LaunchedEffect(activePlayer, speed) { activePlayer?.setPlaybackSpeed(speed) }
 
-    DisposableEffect(player) {
-        val p = player ?: return@DisposableEffect onDispose { }
+    DisposableEffect(activePlayer) {
+        val p = activePlayer ?: return@DisposableEffect onDispose { }
         val listener = object : androidx.media3.common.Player.Listener {
             override fun onRenderedFirstFrame() {
                 firstFrameGen++
+                awaitingFrameAt = null
                 latestOnReady(
-                    (android.os.SystemClock.elapsedRealtime() - prepareStartedAt).coerceAtLeast(0L)
+                    if (prepareStartedAt == 0L) 0L
+                    else (android.os.SystemClock.elapsedRealtime() - prepareStartedAt).coerceAtLeast(0L)
                 )
+                playerScope.launch {
+                    transitionVeil.animateTo(0f, tween(650, easing = FastOutSlowInEasing))
+                }
             }
             override fun onPlaybackStateChanged(state: Int) {
                 // Fallback for a one-item queue or an exhausted source list.
@@ -1881,14 +1739,12 @@ private fun VideoWallpaper(
             ) {
                 if (reason != androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) return
                 prepareStartedAt = android.os.SystemClock.elapsedRealtime()
+                awaitingFrameAt = firstFrameGen
                 latestOnAdvanced()
-                playerScope.launch {
-                    delay(70L)
-                    transitionVeil.animateTo(0f, tween(850, easing = FastOutSlowInEasing))
-                }
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                android.util.Log.w("LiteTV", "wallpaper play error ${error.errorCodeName}: $uri")
+                val activeUri = p.currentMediaItem?.localConfiguration?.uri ?: uri
+                android.util.Log.w("LiteTV", "wallpaper play error ${error.errorCodeName}: $activeUri")
                 latestOnError()
             }
         }
@@ -1897,10 +1753,10 @@ private fun VideoWallpaper(
     }
     // Load (or reload, after a rebuild on return) the current clip. Keyed on the
     // player too, so coming back from the background re-prepares on the fresh one.
-    LaunchedEffect(player, uri, nextUri) {
-        val p = player ?: return@LaunchedEffect
+    LaunchedEffect(activePlayer, uri, nextUri) {
+        val p = activePlayer ?: return@LaunchedEffect
         val playingUri = p.currentMediaItem?.localConfiguration?.uri?.toString()
-        if (playingUri == uri && p.mediaItemCount > 0) {
+        if (playingUri == uri && p.mediaItemCount > 0 && p.playerError == null) {
             // The queued item is already playing. Keep its decoded frame, discard
             // playlist history, and append exactly one fresh successor.
             val currentIndex = p.currentMediaItemIndex
@@ -1910,9 +1766,8 @@ private fun VideoWallpaper(
             return@LaunchedEffect
         }
         // First load or a genuine source change: cover until a frame is decoded.
-        if (alpha.value > 0f) alpha.animateTo(0f, tween(450))
-        transitionVeil.snapTo(0f)
-        val genBefore = firstFrameGen
+        if (!remoteCache && alpha.value > 0f) alpha.animateTo(0f, tween(450))
+        awaitingFrameAt = firstFrameGen
         runCatching {
             val queue = buildList {
                 add(androidx.media3.common.MediaItem.fromUri(uri))
@@ -1922,29 +1777,30 @@ private fun VideoWallpaper(
             prepareStartedAt = android.os.SystemClock.elapsedRealtime()
             p.prepare()
         }
-        // Stall watchdog: if no frame has rendered in 20s (a dead/unreachable
-        // stream), skip to the next clip instead of sitting on the cover. Cancelled
-        // automatically when the uri (or player) changes.
-        delay(20_000L)
-        // Only a real stall counts. While the app isn't RESUMED the SurfaceView may
-        // have no surface, so NO clip can render — tripping here would falsely flag
-        // an error and drop to the gradient. Skip unless resumed.
-        val resumed = lifecycleOwner.lifecycle.currentState
-            .isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
-        if (firstFrameGen == genBefore && resumed) {
-            android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 20s), skipping: $uri")
-            latestOnError()
+    }
+    LaunchedEffect(activePlayer, awaitingFrameAt) {
+        val expected = awaitingFrameAt ?: return@LaunchedEffect
+        val p = activePlayer ?: return@LaunchedEffect
+        // A restore may prepare while Home is behind the document picker. Start
+        // the first-frame timeout only once Home can render, and rearm on resume.
+        lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+            if (firstFrameGen != expected) return@repeatOnLifecycle
+            delay(20_000L)
+            if (firstFrameGen == expected && !p.isPlaying) {
+                android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 20s), skipping: $uri")
+                latestOnError()
+            }
         }
     }
     // The successor is already queued. Near the cut, pass through a shallow
     // black veil and reveal the next decoded frame; the static preset never
     // appears between two playable aerials.
-    LaunchedEffect(player, nextUri, loop) {
-        val p = player ?: return@LaunchedEffect
+    LaunchedEffect(activePlayer, nextUri, loop) {
+        val p = activePlayer ?: return@LaunchedEffect
         if (loop || nextUri == null) return@LaunchedEffect
         while (true) {
             val duration = p.duration
-            val remaining = duration - p.currentPosition
+            val remaining = ((duration - p.currentPosition) / p.playbackParameters.speed).toLong()
             if (duration > 0L && remaining in 1L..1_150L && transitionVeil.value < 0.05f) {
                 transitionVeil.animateTo(0.82f, tween(850, easing = FastOutSlowInEasing))
             }
@@ -1965,7 +1821,7 @@ private fun VideoWallpaper(
     Box(Modifier.fillMaxSize()) {
         androidx.compose.ui.viewinterop.AndroidView(
             modifier = Modifier.fillMaxSize(),
-            factory = { ctx -> android.view.SurfaceView(ctx) },
+            factory = { ctx -> android.view.SurfaceView(ctx).also { videoSurface = it } },
             // Bind the surface to whichever player is current. Re-runs when the
             // player is rebuilt on return (the old, released one needs no cleanup);
             // a no-op when it's null after release.

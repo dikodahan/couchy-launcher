@@ -62,7 +62,6 @@
     <string name="item_android_settings">Configurações Android</string>
     <string name="item_android_settings_sub">Abrir as configurações do sistema deste dispositivo</string>
     <string name="item_sections">Seções</string>
-    <string name="item_sections_sub">Escolher apps por seção, renomear, reordenar</string>
     <string name="item_display">Tela</string>
     <string name="item_display_sub">Modo de layout, nomes, tamanho dos ícones, espaçamento</string>
     <string name="item_wallpaper">Papel de parede</string>
@@ -99,11 +98,9 @@
     <string name="no_section">sem seção</string>
     <string name="hidden_tag">oculto</string>
 
-    <string name="section_row_sub">OK: escolher os apps desta seção</string>
     <string name="add_section">Adicionar seção</string>
     <string name="new_section">Nova seção</string>
     <string name="rename_section">Renomear seção</string>
-    <string name="section_apps_sub">OK alterna se um app aparece nesta seção</string>
 
     <string name="dim_label">Escurecimento</string>
     <string name="dim_top_bottom">Superior &amp; inferior</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">Local da previsão: %1$s</string>
     <string name="weather_using_saved_ip_city">Usando o último local por IP salvo. Não haverá outra consulta por IP nesta sessão.</string>
     <string name="home_launcher_title">Tela inicial</string>
-    <string name="home_launcher_settings_sub">Escolha a tela inicial, use o Couchy ou restaure o launcher do sistema.</string>
     <string name="home_current">Tela inicial atual: %1$s</string>
     <string name="home_not_selected">Não selecionado</string>
-    <string name="home_system_picker">Escolher a tela inicial no Android</string>
-    <string name="home_system_picker_sub">Abra o seletor padrão da TV, se disponível.</string>
-    <string name="home_picker_unavailable">Esta TV não tem seletor de tela inicial. Use os controles de depuração abaixo.</string>
-    <string name="home_debugging_controls">Controles de depuração da TV</string>
-    <string name="home_debugging_controls_sub">Troque de launcher sem precisar de outro app.</string>
-    <string name="home_debugging_help">Ative o ADB pela rede e autorize o Couchy com Sempre permitir. O Couchy só se conecta a esta TV na porta 5555. Se a depuração sem fio só permitir pareamento, ative o ADB por TCP por um computador.</string>
     <string name="home_use_couchy">Usar Couchy como tela inicial</string>
-    <string name="home_use_couchy_sub">Aplique pela depuração autorizada e verifique o resultado.</string>
-    <string name="home_pause_stock">Impedir que o launcher original volte a assumir</string>
-    <string name="home_pause_stock_sub">Você pode pausar componentes conhecidos. Eles serão restaurados quando trocar de launcher.</string>
-    <string name="home_choose_other">Trocar para outro launcher</string>
-    <string name="home_choose_other_sub">Inclui launchers do sistema desativados pelo Launcher Manager.</string>
     <string name="home_restore_stock">Restaurar launchers do sistema pausados</string>
     <string name="home_restore_stock_sub">Restaure os componentes registrados pelo Couchy. Depois, escolha outro launcher se quiser trocar.</string>
     <string name="home_confirm_title">Usar %1$s como tela inicial?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">Manter o launcher atual</string>
     <string name="home_stock_still_active">O launcher original ainda está ativo.</string>
     <string name="home_wizard_debug_needed">Ative o ADB pela rede e selecione novamente Usar Couchy como tela inicial. Você pode manter o launcher atual e trocar depois.</string>
-    <string name="home_control_open">Abrir</string>
-    <string name="home_control_on">Ativado</string>
     <string name="home_press_home_title">Pressione Início no controle remoto</string>
     <string name="home_press_home_body">Confira se o botão Início abre o Couchy.</string>
     <string name="home_debug_export">Exportar registro de depuração</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">Adicionar apps recomendados</string>
     <string name="recommended_catalog_url">URL do catálogo JSON</string>
     <string name="recommended_catalog_invalid">Insira um link HTTPS válido para um arquivo JSON compatível de apps recomendados.</string>
+    <string name="apps_reorder_mode">Modo de reordenar apps</string>
+    <string name="apps_reorder_help">Pressione OK para pegar ou soltar um app. Pressione Voltar para salvar e sair.</string>
+    <string name="edit_section">Editar seção</string>
+    <string name="section_icon">Mostrar ícone da seção</string>
+    <string name="section_choose_icon">Escolher ícone da seção</string>
+    <string name="aerial_quality">Qualidade do vídeo</string>
+    <string name="home_switch_to">Mudar para %1$s</string>
+    <string name="home_stock_launcher">Launcher do sistema</string>
+    <string name="home_adb_enabled">Depuração ADB pela rede ativada</string>
+    <string name="home_adb_disabled">Depuração ADB pela rede desativada</string>
+    <string name="home_launcher_settings_sub">Alterne entre o Couchy e o launcher do televisor</string>
+    <string name="android_shortcuts">Atalhos do Android</string>
+    <string name="screen_resize">Ajustar tamanho da tela</string>
+    <string name="shortcut_keyboard_languages">Idiomas do teclado</string>
+    <string name="shortcut_screensaver">Escolher protetor de tela</string>
+    <string name="shortcut_power_timeout">Desligar automaticamente</string>
 </resources>

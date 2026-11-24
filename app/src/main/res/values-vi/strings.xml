@@ -62,7 +62,6 @@
     <string name="item_android_settings">Cài đặt Android</string>
     <string name="item_android_settings_sub">Mở cài đặt hệ thống của thiết bị này</string>
     <string name="item_sections">Mục</string>
-    <string name="item_sections_sub">Chọn ứng dụng theo mục, đổi tên, sắp xếp lại</string>
     <string name="item_display">Hiển thị</string>
     <string name="item_display_sub">Chế độ bố cục, tên, kích thước biểu tượng, khoảng cách</string>
     <string name="item_wallpaper">Hình nền</string>
@@ -99,11 +98,9 @@
     <string name="no_section">không mục</string>
     <string name="hidden_tag">đã ẩn</string>
 
-    <string name="section_row_sub">OK: chọn ứng dụng của mục này</string>
     <string name="add_section">Thêm mục</string>
     <string name="new_section">Mục mới</string>
     <string name="rename_section">Đổi tên mục</string>
-    <string name="section_apps_sub">OK chuyển đổi việc ứng dụng có xuất hiện trong mục này không</string>
 
     <string name="dim_label">Làm tối</string>
     <string name="dim_top_bottom">Trên &amp; dưới</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">Vị trí dự báo: %1$s</string>
     <string name="weather_using_saved_ip_city">Đang dùng vị trí qua IP được lưu gần nhất. Không tra cứu thêm qua IP trong phiên này.</string>
     <string name="home_launcher_title">Trình khởi chạy màn hình chính</string>
-    <string name="home_launcher_settings_sub">Chọn màn hình chính, dùng Couchy hoặc khôi phục trình khởi chạy hệ thống.</string>
     <string name="home_current">Màn hình chính hiện tại: %1$s</string>
     <string name="home_not_selected">Chưa chọn</string>
-    <string name="home_system_picker">Chọn màn hình chính trong Android</string>
-    <string name="home_system_picker_sub">Mở bộ chọn chuẩn của TV nếu có.</string>
-    <string name="home_picker_unavailable">TV này không có bộ chọn. Hãy dùng các tuỳ chọn gỡ lỗi bên dưới.</string>
-    <string name="home_debugging_controls">Điều khiển gỡ lỗi TV</string>
-    <string name="home_debugging_controls_sub">Đổi trình khởi chạy mà không cần ứng dụng Launcher Manager riêng.</string>
-    <string name="home_debugging_help">Bật ADB qua mạng và chọn Luôn cho phép để cấp quyền cho Couchy. Couchy chỉ kết nối với TV này qua cổng 5555. Nếu gỡ lỗi không dây yêu cầu ghép đôi, trước tiên hãy bật TCP ADB từ máy tính.</string>
     <string name="home_use_couchy">Dùng Couchy làm màn hình chính</string>
-    <string name="home_use_couchy_sub">Áp dụng qua kết nối gỡ lỗi đã được cấp quyền và kiểm tra kết quả.</string>
-    <string name="home_pause_stock">Ngăn trình khởi chạy mặc định giành lại màn hình chính</string>
-    <string name="home_pause_stock_sub">Có thể tạm dừng các thành phần đã biết và khôi phục chúng khi đổi trình khởi chạy.</string>
-    <string name="home_choose_other">Chuyển sang trình khởi chạy khác</string>
-    <string name="home_choose_other_sub">Bao gồm các trình khởi chạy hệ thống bị Launcher Manager tắt.</string>
     <string name="home_restore_stock">Khôi phục các trình khởi chạy hệ thống đã tạm dừng</string>
     <string name="home_restore_stock_sub">Khôi phục các thành phần Couchy đã ghi lại rồi chọn trình khởi chạy khác nếu muốn.</string>
     <string name="home_confirm_title">Dùng %1$s làm màn hình chính?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">Giữ trình khởi chạy hiện tại</string>
     <string name="home_stock_still_active">Trình khởi chạy mặc định vẫn hoạt động.</string>
     <string name="home_wizard_debug_needed">Bật ADB qua mạng rồi chọn lại Dùng Couchy làm màn hình chính. Bạn cũng có thể giữ trình khởi chạy hiện tại và đổi sau.</string>
-    <string name="home_control_open">Mở</string>
-    <string name="home_control_on">Bật</string>
     <string name="home_press_home_title">Nhấn nút Home trên điều khiển</string>
     <string name="home_press_home_body">Kiểm tra xem nút Home có mở Couchy không.</string>
     <string name="home_debug_export">Xuất nhật ký gỡ lỗi</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">Thêm ứng dụng đề xuất</string>
     <string name="recommended_catalog_url">URL JSON của danh mục</string>
     <string name="recommended_catalog_invalid">Nhập liên kết HTTPS hợp lệ đến tệp JSON ứng dụng đề xuất tương thích.</string>
+    <string name="apps_reorder_mode">Chế độ sắp xếp ứng dụng</string>
+    <string name="apps_reorder_help">Nhấn OK để chọn hoặc đặt ứng dụng. Nhấn Quay lại để lưu và thoát.</string>
+    <string name="edit_section">Chỉnh sửa mục</string>
+    <string name="section_icon">Hiện biểu tượng mục</string>
+    <string name="section_choose_icon">Chọn biểu tượng mục</string>
+    <string name="aerial_quality">Chất lượng video</string>
+    <string name="home_switch_to">Chuyển sang %1$s</string>
+    <string name="home_stock_launcher">Trình khởi chạy hệ thống</string>
+    <string name="home_adb_enabled">Đã bật gỡ lỗi ADB qua mạng</string>
+    <string name="home_adb_disabled">Đã tắt gỡ lỗi ADB qua mạng</string>
+    <string name="home_launcher_settings_sub">Chuyển đổi giữa Couchy và trình khởi chạy của TV</string>
+    <string name="android_shortcuts">Lối tắt Android</string>
+    <string name="screen_resize">Chỉnh kích thước màn hình</string>
+    <string name="shortcut_keyboard_languages">Ngôn ngữ bàn phím</string>
+    <string name="shortcut_screensaver">Chọn trình bảo vệ màn hình</string>
+    <string name="shortcut_power_timeout">Tự động tắt</string>
 </resources>

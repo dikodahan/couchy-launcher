@@ -62,7 +62,6 @@
     <string name="item_android_settings">Android設定</string>
     <string name="item_android_settings_sub">このデバイスのシステム設定を開く</string>
     <string name="item_sections">セクション</string>
-    <string name="item_sections_sub">セクションごとにアプリを選択、名前変更、並べ替え</string>
     <string name="item_display">表示</string>
     <string name="item_display_sub">レイアウトモード、名前、アイコンサイズ、間隔</string>
     <string name="item_wallpaper">壁紙</string>
@@ -99,11 +98,9 @@
     <string name="no_section">セクションなし</string>
     <string name="hidden_tag">非表示</string>
 
-    <string name="section_row_sub">OK: このセクションのアプリを選択</string>
     <string name="add_section">セクションを追加</string>
     <string name="new_section">新しいセクション</string>
     <string name="rename_section">セクション名を変更</string>
-    <string name="section_apps_sub">OKでアプリの表示/非表示を切り替え</string>
 
     <string name="dim_label">暗化</string>
     <string name="dim_top_bottom">上部 &amp; 下部</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">予報地点：%1$s</string>
     <string name="weather_using_saved_ip_city">前回保存したIPによる位置情報を使用します。このセッション中は再検索しません。</string>
     <string name="home_launcher_title">ホーム画面</string>
-    <string name="home_launcher_settings_sub">ホーム画面の選択、Couchyの使用、システムランチャーの復元を行います。</string>
     <string name="home_current">現在のホーム画面：%1$s</string>
     <string name="home_not_selected">未選択</string>
-    <string name="home_system_picker">Androidでホーム画面を選択</string>
-    <string name="home_system_picker_sub">利用できる場合は、テレビの標準選択画面を開きます。</string>
-    <string name="home_picker_unavailable">このテレビには選択画面がありません。下のデバッグ操作を使用してください。</string>
-    <string name="home_debugging_controls">テレビのデバッグ操作</string>
-    <string name="home_debugging_controls_sub">別のLauncher Managerアプリを使わずにホーム画面を切り替えます。</string>
-    <string name="home_debugging_help">ネットワーク経由のADBを有効にし、常に許可を選んでCouchyを許可してください。Couchyはこのテレビのポート5555にのみ接続します。ワイヤレスデバッグがペアリング専用の場合は、先にパソコンからTCP ADBを有効にしてください。</string>
     <string name="home_use_couchy">Couchyをホーム画面にする</string>
-    <string name="home_use_couchy_sub">許可したデバッグ経由で適用し、結果を確認します。</string>
-    <string name="home_pause_stock">標準ランチャーへの切り替わりを防ぐ</string>
-    <string name="home_pause_stock_sub">既知のシステムコンポーネントを停止できます。ランチャーを切り替える際に復元されます。</string>
-    <string name="home_choose_other">別のランチャーに切り替える</string>
-    <string name="home_choose_other_sub">Launcher Managerで無効にしたシステムランチャーも含みます。</string>
     <string name="home_restore_stock">停止中のシステムランチャーを復元</string>
     <string name="home_restore_stock_sub">Couchyが記録したコンポーネントを復元します。その後、別のランチャーを選べます。</string>
     <string name="home_confirm_title">%1$sをホーム画面にしますか？</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">現在のランチャーを維持</string>
     <string name="home_stock_still_active">標準ランチャーがまだ有効です。</string>
     <string name="home_wizard_debug_needed">ネットワークADBを有効にして、もう一度「Couchyをホーム画面にする」を選択してください。現在のランチャーを維持して後で変更することもできます。</string>
-    <string name="home_control_open">開く</string>
-    <string name="home_control_on">オン</string>
     <string name="home_press_home_title">リモコンのホームボタンを押す</string>
     <string name="home_press_home_body">ホームボタンでCouchyが開くことを確認してください。</string>
     <string name="home_debug_export">デバッグログをエクスポート</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">おすすめアプリを追加</string>
     <string name="recommended_catalog_url">カタログの JSON URL</string>
     <string name="recommended_catalog_invalid">対応するおすすめアプリの JSON ファイルへの有効な HTTPS リンクを入力してください。</string>
+    <string name="apps_reorder_mode">アプリの並べ替えモード</string>
+    <string name="apps_reorder_help">OK を押してアプリを選択または配置します。戻るを押すと保存して終了します。</string>
+    <string name="edit_section">セクションを編集</string>
+    <string name="section_icon">セクションのアイコンを表示</string>
+    <string name="section_choose_icon">セクションのアイコンを選択</string>
+    <string name="aerial_quality">動画の画質</string>
+    <string name="home_switch_to">%1$s に切り替え</string>
+    <string name="home_stock_launcher">標準ランチャー</string>
+    <string name="home_adb_enabled">ネットワーク ADB デバッグは有効です</string>
+    <string name="home_adb_disabled">ネットワーク ADB デバッグは無効です</string>
+    <string name="home_launcher_settings_sub">Couchy とテレビの標準ランチャーを切り替えます</string>
+    <string name="android_shortcuts">Android ショートカット</string>
+    <string name="screen_resize">画面サイズを調整</string>
+    <string name="shortcut_keyboard_languages">キーボードの言語</string>
+    <string name="shortcut_screensaver">スクリーンセーバーを選択</string>
+    <string name="shortcut_power_timeout">自動電源オフ</string>
 </resources>

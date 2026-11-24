@@ -62,7 +62,6 @@
     <string name="item_android_settings">Android-Einstellungen</string>
     <string name="item_android_settings_sub">Systemeinstellungen dieses Geräts öffnen</string>
     <string name="item_sections">Abschnitte</string>
-    <string name="item_sections_sub">Apps pro Abschnitt wählen, umbenennen, sortieren</string>
     <string name="item_display">Anzeige</string>
     <string name="item_display_sub">Layout-Modus, Namen, Symbolgröße, Abstand</string>
     <string name="item_wallpaper">Hintergrund</string>
@@ -99,11 +98,9 @@
     <string name="no_section">kein Abschnitt</string>
     <string name="hidden_tag">ausgeblendet</string>
 
-    <string name="section_row_sub">OK: Apps dieses Abschnitts auswählen</string>
     <string name="add_section">Abschnitt hinzufügen</string>
     <string name="new_section">Neuer Abschnitt</string>
     <string name="rename_section">Abschnitt umbenennen</string>
-    <string name="section_apps_sub">OK schaltet um, ob eine App in diesem Abschnitt erscheint</string>
 
     <string name="dim_label">Abdunkelung</string>
     <string name="dim_top_bottom">Oben &amp; unten</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">Wetterstandort: %1$s</string>
     <string name="weather_using_saved_ip_city">Der letzte gespeicherte IP-Standort wird verwendet. In dieser Sitzung wird keine weitere IP-Suche ausgeführt.</string>
     <string name="home_launcher_title">Startbildschirm</string>
-    <string name="home_launcher_settings_sub">Wähle den Startbildschirm, verwende Couchy oder stelle den System-Launcher wieder her.</string>
     <string name="home_current">Aktueller Startbildschirm: %1$s</string>
     <string name="home_not_selected">Nicht ausgewählt</string>
-    <string name="home_system_picker">Startbildschirm in Android wählen</string>
-    <string name="home_system_picker_sub">Öffne die Android-Auswahl, falls verfügbar.</string>
-    <string name="home_picker_unavailable">Dieser Fernseher bietet keine Auswahl. Verwende unten die Debugging-Steuerung.</string>
-    <string name="home_debugging_controls">TV-Debugging</string>
-    <string name="home_debugging_controls_sub">Startbildschirm ohne separate Launcher-Manager-App wechseln</string>
-    <string name="home_debugging_help">Aktiviere Netzwerk-ADB und bestätige Couchy mit Immer zulassen. Couchy verbindet sich nur mit diesem Fernseher über Port 5555. Bei reinem Kopplungs-Debugging muss zuerst ein Computer TCP-ADB aktivieren.</string>
     <string name="home_use_couchy">Couchy als Startbildschirm verwenden</string>
-    <string name="home_use_couchy_sub">Über autorisiertes TV-Debugging anwenden und das Ergebnis prüfen.</string>
-    <string name="home_pause_stock">Standard-Launcher an der Übernahme hindern</string>
-    <string name="home_pause_stock_sub">Bekannte System-Launcher-Komponenten können pausiert werden und werden beim Wechsel wiederhergestellt.</string>
-    <string name="home_choose_other">Zu einem anderen Launcher wechseln</string>
-    <string name="home_choose_other_sub">Enthält installierte System-Launcher, die Launcher Manager deaktiviert hat.</string>
     <string name="home_restore_stock">Pausierte System-Launcher wiederherstellen</string>
     <string name="home_restore_stock_sub">Stelle die in Couchy gespeicherten Komponenten wieder her. Wähle danach bei Bedarf einen anderen Launcher.</string>
     <string name="home_confirm_title">%1$s als Startbildschirm verwenden?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">Aktuellen Launcher behalten</string>
     <string name="home_stock_still_active">Der Standard-Launcher ist noch aktiv.</string>
     <string name="home_wizard_debug_needed">Aktiviere Netzwerk-ADB und wähle Couchy als Startbildschirm verwenden erneut. Du kannst auch den aktuellen Launcher behalten und später wechseln.</string>
-    <string name="home_control_open">Öffnen</string>
-    <string name="home_control_on">An</string>
     <string name="home_press_home_title">Drücke Home auf der Fernbedienung</string>
     <string name="home_press_home_body">Prüfe, ob die Home-Taste Couchy öffnet.</string>
     <string name="home_debug_export">Debug-Protokoll exportieren</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">Empfohlene Apps hinzufügen</string>
     <string name="recommended_catalog_url">JSON-URL des Katalogs</string>
     <string name="recommended_catalog_invalid">Gib eine gültige HTTPS-Adresse für eine kompatible JSON-Datei mit empfohlenen Apps ein.</string>
+    <string name="apps_reorder_mode">App-Sortiermodus</string>
+    <string name="apps_reorder_help">Drücke OK, um eine App aufzunehmen oder abzulegen. Drücke Zurück zum Speichern und Beenden.</string>
+    <string name="edit_section">Abschnitt bearbeiten</string>
+    <string name="section_icon">Abschnittssymbol anzeigen</string>
+    <string name="section_choose_icon">Abschnittssymbol auswählen</string>
+    <string name="aerial_quality">Videoqualität</string>
+    <string name="home_switch_to">Zu %1$s wechseln</string>
+    <string name="home_stock_launcher">System-Launcher</string>
+    <string name="home_adb_enabled">ADB-Debugging über das Netzwerk aktiviert</string>
+    <string name="home_adb_disabled">ADB-Debugging über das Netzwerk deaktiviert</string>
+    <string name="home_launcher_settings_sub">Zwischen Couchy und dem System-Launcher wechseln</string>
+    <string name="android_shortcuts">Android-Verknüpfungen</string>
+    <string name="screen_resize">Bildschirmgröße anpassen</string>
+    <string name="shortcut_keyboard_languages">Tastatursprachen</string>
+    <string name="shortcut_screensaver">Bildschirmschoner auswählen</string>
+    <string name="shortcut_power_timeout">Automatisch ausschalten</string>
 </resources>

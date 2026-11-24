@@ -280,7 +280,9 @@ object AppRepository {
             if (cat.id == ALL_APPS_ID) {
                 val all = if (config.showHidden) apps
                 else apps.filter { it.pkg !in config.hidden }
-                return@map cat to all.sortedBy { it.label.lowercase() }
+                val position = config.order[cat.id].orEmpty().withIndex().associate { it.value to it.index }
+                return@map cat to all.sortedWith(compareBy<AppEntry> { position[it.pkg] ?: Int.MAX_VALUE }
+                    .thenBy { it.label.lowercase() })
             }
             val list = byCat[cat.id].orEmpty()
             val explicit = config.order[cat.id].orEmpty()

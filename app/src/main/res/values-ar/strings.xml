@@ -62,7 +62,6 @@
     <string name="item_android_settings">إعدادات Android</string>
     <string name="item_android_settings_sub">فتح إعدادات النظام لهذا الجهاز</string>
     <string name="item_sections">الأقسام</string>
-    <string name="item_sections_sub">اختيار التطبيقات لكل قسم، إعادة تسمية، إعادة ترتيب</string>
     <string name="item_display">العرض</string>
     <string name="item_display_sub">وضع التخطيط، الأسماء، حجم الأيقونات، التباعد</string>
     <string name="item_wallpaper">الخلفية</string>
@@ -99,11 +98,9 @@
     <string name="no_section">بدون قسم</string>
     <string name="hidden_tag">مخفي</string>
 
-    <string name="section_row_sub">OK: اختيار تطبيقات هذا القسم</string>
     <string name="add_section">إضافة قسم</string>
     <string name="new_section">قسم جديد</string>
     <string name="rename_section">إعادة تسمية القسم</string>
-    <string name="section_apps_sub">OK يبدل ظهور التطبيق في هذا القسم</string>
 
     <string name="dim_label">تعتيم</string>
     <string name="dim_top_bottom">أعلى &amp; أسفل</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">موقع التوقعات: %1$s</string>
     <string name="weather_using_saved_ip_city">يتم استخدام آخر موقع محفوظ عبر IP. لن يتم البحث مجددًا في هذه الجلسة.</string>
     <string name="home_launcher_title">واجهة الشاشة الرئيسية</string>
-    <string name="home_launcher_settings_sub">اختر واجهة الشاشة الرئيسية أو استخدم Couchy أو استعد واجهة النظام.</string>
     <string name="home_current">الواجهة الحالية: %1$s</string>
     <string name="home_not_selected">لم يتم الاختيار</string>
-    <string name="home_system_picker">اختيار الواجهة في Android</string>
-    <string name="home_system_picker_sub">افتح أداة الاختيار القياسية في التلفزيون إن كانت متاحة.</string>
-    <string name="home_picker_unavailable">لا يوفر هذا التلفزيون أداة اختيار. استخدم عناصر تصحيح الأخطاء أدناه.</string>
-    <string name="home_debugging_controls">عناصر تصحيح أخطاء التلفزيون</string>
-    <string name="home_debugging_controls_sub">بدّل الواجهة من دون تطبيق Launcher Manager منفصل.</string>
-    <string name="home_debugging_help">فعّل ADB عبر الشبكة وامنح Couchy الإذن الدائم. يتصل Couchy بهذا التلفزيون فقط عبر المنفذ 5555. إذا كان التصحيح اللاسلكي يتطلب الاقتران، فعّل TCP ADB أولًا من كمبيوتر.</string>
     <string name="home_use_couchy">استخدام Couchy للشاشة الرئيسية</string>
-    <string name="home_use_couchy_sub">طبّق التغيير عبر التصحيح المصرح به ثم تحقق من النتيجة.</string>
-    <string name="home_pause_stock">منع استعادة الواجهة الأصلية للتحكم</string>
-    <string name="home_pause_stock_sub">يمكن إيقاف المكونات المعروفة مؤقتًا. تُستعاد عند تبديل الواجهة.</string>
-    <string name="home_choose_other">التبديل إلى واجهة أخرى</string>
-    <string name="home_choose_other_sub">يشمل واجهات النظام التي عطّلها Launcher Manager.</string>
     <string name="home_restore_stock">استعادة واجهات النظام الموقوفة مؤقتًا</string>
     <string name="home_restore_stock_sub">استعد المكونات التي سجلها Couchy ثم اختر واجهة أخرى إذا أردت.</string>
     <string name="home_confirm_title">استخدام %1$s للشاشة الرئيسية؟</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">الإبقاء على الواجهة الحالية</string>
     <string name="home_stock_still_active">واجهة النظام الأصلية لا تزال نشطة.</string>
     <string name="home_wizard_debug_needed">فعّل ADB عبر الشبكة ثم اختر استخدام Couchy للشاشة الرئيسية مجددًا. يمكنك إبقاء الواجهة الحالية وتغييرها لاحقًا.</string>
-    <string name="home_control_open">فتح</string>
-    <string name="home_control_on">مفعّل</string>
     <string name="home_press_home_title">اضغط زر الشاشة الرئيسية في جهاز التحكم</string>
     <string name="home_press_home_body">تأكد من أن الزر يفتح Couchy.</string>
     <string name="home_debug_export">تصدير سجل تصحيح الأخطاء</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">إضافة تطبيقات موصى بها</string>
     <string name="recommended_catalog_url">رابط ملف JSON للقائمة</string>
     <string name="recommended_catalog_invalid">أدخل رابط HTTPS صالحًا لملف JSON متوافق للتطبيقات الموصى بها.</string>
+    <string name="apps_reorder_mode">وضع إعادة ترتيب التطبيقات</string>
+    <string name="apps_reorder_help">اضغط «موافق» لتحديد تطبيق أو وضعه. اضغط «رجوع» للحفظ والخروج.</string>
+    <string name="edit_section">تعديل القسم</string>
+    <string name="section_icon">إظهار رمز القسم</string>
+    <string name="section_choose_icon">اختيار رمز القسم</string>
+    <string name="aerial_quality">جودة الفيديو</string>
+    <string name="home_switch_to">التبديل إلى %1$s</string>
+    <string name="home_stock_launcher">مشغّل النظام</string>
+    <string name="home_adb_enabled">تصحيح أخطاء ADB عبر الشبكة مفعّل</string>
+    <string name="home_adb_disabled">تصحيح أخطاء ADB عبر الشبكة غير مفعّل</string>
+    <string name="home_launcher_settings_sub">التبديل بين Couchy ومشغّل النظام في التلفزيون</string>
+    <string name="android_shortcuts">اختصارات Android</string>
+    <string name="screen_resize">ضبط حجم الشاشة</string>
+    <string name="shortcut_keyboard_languages">لغات لوحة المفاتيح</string>
+    <string name="shortcut_screensaver">اختيار شاشة التوقف</string>
+    <string name="shortcut_power_timeout">إيقاف التشغيل تلقائيًا</string>
 </resources>

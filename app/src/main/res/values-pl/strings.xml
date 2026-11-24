@@ -62,7 +62,6 @@
     <string name="item_android_settings">Ustawienia Androida</string>
     <string name="item_android_settings_sub">Otwórz ustawienia systemowe tego urządzenia</string>
     <string name="item_sections">Sekcje</string>
-    <string name="item_sections_sub">Wybierz aplikacje według sekcji, zmień nazwy, zmień kolejność</string>
     <string name="item_display">Ekran</string>
     <string name="item_display_sub">Tryb układu, nazwy, rozmiar ikon, odstępy</string>
     <string name="item_wallpaper">Tapeta</string>
@@ -99,11 +98,9 @@
     <string name="no_section">brak sekcji</string>
     <string name="hidden_tag">ukryte</string>
 
-    <string name="section_row_sub">OK: wybierz aplikacje tej sekcji</string>
     <string name="add_section">Dodaj sekcję</string>
     <string name="new_section">Nowa sekcja</string>
     <string name="rename_section">Zmień nazwę sekcji</string>
-    <string name="section_apps_sub">OK przełącza, czy aplikacja pojawia się w tej sekcji</string>
 
     <string name="dim_label">Przyciemnienie</string>
     <string name="dim_top_bottom">Góra &amp; dół</string>
@@ -273,21 +270,9 @@
     <string name="weather_ip_city">Lokalizacja prognozy: %1$s</string>
     <string name="weather_using_saved_ip_city">Używana jest ostatnia zapisana lokalizacja według IP. W tej sesji nie będzie kolejnych zapytań według IP.</string>
     <string name="home_launcher_title">Ekran główny</string>
-    <string name="home_launcher_settings_sub">Wybierz ekran główny, użyj Couchy lub przywróć launcher systemowy.</string>
     <string name="home_current">Obecny ekran główny: %1$s</string>
     <string name="home_not_selected">Nie wybrano</string>
-    <string name="home_system_picker">Wybierz ekran główny w Androidzie</string>
-    <string name="home_system_picker_sub">Otwórz systemowy wybór ekranu głównego, jeśli jest dostępny.</string>
-    <string name="home_picker_unavailable">Telewizor nie udostępnia wyboru. Użyj poniższych opcji debugowania.</string>
-    <string name="home_debugging_controls">Debugowanie telewizora</string>
-    <string name="home_debugging_controls_sub">Zmień launcher bez osobnej aplikacji Launcher Manager.</string>
-    <string name="home_debugging_help">Włącz ADB przez sieć i zezwól Couchy na połączenie przez Zawsze zezwalaj. Couchy łączy się tylko z tym telewizorem na porcie 5555. Jeśli debugowanie bezprzewodowe wymaga parowania, najpierw włącz ADB przez TCP na komputerze.</string>
     <string name="home_use_couchy">Użyj Couchy jako ekranu głównego</string>
-    <string name="home_use_couchy_sub">Zastosuj przez zatwierdzone debugowanie i sprawdź wynik.</string>
-    <string name="home_pause_stock">Zapobiegaj przejmowaniu ekranu przez domyślny launcher</string>
-    <string name="home_pause_stock_sub">Znane składniki mogą zostać wstrzymane i przywrócone przy zmianie launchera.</string>
-    <string name="home_choose_other">Przełącz na inny launcher</string>
-    <string name="home_choose_other_sub">Obejmuje launchery systemowe wyłączone przez Launcher Manager.</string>
     <string name="home_restore_stock">Przywróć wstrzymane launchery systemowe</string>
     <string name="home_restore_stock_sub">Przywróć składniki zapisane przez Couchy. Potem możesz wybrać inny launcher.</string>
     <string name="home_confirm_title">Użyć %1$s jako ekranu głównego?</string>
@@ -304,8 +289,6 @@
     <string name="home_keep_current">Zachowaj obecny launcher</string>
     <string name="home_stock_still_active">Domyślny launcher jest nadal aktywny.</string>
     <string name="home_wizard_debug_needed">Włącz ADB przez sieć i ponownie wybierz Użyj Couchy jako ekranu głównego. Możesz zachować obecny launcher i zmienić go później.</string>
-    <string name="home_control_open">Otwórz</string>
-    <string name="home_control_on">Wł.</string>
     <string name="home_press_home_title">Naciśnij Home na pilocie</string>
     <string name="home_press_home_body">Sprawdź, czy przycisk Home otwiera Couchy.</string>
     <string name="home_debug_export">Eksportuj dziennik debugowania</string>
@@ -382,4 +365,20 @@
     <string name="recommended_settings">Dodaj polecane aplikacje</string>
     <string name="recommended_catalog_url">Adres URL katalogu JSON</string>
     <string name="recommended_catalog_invalid">Wprowadź prawidłowy link HTTPS do zgodnego pliku JSON z polecanymi aplikacjami.</string>
+    <string name="apps_reorder_mode">Tryb zmiany kolejności aplikacji</string>
+    <string name="apps_reorder_help">Naciśnij OK, aby chwycić lub upuścić aplikację. Naciśnij Wstecz, aby zapisać i wyjść.</string>
+    <string name="edit_section">Edytuj sekcję</string>
+    <string name="section_icon">Pokaż ikonę sekcji</string>
+    <string name="section_choose_icon">Wybierz ikonę sekcji</string>
+    <string name="aerial_quality">Jakość wideo</string>
+    <string name="home_switch_to">Przełącz na %1$s</string>
+    <string name="home_stock_launcher">Program uruchamiający systemu</string>
+    <string name="home_adb_enabled">Debugowanie ADB przez sieć włączone</string>
+    <string name="home_adb_disabled">Debugowanie ADB przez sieć wyłączone</string>
+    <string name="home_launcher_settings_sub">Przełączaj między Couchy a programem uruchamiającym telewizora</string>
+    <string name="android_shortcuts">Skróty Androida</string>
+    <string name="screen_resize">Zmień rozmiar ekranu</string>
+    <string name="shortcut_keyboard_languages">Języki klawiatury</string>
+    <string name="shortcut_screensaver">Wybierz wygaszacz ekranu</string>
+    <string name="shortcut_power_timeout">Wyłącz automatycznie</string>
 </resources>

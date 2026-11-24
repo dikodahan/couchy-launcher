@@ -36,6 +36,10 @@ internal class LibraryIcon(
 }
 
 internal class IconLibrary private constructor(private val icons: List<LibraryIcon>) {
+    private val byName by lazy { icons.associateBy(LibraryIcon::name) }
+
+    fun find(name: String): LibraryIcon? = byName[name]
+
     fun search(query: String): List<LibraryIcon> {
         val words = query.trim().lowercase(Locale.ROOT)
             .split(SEARCH_SEPARATOR).filter { it.isNotEmpty() }

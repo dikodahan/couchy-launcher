@@ -1,10 +1,12 @@
 package com.conreo.couchytv
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
+import android.view.inputmethod.InputMethodManager
 import com.conreo.couchytv.data.AdbShellResult
 import com.conreo.couchytv.data.LocalAdb
 import java.io.IOException
@@ -84,6 +86,52 @@ object Actions {
     }
 
     private val packageName = Regex("[a-zA-Z0-9_]+(?:\\.[a-zA-Z0-9_]+)+")
+
+    fun openScreenPositionSettings(context: Context) {
+        val amlogicDisplaySettings = Intent().setClassName(
+            "com.droidlogic.tv.settings", "com.droidlogic.tv.settings.more.MorePrefFragmentActivity",
+        )
+        if (tryOpenSettings(context, amlogicDisplaySettings) ||
+            tryOpenSettings(context, Intent(Settings.ACTION_DISPLAY_SETTINGS))
+        ) return
+        openSystemSettings(context)
+    }
+
+    fun openGboardLanguages(context: Context) {
+        val gboard = context.getSystemService(InputMethodManager::class.java)
+            ?.inputMethodList?.firstOrNull { it.packageName == "com.google.android.inputmethod.latin" }
+        if (gboard != null) {
+            val languageSettings = Intent("android.view.inputmethod.action.IME_LANGUAGE_SETTINGS").setPackage(gboard.packageName)
+            val subtypes = Intent(Settings.ACTION_INPUT_METHOD_SUBTYPE_SETTINGS)
+                .putExtra(Settings.EXTRA_INPUT_METHOD_ID, gboard.id)
+            if (tryOpenSettings(context, languageSettings) || tryOpenSettings(context, subtypes)) return
+        }
+        if (!tryOpenSettings(context, Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))) openSystemSettings(context)
+    }
+
+    fun openScreensaverSettings(context: Context) {
+        val tvPicker = Intent().setClassName(
+            "com.android.tv.settings", "com.android.tv.settings.device.display.daydream.DaydreamActivity"
+        )
+        if (tryOpenSettings(context, Intent(Settings.ACTION_DREAM_SETTINGS)) ||
+            tryOpenSettings(context, tvPicker) ||
+            tryOpenSettings(context, Intent("com.google.android.tv.settings.ambient").setPackage("com.android.tv.settings"))
+        ) return
+        openSystemSettings(context)
+    }
+
+    /** The TV can expose a native timeout activity on vendor firmware. */
+    fun openPowerTimeoutSettings(context: Context): Boolean =
+        tryOpenSettings(context, Intent("android.settings.ENERGY_SAVER_SETTINGS"))
+
+    private fun tryOpenSettings(context: Context, intent: Intent): Boolean = try {
+        context.startActivity(intent)
+        true
+    } catch (_: ActivityNotFoundException) {
+        false
+    } catch (_: SecurityException) {
+        false
+    }
 
     fun openDebuggingSettings(context: Context) {
         runCatching { context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)) }

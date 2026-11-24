@@ -23,17 +23,23 @@ class CompatibilityDeviceTest {
         val store = ConfigStore(context)
         val original = store.flow.first()
         val file = File(context.cacheDir, "compatibility-test.json")
+        val category = CategoryCfg("example-reorder", "Example", iconName = "movie", iconEnabled = true)
         try {
             store.update { it.copy(knownApps = setOf("test.seen"), weatherEnabled = true,
                 weatherUnit = 1, labelOverrides = mapOf("test.app" to "My app"),
-                recommendedAppsEnabled = true, recommendedAppsUrl = "https://example.org/catalog.json") }
+                recommendedAppsEnabled = true, recommendedAppsUrl = "https://example.org/catalog.json",
+                categories = it.categories + category,
+                sections = mapOf("example.first" to setOf(category.id)),
+                order = mapOf(category.id to listOf("example.second", "example.first"))) }
             store.exportTo(file)
             val exported = store.flow.first()
             file.writeText("{}")
             assertFalse(store.importFrom(file)); assertEquals(exported, store.flow.first())
             store.exportTo(file)
             store.update { it.copy(knownApps = setOf("test.new"), weatherUnit = 0,
-                recommendedAppsEnabled = false, recommendedAppsUrl = "") }
+                recommendedAppsEnabled = false, recommendedAppsUrl = "",
+                categories = it.categories.filterNot { it.id == category.id },
+                sections = emptyMap(), order = emptyMap()) }
             assertTrue(store.importFrom(file))
             val imported = store.flow.first()
             assertEquals(1, imported.weatherUnit)
@@ -41,7 +47,38 @@ class CompatibilityDeviceTest {
             assertEquals("My app", imported.labelOverrides["test.app"])
             assertTrue(imported.recommendedAppsEnabled)
             assertEquals("https://example.org/catalog.json", imported.recommendedAppsUrl)
+            assertEquals(category, imported.categories.last())
+            assertEquals("movie", imported.categories.last().visibleIcon)
+            assertEquals(setOf(category.id), imported.sections["example.first"])
+            assertEquals(listOf("example.second", "example.first"), imported.order[category.id])
         } finally { store.update { original }; file.delete() }
+    }
+
+    @Test fun restoringSameAerialSettingsRefreshesPlaybackRevision() = runBlocking {
+        val store = ConfigStore(context)
+        val original = store.snapshot()
+        val file = File(context.cacheDir, "aerial-restore-test.json")
+        try {
+            store.update { it.copy(setupDone = true, useBuiltinAerials = true, builtinSource = 2, aerialQuality = BuiltinAerials.QUALITY_720P, videoSpeed = 4) }
+            store.exportTo(file)
+            val before = store.storedConfig.first()
+            assertTrue(store.importFrom(file))
+            val restored = store.storedConfig.first()
+            assertEquals(before.config, restored.config)
+            assertEquals(before.restoreRevision + 1, restored.restoreRevision)
+        } finally {
+            store.update { original }
+            file.delete()
+        }
+    }
+
+    @Test fun lowerAerialQualityUsesOnlyLowerResolutionVariants() {
+        val reduced = BuiltinAerials.load(context, sourceIndex = 1, quality = BuiltinAerials.QUALITY_720P)
+        val standard = BuiltinAerials.load(context, sourceIndex = 1, quality = BuiltinAerials.QUALITY_1080P)
+        assertTrue(reduced.isNotEmpty())
+        assertTrue(reduced.all { "/content/HD/" in it })
+        assertTrue(standard.isNotEmpty())
+        assertTrue(standard.all { "apple.com/" in it })
     }
 
     @Test fun panoramaImportIsBoundedAndResetRestoresOriginalArt() = runBlocking {

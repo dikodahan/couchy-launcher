@@ -9,7 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,6 +79,7 @@ import com.conreo.couchytv.Actions
 import com.conreo.couchytv.R
 import com.conreo.couchytv.data.AppEntry
 import com.conreo.couchytv.data.AppRepository
+import com.conreo.couchytv.data.BuiltinAerials
 import com.conreo.couchytv.data.CategoryCfg
 import com.conreo.couchytv.data.CloudNotConfigured
 import com.conreo.couchytv.data.CloudSession
@@ -92,7 +90,9 @@ import com.conreo.couchytv.data.IconPack
 import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
 import com.conreo.couchytv.data.LauncherConfig
+import com.conreo.couchytv.data.HomeDiagnostics
 import com.conreo.couchytv.data.NeedTelegramLogin
+import com.conreo.couchytv.data.TelegramRequestFailure
 import com.conreo.couchytv.data.ParentalControls
 import com.conreo.couchytv.data.ParentalState
 import com.conreo.couchytv.data.READ_TV_LISTINGS
@@ -109,7 +109,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 
-private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Weather, Apps, RecommendedApps, Categories, IconPack, Parental, Launcher, About }
+private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Weather, Apps, RecommendedApps, Categories, IconPack, Parental, Launcher, AndroidShortcuts, About }
 
 /**
  * Settings panel built entirely from focusable rows and buttons — every
@@ -143,6 +143,12 @@ internal fun SettingsSheet(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var screen by remember { mutableStateOf(if (startAtWeather) SettingsScreen.Weather else SettingsScreen.Main) }
+    var settingsReturnTo by remember { mutableStateOf(if (startAtWeather) SettingsScreen.Weather else SettingsScreen.Apps) }
+    val mainMenuScroll = rememberScrollState()
+    fun openSettings(target: SettingsScreen) {
+        settingsReturnTo = target
+        screen = target
+    }
     var released by remember { mutableStateOf(!suppressInitialRelease) }
     val catalogUrl = config.recommendedAppsUrl.takeIf {
         BuildConfig.GITHUB_UPDATES && !BuildConfig.DEBUG && config.recommendedAppsEnabled && it.isNotBlank()
@@ -239,17 +245,7 @@ internal fun SettingsSheet(
         },
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        // Force the dialog window to fill the screen — Compose dialogs otherwise
-        // keep a small platform margin, so the panel wouldn't sit flush against
-        // the right edge.
-        val dialogView = androidx.compose.ui.platform.LocalView.current
-        androidx.compose.runtime.SideEffect {
-            ((dialogView.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window)
-                ?.setLayout(
-                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
-                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
-                )
-        }
+        FillDialogWindow()
         // A Dialog spawns its own window that re-provides the platform density,
         // so the launcher's ScaledUi doesn't reach here — re-apply it. The
         // dialog's LocalConfiguration is the real (unscaled) device width.
@@ -290,21 +286,23 @@ internal fun SettingsSheet(
                 ) { target ->
                 when (target) {
                     SettingsScreen.Main -> MainScreen(
-                        onWallpaper = { screen = SettingsScreen.Wallpaper },
-                        onDisplay = { screen = SettingsScreen.Display },
-                        onStatusBar = { screen = SettingsScreen.StatusBar },
-                        onWeather = { screen = SettingsScreen.Weather },
-                        onApps = { screen = SettingsScreen.Apps },
+                        returnTo = settingsReturnTo,
+                        scroll = mainMenuScroll,
+                        onWallpaper = { openSettings(SettingsScreen.Wallpaper) },
+                        onDisplay = { openSettings(SettingsScreen.Display) },
+                        onStatusBar = { openSettings(SettingsScreen.StatusBar) },
+                        onWeather = { openSettings(SettingsScreen.Weather) },
+                        onApps = { openSettings(SettingsScreen.Apps) },
                         onRecommendedApps = if (configuredApps != null) {
-                            { screen = SettingsScreen.RecommendedApps }
+                            { openSettings(SettingsScreen.RecommendedApps) }
                         } else null,
-                        onCategories = { screen = SettingsScreen.Categories },
-                        onIconPack = { screen = SettingsScreen.IconPack },
-                        onParental = { screen = SettingsScreen.Parental },
-                        onLauncher = { screen = SettingsScreen.Launcher },
-                        onAndroidSettings = { Actions.openSystemSettings(context) },
+                        onCategories = { openSettings(SettingsScreen.Categories) },
+                        onIconPack = { openSettings(SettingsScreen.IconPack) },
+                        onParental = { openSettings(SettingsScreen.Parental) },
+                        onLauncher = { openSettings(SettingsScreen.Launcher) },
+                        onAndroidShortcuts = { openSettings(SettingsScreen.AndroidShortcuts) },
                         updatePrompt = updatePrompt,
-                        onAbout = { screen = SettingsScreen.About },
+                        onAbout = { openSettings(SettingsScreen.About) },
                     )
                     SettingsScreen.Wallpaper -> WallpaperScreen(
                         config = config,
@@ -322,6 +320,9 @@ internal fun SettingsSheet(
                         },
                         onSelectBuiltinSource = { v ->
                             scope.launch { store.update { it.copy(builtinSource = v) } }
+                        },
+                        onSelectAerialQuality = { quality ->
+                            scope.launch { store.update { it.copy(aerialQuality = quality) } }
                         },
                         onSetScrim = { v ->
                             scope.launch { store.update { it.copy(scrimMode = v) } }
@@ -401,12 +402,8 @@ internal fun SettingsSheet(
                             }
                         },
                     )
-                    SettingsScreen.Categories -> CategoriesScreen(
-                        config = config,
-                        apps = apps,
-                        store = store,
-                        onBack = { screen = SettingsScreen.Main },
-                    )
+                    SettingsScreen.Categories -> CategoriesScreen(config = config, store = store)
+                    SettingsScreen.AndroidShortcuts -> AndroidShortcutsScreen()
                     SettingsScreen.About -> AboutScreen(
                         onBack = { screen = SettingsScreen.Main },
                     )
@@ -428,6 +425,8 @@ internal fun SettingsSheet(
 
 @Composable
 private fun MainScreen(
+    returnTo: SettingsScreen,
+    scroll: androidx.compose.foundation.ScrollState,
     onWallpaper: () -> Unit,
     onDisplay: () -> Unit,
     onStatusBar: () -> Unit,
@@ -438,12 +437,17 @@ private fun MainScreen(
     onIconPack: () -> Unit,
     onParental: () -> Unit,
     onLauncher: () -> Unit,
-    onAndroidSettings: () -> Unit,
+    onAndroidShortcuts: () -> Unit,
     updatePrompt: AppUpdatePrompt?,
     onAbout: () -> Unit,
 ) {
+    val focus = initialFocus()
+    val target = if (returnTo == SettingsScreen.RecommendedApps && onRecommendedApps == null) {
+        SettingsScreen.Apps
+    } else returnTo
+    fun focusFor(row: SettingsScreen) = if (row == target) Modifier.focusRequester(focus) else Modifier
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        Modifier.fillMaxSize().verticalScroll(scroll).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
@@ -451,32 +455,33 @@ private fun MainScreen(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
         )
-        val f = initialFocus()
 
         // ---- Content: what shows on the home screen ----
         SectionLabel(stringResource(R.string.group_content))
         SettingsItem(
             selected = false, onClick = onApps,
+            modifier = focusFor(SettingsScreen.Apps),
             headlineContent = { Text(stringResource(R.string.item_app)) },
             supportingContent = { Text(stringResource(R.string.item_app_sub)) },
             leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
-            modifier = Modifier.focusRequester(f),
         )
         if (onRecommendedApps != null) {
             SettingsItem(
                 onClick = onRecommendedApps,
+                modifier = focusFor(SettingsScreen.RecommendedApps),
                 headlineContent = { Text(stringResource(R.string.recommended_title)) },
                 leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
             )
         }
         SettingsItem(
             selected = false, onClick = onCategories,
+            modifier = focusFor(SettingsScreen.Categories),
             headlineContent = { Text(stringResource(R.string.item_sections)) },
-            supportingContent = { Text(stringResource(R.string.item_sections_sub)) },
             leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
         )
         SettingsItem(
             selected = false, onClick = onIconPack,
+            modifier = focusFor(SettingsScreen.IconPack),
             headlineContent = { Text(stringResource(R.string.item_icon_pack)) },
             supportingContent = { Text(stringResource(R.string.item_icon_pack_sub)) },
             leadingContent = { Icon(AppIcons.Palette, contentDescription = null) },
@@ -484,6 +489,7 @@ private fun MainScreen(
 
         SettingsItem(
             selected = false, onClick = onParental,
+            modifier = focusFor(SettingsScreen.Parental),
             headlineContent = { Text(stringResource(R.string.parental_controls)) },
             leadingContent = { Icon(AppIcons.Lock, contentDescription = null) },
         )
@@ -492,24 +498,28 @@ private fun MainScreen(
         SectionLabel(stringResource(R.string.group_appearance))
         SettingsItem(
             selected = false, onClick = onDisplay,
+            modifier = focusFor(SettingsScreen.Display),
             headlineContent = { Text(stringResource(R.string.item_display)) },
             supportingContent = { Text(stringResource(R.string.item_display_sub)) },
             leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
         )
         SettingsItem(
             selected = false, onClick = onWallpaper,
+            modifier = focusFor(SettingsScreen.Wallpaper),
             headlineContent = { Text(stringResource(R.string.item_wallpaper)) },
             supportingContent = { Text(stringResource(R.string.item_wallpaper_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
         )
         SettingsItem(
             selected = false, onClick = onStatusBar,
+            modifier = focusFor(SettingsScreen.StatusBar),
             headlineContent = { Text(stringResource(R.string.item_statusbar)) },
             supportingContent = { Text(stringResource(R.string.item_statusbar_sub)) },
             leadingContent = { Icon(AppIcons.Wifi, contentDescription = null) },
         )
         SettingsItem(
             selected = false, onClick = onWeather,
+            modifier = focusFor(SettingsScreen.Weather),
             headlineContent = { Text(stringResource(R.string.item_weather)) },
             supportingContent = { Text(stringResource(R.string.item_weather_sub)) },
             leadingContent = { Icon(AppIcons.WeatherPartlyCloudy, contentDescription = null) },
@@ -519,14 +529,15 @@ private fun MainScreen(
         SectionLabel(stringResource(R.string.group_system))
         SettingsItem(
             selected = false, onClick = onLauncher,
+            modifier = focusFor(SettingsScreen.Launcher),
             headlineContent = { Text(stringResource(R.string.item_launcher_settings)) },
             supportingContent = { Text(stringResource(R.string.item_launcher_settings_sub)) },
             leadingContent = { Icon(painter = androidx.compose.ui.res.painterResource(R.drawable.ic_couch), contentDescription = null, modifier = Modifier.size(24.dp)) },
         )
         SettingsItem(
-            selected = false, onClick = onAndroidSettings,
-            headlineContent = { Text(stringResource(R.string.item_android_settings)) },
-            supportingContent = { Text(stringResource(R.string.item_android_settings_sub)) },
+            onClick = onAndroidShortcuts,
+            modifier = focusFor(SettingsScreen.AndroidShortcuts),
+            headlineContent = { Text(stringResource(R.string.android_shortcuts)) },
             leadingContent = { Icon(AppIcons.Gear, contentDescription = null) },
         )
         if (updatePrompt != null) {
@@ -542,6 +553,7 @@ private fun MainScreen(
         }
         SettingsItem(
             selected = false, onClick = onAbout,
+            modifier = focusFor(SettingsScreen.About),
             headlineContent = { Text(stringResource(R.string.item_about)) },
             leadingContent = { Icon(AppIcons.Info, contentDescription = null) },
         )
@@ -830,102 +842,6 @@ private fun AppThumb(app: AppEntry) {
     }
 }
 
-/* ---------- section apps picker: vertical grid, checked = included ---------- */
-
-@Composable
-private fun SectionAppsDialog(
-    cat: CategoryCfg,
-    apps: List<AppEntry>,
-    config: LauncherConfig,
-    onToggle: (AppEntry) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier.width(720.dp).height(520.dp),
-        ) {
-            Column(Modifier.fillMaxSize().padding(20.dp)) {
-                Text(cat.name, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.section_apps_sub),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp),
-                )
-                val f = initialFocus()
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    items(apps.size, key = { apps[it].pkg }) { i ->
-                        val app = apps[i]
-                        val inSection = cat.id in AppRepository.sectionsOf(app, config)
-                        Surface(
-                            onClick = { onToggle(app) },
-                            modifier = if (i == 0) Modifier.focusRequester(f) else Modifier,
-                            shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
-                            colors = ClickableSurfaceDefaults.colors(
-                                containerColor = Color.White.copy(alpha = 0.06f),
-                                focusedContainerColor = Color.White.copy(alpha = 0.18f),
-                            ),
-                            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
-                        ) {
-                            Box(Modifier.fillMaxWidth().padding(8.dp)) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    if (app.banner != null) {
-                                        Image(
-                                            bitmap = app.banner,
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .aspectRatio(16f / 9f)
-                                                .clip(RoundedCornerShape(6.dp)),
-                                        )
-                                    } else {
-                                        Box(
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .aspectRatio(16f / 9f)
-                                                .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(6.dp)),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            if (app.icon != null) {
-                                                Image(bitmap = app.icon, contentDescription = null, modifier = Modifier.size(40.dp))
-                                            }
-                                        }
-                                    }
-                                    Text(
-                                        app.label,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.padding(top = 6.dp),
-                                    )
-                                }
-                                Box(Modifier.align(Alignment.TopEnd).padding(4.dp)) {
-                                    CheckMark(checked = inSection)
-                                }
-                            }
-                        }
-                    }
-                }
-                Button(onClick = onDismiss, modifier = Modifier.padding(top = 12.dp)) {
-                    Text(stringResource(R.string.done))
-                }
-            }
-        }
-    }
-}
-
-
 /* ------------------------------ launcher settings ------------------------------ */
 
 private enum class LauncherPane { Menu, Home, Language, RecommendedApps, Save, Load }
@@ -942,6 +858,12 @@ private fun LauncherSettingsSubscreen(
     val cloud = remember { TelegramCloudBackup.get(context.applicationContext) }
     val session by cloud.session.collectAsStateWithLifecycle(CloudSession.Empty)
     var pane by remember { mutableStateOf(LauncherPane.Menu) }
+    var launcherReturnTo by remember { mutableStateOf(LauncherPane.Home) }
+    val launcherMenuScroll = rememberScrollState()
+    fun openPane(target: LauncherPane) {
+        launcherReturnTo = target
+        pane = target
+    }
     var pendingCloud by remember { mutableStateOf<LauncherPane?>(null) }
     var showAuth by remember { mutableStateOf(false) }
     LaunchedEffect(cloud) { cloud.warmup() }
@@ -987,7 +909,7 @@ private fun LauncherSettingsSubscreen(
     fun saveCloud() {
         scope.launch {
             val result = runCatching { cloud.saveConfig(store.snapshot()) }
-            when (result.exceptionOrNull()) {
+            when (val error = result.exceptionOrNull()) {
                 is NeedTelegramLogin, is CloudNotConfigured -> {
                     if (!cloud.isConfigured()) {
                         Actions.toast(context, cloud.unavailableMessage())
@@ -996,8 +918,25 @@ private fun LauncherSettingsSubscreen(
                         showAuth = true
                     }
                 }
-                null -> Actions.toast(context, context.getString(R.string.toast_config_saved_cloud))
-                else -> Actions.toast(context, context.getString(R.string.toast_cloud_save_fail))
+                null -> {
+                    HomeDiagnostics.record(context, "Telegram Cloud Save confirmed")
+                    android.util.Log.i("CouchyTelegram", "Cloud Save confirmed")
+                    Actions.toast(context, context.getString(R.string.toast_config_saved_cloud))
+                }
+                else -> {
+                    if (error is kotlinx.coroutines.CancellationException &&
+                        error !is kotlinx.coroutines.TimeoutCancellationException
+                    ) throw error
+                    val requestFailure = error as? TelegramRequestFailure
+                    val detail = requestFailure?.diagnostic ?: error.javaClass.simpleName
+                    HomeDiagnostics.record(context, "Telegram Cloud Save failed: $detail")
+                    android.util.Log.w("CouchyTelegram", detail)
+                    val message = context.getString(R.string.toast_cloud_save_fail)
+                    val code = requestFailure?.code?.takeIf { it != 0 }
+                    val request = if (code != null) "${requestFailure.method} $code" else null
+                    val explanation = listOfNotNull(request, requestFailure?.reason).joinToString(" · ")
+                    Actions.toast(context, if (explanation.isBlank()) message else "$message\n$explanation")
+                }
             }
         }
     }
@@ -1094,7 +1033,7 @@ private fun LauncherSettingsSubscreen(
             onDisconnect = { scope.launch { cloud.signOut() } },
         )
         LauncherPane.Menu -> Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+            Modifier.fillMaxSize().verticalScroll(launcherMenuScroll).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
@@ -1102,36 +1041,43 @@ private fun LauncherSettingsSubscreen(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
             )
+            val focus = initialFocus()
+            fun focusFor(row: LauncherPane) = if (row == launcherReturnTo) Modifier.focusRequester(focus) else Modifier
             SettingsItem(
-                selected = false, onClick = { pane = LauncherPane.Home },
+                selected = false, onClick = { openPane(LauncherPane.Home) },
+                modifier = focusFor(LauncherPane.Home),
                 headlineContent = { Text(stringResource(R.string.home_launcher_title)) },
                 supportingContent = { Text(stringResource(R.string.home_launcher_settings_sub)) },
                 leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
             )
             SettingsItem(
                 selected = false,
-                onClick = { pane = LauncherPane.Language },
+                onClick = { openPane(LauncherPane.Language) },
+                modifier = focusFor(LauncherPane.Language),
                 headlineContent = { Text(stringResource(R.string.item_language)) },
                 supportingContent = { Text(stringResource(R.string.item_language_sub)) },
                 leadingContent = { Icon(AppIcons.Language, contentDescription = null) },
             )
             if (BuildConfig.GITHUB_UPDATES && !BuildConfig.DEBUG) {
                 SettingsItem(
-                    onClick = { pane = LauncherPane.RecommendedApps },
+                    onClick = { openPane(LauncherPane.RecommendedApps) },
+                    modifier = focusFor(LauncherPane.RecommendedApps),
                     headlineContent = { Text(stringResource(R.string.recommended_settings)) },
                     leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
                 )
             }
             SettingsItem(
                 selected = false,
-                onClick = { pane = LauncherPane.Save },
+                onClick = { openPane(LauncherPane.Save) },
+                modifier = focusFor(LauncherPane.Save),
                 headlineContent = { Text(stringResource(R.string.item_save_config)) },
                 supportingContent = { Text(stringResource(R.string.item_save_config_sub)) },
                 leadingContent = { Icon(AppIcons.Save, contentDescription = null) },
             )
             SettingsItem(
                 selected = false,
-                onClick = { pane = LauncherPane.Load },
+                onClick = { openPane(LauncherPane.Load) },
+                modifier = focusFor(LauncherPane.Load),
                 headlineContent = { Text(stringResource(R.string.item_load_config)) },
                 supportingContent = { Text(stringResource(R.string.item_load_config_sub)) },
                 leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
@@ -1702,13 +1648,22 @@ private fun WeatherScreen(
 @Composable
 private fun CategoriesScreen(
     config: LauncherConfig,
-    apps: List<AppEntry>,
     store: ConfigStore,
-    onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var renameFor by remember { mutableStateOf<CategoryCfg?>(null) }
-    var appsFor by remember { mutableStateOf<CategoryCfg?>(null) }
+    var editingId by remember { mutableStateOf<String?>(null) }
+    var choosingIcon by remember { mutableStateOf(false) }
+
+    fun changeSectionIcon(id: String, name: String?, enabled: Boolean) {
+        scope.launch {
+            store.update { cfg ->
+                cfg.copy(categories = cfg.categories.map { section ->
+                    if (section.id == id) section.copy(iconName = name, iconEnabled = enabled) else section
+                })
+            }
+        }
+    }
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -1720,29 +1675,39 @@ private fun CategoriesScreen(
             modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
         )
         val f = initialFocus()
-        // Auto-filled "All apps" section: a single toggle, no per-app assignment.
-        run {
-            val hasAll = config.categories.any { it.id == AppRepository.ALL_APPS_ID }
-            val allName = stringResource(R.string.cat_all_apps)
-            SettingsItem(
-                selected = false,
-                onClick = {
-                    scope.launch {
-                        store.update { cfg ->
-                            val rest = cfg.categories.filter { it.id != AppRepository.ALL_APPS_ID }
-                            cfg.copy(
-                                categories = if (hasAll) rest
-                                else rest + CategoryCfg(AppRepository.ALL_APPS_ID, allName),
-                            )
+        val allSection = config.categories.firstOrNull { it.id == AppRepository.ALL_APPS_ID }
+        val allName = stringResource(R.string.cat_all_apps)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.weight(1f)) {
+                SettingsItem(
+                    onClick = {
+                        scope.launch {
+                            store.update { cfg ->
+                                val rest = cfg.categories.filter { it.id != AppRepository.ALL_APPS_ID }
+                                cfg.copy(categories = if (allSection != null) rest else
+                                    rest + CategoryCfg(AppRepository.ALL_APPS_ID, allName))
+                            }
                         }
-                    }
-                },
-                modifier = Modifier.focusRequester(f),
-                headlineContent = { Text(allName) },
-                supportingContent = { Text(stringResource(R.string.all_apps_sub)) },
-                leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
-                trailingContent = { CheckMark(checked = hasAll) },
-            )
+                    },
+                    modifier = Modifier.focusRequester(f),
+                    headlineContent = { Text(allName) },
+                    supportingContent = { Text(stringResource(R.string.all_apps_sub)) },
+                    leadingContent = {
+                        if (allSection?.visibleIcon == null) Icon(AppIcons.Apps, contentDescription = null)
+                        else SectionIcon(allSection.visibleIcon, Modifier.size(24.dp))
+                    },
+                    trailingContent = { CheckMark(checked = allSection != null) },
+                )
+            }
+            if (allSection != null) {
+                SmallIconButton(AppIcons.Pencil, stringResource(R.string.edit_section)) {
+                    editingId = allSection.id
+                }
+            }
         }
         config.categories.forEachIndexed { i, cat ->
             if (cat.id == AppRepository.ALL_APPS_ID) return@forEachIndexed
@@ -1754,13 +1719,14 @@ private fun CategoriesScreen(
                 Box(Modifier.weight(1f)) {
                     SettingsItem(
                         selected = false,
-                        onClick = { appsFor = cat },
+                        onClick = { editingId = cat.id },
                         headlineContent = { Text(cat.name) },
-                        supportingContent = { Text(stringResource(R.string.section_row_sub)) },
-                        leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
+                        leadingContent = {
+                            if (cat.visibleIcon == null) Icon(AppIcons.Folder, contentDescription = null)
+                            else SectionIcon(cat.visibleIcon, Modifier.size(24.dp))
+                        },
                     )
                 }
-                SmallIconButton(AppIcons.Pencil, stringResource(R.string.rename_section)) { renameFor = cat }
                 SmallIconButton(AppIcons.Up, stringResource(R.string.cd_move_up)) {
                     if (i > 0) scope.launch {
                         store.update { cfg ->
@@ -1808,25 +1774,27 @@ private fun CategoriesScreen(
         )
     }
 
-    appsFor?.let { cat ->
-        // Keep the dialog's category object in sync with the live config
-        val liveCat = config.categories.firstOrNull { it.id == cat.id } ?: cat
-        SectionAppsDialog(
-            cat = liveCat,
-            apps = apps,
-            config = config,
-            onToggle = { app ->
-                scope.launch {
-                    store.update { cfg ->
-                        val current = AppRepository.sectionsOf(app, cfg)
-                        val next = if (liveCat.id in current) current - liveCat.id
-                        else current + liveCat.id
-                        cfg.copy(sections = cfg.sections + (app.pkg to next))
-                    }
-                }
-            },
-            onDismiss = { appsFor = null },
-        )
+    config.categories.firstOrNull { it.id == editingId }?.let { section ->
+        if (choosingIcon) {
+            LibraryIconPickDialog(
+                onPick = { icon ->
+                    changeSectionIcon(section.id, icon.name, enabled = true)
+                    choosingIcon = false
+                },
+                onDismiss = { choosingIcon = false },
+            )
+        } else if (renameFor == null) {
+            SectionEditDialog(
+                section = section,
+                onRename = if (section.id == AppRepository.ALL_APPS_ID) null else ({ renameFor = section }),
+                onToggleIcon = {
+                    if (section.visibleIcon != null) changeSectionIcon(section.id, section.iconName, enabled = false)
+                    else choosingIcon = true
+                },
+                onChooseIcon = { choosingIcon = true },
+                onDismiss = { editingId = null },
+            )
+        }
     }
 
     renameFor?.let { cat ->
@@ -1845,6 +1813,49 @@ private fun CategoriesScreen(
             },
             onDismiss = { renameFor = null },
         )
+    }
+}
+
+@Composable
+private fun SectionEditDialog(
+    section: CategoryCfg,
+    onRename: (() -> Unit)?,
+    onToggleIcon: () -> Unit,
+    onChooseIcon: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+        ) {
+            Column(Modifier.width(410.dp).padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(section.name, style = MaterialTheme.typography.titleMedium)
+                val focus = initialFocus()
+                if (onRename != null) {
+                    SettingsItem(
+                        onClick = onRename,
+                        modifier = Modifier.focusRequester(focus),
+                        headlineContent = { Text(stringResource(R.string.rename_section)) },
+                        leadingContent = { Icon(AppIcons.Pencil, contentDescription = null) },
+                    )
+                }
+                SettingsItem(
+                    onClick = onToggleIcon,
+                    modifier = if (onRename == null) Modifier.focusRequester(focus) else Modifier,
+                    headlineContent = { Text(stringResource(R.string.section_icon)) },
+                    trailingContent = { CheckMark(section.visibleIcon != null) },
+                )
+                if (section.visibleIcon != null) {
+                    SettingsItem(
+                        onClick = onChooseIcon,
+                        headlineContent = { Text(stringResource(R.string.section_choose_icon)) },
+                        leadingContent = { SectionIcon(section.visibleIcon, Modifier.size(24.dp)) },
+                    )
+                }
+                Button(onClick = onDismiss) { Text(stringResource(R.string.done)) }
+            }
+        }
     }
 }
 
@@ -1925,6 +1936,7 @@ internal fun TextEntryDialog(
     busy: Boolean = false,
     status: Int? = null,
     urlInput: Boolean = false,
+    positionAboveKeyboard: Boolean = false,
 ) {
     var name by remember { mutableStateOf(initial) }
     val saveFocus = remember { FocusRequester() }
@@ -1933,6 +1945,7 @@ internal fun TextEntryDialog(
         if (!busy && (allowEmpty || trimmed.isNotEmpty())) onSave(trimmed)
     }
     Dialog(onDismissRequest = onDismiss) {
+        if (positionAboveKeyboard) PositionDialogAboveKeyboard()
         Surface(
             shape = RoundedCornerShape(16.dp),
             colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
@@ -2068,6 +2081,7 @@ private fun WallpaperScreen(
     config: LauncherConfig,
     onSelectBuiltinAerials: () -> Unit,
     onSelectBuiltinSource: (Int) -> Unit,
+    onSelectAerialQuality: (Int) -> Unit,
     onSetScrim: (Int) -> Unit,
     onSetSpeed: (Int) -> Unit,
     onPreset: (Int) -> Unit,
@@ -2167,21 +2181,34 @@ private fun WallpaperScreen(
             trailingContent = { CheckMark(checked = config.useBuiltinAerials) },
         )
         if (config.useBuiltinAerials) {
-            val sourceNames = listOf(
-                stringResource(R.string.aerial_src_all),
-                stringResource(R.string.aerial_src_apple),
-                stringResource(R.string.aerial_src_amazon),
-                stringResource(R.string.aerial_src_comm1),
-                stringResource(R.string.aerial_src_comm2),
-            )
-            val idx = config.builtinSource.coerceIn(0, sourceNames.size - 1)
+            val reduced = config.aerialQuality == BuiltinAerials.QUALITY_720P
+            val quality = if (reduced) BuiltinAerials.QUALITY_720P else BuiltinAerials.QUALITY_1080P
+            val labels = listOf("1080p", "720p")
             SelectorRow(
-                label = stringResource(R.string.aerial_src_label),
-                value = sourceNames[idx],
-                steps = sourceNames.size,
-                current = idx,
-                onSelect = { v -> onSelectBuiltinSource(v) },
+                label = stringResource(R.string.aerial_quality),
+                value = labels[quality],
+                steps = labels.size,
+                current = quality,
+                onSelect = onSelectAerialQuality,
+                description = if (reduced) stringResource(R.string.aerial_quality_amazon) else null,
             )
+            if (!reduced) {
+                val sourceNames = listOf(
+                    stringResource(R.string.aerial_src_all),
+                    stringResource(R.string.aerial_src_apple),
+                    stringResource(R.string.aerial_src_amazon),
+                    stringResource(R.string.aerial_src_comm1),
+                    stringResource(R.string.aerial_src_comm2),
+                )
+                val idx = config.builtinSource.coerceIn(0, sourceNames.size - 1)
+                SelectorRow(
+                    label = stringResource(R.string.aerial_src_label),
+                    value = sourceNames[idx],
+                    steps = sourceNames.size,
+                    current = idx,
+                    onSelect = { v -> onSelectBuiltinSource(v) },
+                )
+            }
         }
 
         // A video file of your own

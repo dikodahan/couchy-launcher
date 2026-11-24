@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.tv.material3.Button
+import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
@@ -60,14 +61,21 @@ internal fun ParentalSettings(state: ParentalState, controls: ParentalControls) 
             state.enabled -> R.string.parental_disable
             else -> R.string.parental_enable
         }
-        Button(modifier = Modifier.focusRequester(focus), onClick = {
-            prompt = if (!state.hasPin) PinPrompt(action, confirm = true, verify = controls::setup)
-            else PinPrompt(action, verify = { controls.enable(it, !state.enabled) })
-        }) { Text(stringResource(action)) }
+        SettingsItem(
+            modifier = Modifier.focusRequester(focus),
+            onClick = {
+                prompt = if (!state.hasPin) PinPrompt(action, confirm = true, verify = controls::setup)
+                else PinPrompt(action, verify = { controls.enable(it, !state.enabled) })
+            },
+            headlineContent = { Text(stringResource(action)) },
+            leadingContent = { Icon(AppIcons.Lock, contentDescription = null) },
+        )
         if (state.hasPin) {
-            Button(onClick = { prompt = PinPrompt(R.string.parental_delete, verify = controls::delete) }) {
-                Text(stringResource(R.string.parental_delete))
-            }
+            SettingsItem(
+                onClick = { prompt = PinPrompt(R.string.parental_delete, verify = controls::delete) },
+                headlineContent = { Text(stringResource(R.string.parental_delete)) },
+                leadingContent = { Icon(AppIcons.Delete, contentDescription = null) },
+            )
         }
     }
     prompt?.let { PinDialog(it) { prompt = null } }

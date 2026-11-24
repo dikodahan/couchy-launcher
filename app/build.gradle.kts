@@ -43,8 +43,8 @@ android {
         applicationId = "com.conreo.couchytv"
         minSdk = 28
         targetSdk = 34
-        versionCode = 9
-        versionName = "1.1.1"
+        versionCode = 10
+        versionName = "1.1.2"
         buildConfigField("boolean", "GITHUB_UPDATES", githubUpdates.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
