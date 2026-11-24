@@ -204,7 +204,8 @@ internal class RecommendedApps(context: Context, private val catalogUrl: String)
     private companion object {
         val downloadLock = Any()
         val catalogLock = Any()
-        val http = OkHttpClient.Builder().followSslRedirects(false).callTimeout(10, TimeUnit.SECONDS).build()
+        val http = OkHttpClient.Builder().followRedirects(true).followSslRedirects(false)
+            .callTimeout(10, TimeUnit.SECONDS).build()
         val icons = LruCache<String, Bitmap>(32)
     }
 }

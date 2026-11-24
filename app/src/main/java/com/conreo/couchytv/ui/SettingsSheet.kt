@@ -1927,6 +1927,7 @@ internal fun TextEntryDialog(
     urlInput: Boolean = false,
 ) {
     var name by remember { mutableStateOf(initial) }
+    val saveFocus = remember { FocusRequester() }
     fun submit() {
         val trimmed = name.trim()
         if (!busy && (allowEmpty || trimmed.isNotEmpty())) onSave(trimmed)
@@ -1949,7 +1950,7 @@ internal fun TextEntryDialog(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
-                        enabled = !busy,
+                        readOnly = busy,
                         textStyle = TextStyle(
                             color = Color.White,
                             fontSize = 15.sp,
@@ -1963,13 +1964,20 @@ internal fun TextEntryDialog(
                         keyboardActions = KeyboardActions(
                             onDone = { submit() }
                         ),
-                        modifier = Modifier.fillMaxWidth().focusRequester(f),
+                        modifier = Modifier.fillMaxWidth().focusRequester(f).onPreviewKeyEvent { event ->
+                            if (urlInput && event.key == Key.DirectionDown && event.type == KeyEventType.KeyDown) {
+                                saveFocus.requestFocus()
+                                true
+                            } else false
+                        },
                     )
                 }
                 if (status != null) Text(stringResource(status))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = ::submit, enabled = !busy) { Text(stringResource(submitLabel)) }
-                    Button(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.cancel)) }
+                    Button(onClick = ::submit, modifier = Modifier.focusRequester(saveFocus)) {
+                        Text(stringResource(submitLabel))
+                    }
+                    Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                 }
             }
         }
