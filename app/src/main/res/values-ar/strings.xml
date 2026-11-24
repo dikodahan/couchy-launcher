@@ -176,7 +176,7 @@
     <string name="about_desc">مشغّل خفيف بشاشة واحدة لأجهزة Android TV و Google TV.\n\nبدون إعلانات · بدون تتبع · بدون خدمات خلفية. يُستخدم الاتصال بالشبكة فقط لبث الخلفيات الجوية المدمجة. جميع إعداداتك تعيش في ملف محلي واحد على هذا الجهاز.</string>
     <string name="about_foss">حر &amp; مفتوح المصدر</string>
     <string name="about_license">مرخص بموجب رخصة GNU General Public License v3.0 (GPLv3). أنت حر في استخدام ودراسة ومشاركة وتعديل Couchy Launcher.</string>
-    <string name="about_thirdparty">رسم الأريكة: Twemoji (MIT). الفيديوهات الجوية: مجموعات Apple و Amazon والمجتمع، يتم بثها من مالكيها.</string>
+    <string name="about_thirdparty">الفيديوهات الجوية: مجموعات Apple و Amazon والمجتمع، يتم بثها من مالكيها.</string>
     <string name="rerun_wizard">إعادة تشغيل معالج الإعداد</string>
     <string name="rerun_wizard_sub">إعداد المشغّل الافتراضي ونصائح البداية</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">لغات لوحة المفاتيح</string>
     <string name="shortcut_screensaver">اختيار شاشة التوقف</string>
     <string name="shortcut_power_timeout">إيقاف التشغيل تلقائيًا</string>
+    <string name="wizard_language_title">ما اللغة التي تريد أن يستخدمها Couchy؟</string>
 </resources>

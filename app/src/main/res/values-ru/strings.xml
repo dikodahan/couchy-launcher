@@ -176,7 +176,7 @@
     <string name="about_desc">Лёгкий одноэкранный лаунчер для Android TV и Google TV.\n\nБез рекламы · без отслеживания · без фоновых служб. Сеть используется только для трансляции встроенных аэрообоев. Все ваши настройки хранятся в одном локальном файле на этом устройстве.</string>
     <string name="about_foss">Свободное и открытое ПО</string>
     <string name="about_license">Лицензия GNU General Public License v3.0 (GPLv3). Вы можете свободно использовать, изучать, делиться и изменять Couchy Launcher.</string>
-    <string name="about_thirdparty">Дизайн дивана: Twemoji (MIT). Аэровидео: коллекции Apple, Amazon и сообщества, транслируются от их владельцев.</string>
+    <string name="about_thirdparty">Аэровидео: коллекции Apple, Amazon и сообщества, транслируются от их владельцев.</string>
     <string name="rerun_wizard">Запустить мастер настройки снова</string>
     <string name="rerun_wizard_sub">Настройка лаунчера по умолчанию и советы для начала</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">Языки клавиатуры</string>
     <string name="shortcut_screensaver">Выбрать заставку</string>
     <string name="shortcut_power_timeout">Автоматическое выключение</string>
+    <string name="wizard_language_title">На каком языке вы хотите использовать Couchy?</string>
 </resources>

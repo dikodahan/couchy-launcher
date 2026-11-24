@@ -176,7 +176,7 @@
     <string name="about_desc">Android TVおよびGoogle TV向けの軽量シングルスクリーンランチャー。\n\n広告なし · トラッキングなし · バックグラウンドサービスなし。ネットワークは内蔵空撮壁紙のストリーミングにのみ使用。すべての設定はこのデバイス上の単一のローカルファイルに保存されます。</string>
     <string name="about_foss">フリー＆オープンソース</string>
     <string name="about_license">GNU General Public License v3.0（GPLv3）の下でライセンスされています。Couchy Launcherを自由に使用、研究、共有、改変できます。</string>
-    <string name="about_thirdparty">ソファのアートワーク：Twemoji（MIT）。空撮動画：Apple、Amazon、コミュニティコレクション、所有者からストリーミング。</string>
+    <string name="about_thirdparty">空撮動画：Apple、Amazon、コミュニティコレクション、所有者からストリーミング。</string>
     <string name="rerun_wizard">セットアップウィザードを再実行</string>
     <string name="rerun_wizard_sub">デフォルトランチャーの設定と初回ヒント</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">キーボードの言語</string>
     <string name="shortcut_screensaver">スクリーンセーバーを選択</string>
     <string name="shortcut_power_timeout">自動電源オフ</string>
+    <string name="wizard_language_title">Couchy で使う言語を選んでください</string>
 </resources>

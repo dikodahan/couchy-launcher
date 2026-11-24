@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="art/couchy-launcher.svg" width="120" alt="Couchy Launcher logo" />
+<img src="art/couchy-launcher.png" width="120" alt="Couchy Launcher logo" />
 
 # Couchy Launcher
 
@@ -16,7 +16,7 @@ https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
 
 </div>
 
-**Version 1.1.0 — an updated open-source fork.** This repository, [dikodahan/couchy-launcher](https://github.com/dikodahan/couchy-launcher), builds on the original [Couchy Launcher by conreo](https://github.com/conreo/couchy-launcher). It is maintained independently and remains licensed under GPLv3. The original author created the launcher, design and foundation; this fork adapts community contributions and adds compatibility and reliability fixes.
+**An updated open-source fork.** This repository, [dikodahan/couchy-launcher](https://github.com/dikodahan/couchy-launcher), builds on the original [Couchy Launcher by conreo](https://github.com/conreo/couchy-launcher). It is maintained independently and remains licensed under GPLv3. The original author created the launcher, design and foundation; this fork adapts community contributions and adds compatibility and reliability fixes.
 
 ### Thanks and community contributions
 
@@ -89,7 +89,7 @@ Couchy Launcher requires Android TV or Google TV running **Android 9 (API 28) or
 
 1. **Get the APK.** Open **Downloader** on your TV, enter code **`5058414`** to download the latest release, and follow the on-screen installation prompts.
 2. **Enable Developer options on the TV.** In **Settings → System → About** (sometimes **Device Preferences → About**), select **Android TV OS build** seven times. Open **Developer options** and find your TV's debugging option. For a network connection, put the computer and TV on the same local network.
-3. **Open Couchy Launcher** from your TV's apps list and follow the wizard. To make it your Home launcher, see [Set or switch the Home launcher](#set-or-switch-the-home-launcher).
+3. **Open Couchy Launcher** from your TV's apps list. On first launch, a short startup video plays before the setup wizard. Press **Back** to go straight to setup. To make it your Home launcher, see [Set or switch the Home launcher](#set-or-switch-the-home-launcher).
 
 ---
 
@@ -111,7 +111,7 @@ Use **Download** to save an APK to the TV’s Downloads folder, **Install** to o
 
 ## Set or switch the Home launcher
 
-First, choose whether to show a VPN button and enable weather. Weather starts off. You can opt in to approximate IP location during setup or configure a different location later in **Settings → Weather**. The final step offers **Use Couchy as Home** or **Keep current launcher**. If Couchy verifies the switch, press Home on your remote to open Couchy Home. Setup is already saved at that point. If the TV keeps a known stock launcher active after accepting the switch, Couchy offers to pause it after you confirm. Later, open **Settings → Launcher settings → Home launcher** and choose **Switch to** followed by the other launcher’s name.
+Setup starts in the TV’s system language. Keep **System language** or pick a language from the dropdown to continue setup in that language. Then choose whether to show a VPN button and enable weather. Weather starts off. You can opt in to approximate IP location during setup or configure a different location later in **Settings → Weather**. The final step offers **Use Couchy as Home** or **Keep current launcher**. If Couchy verifies the switch, press Home on your remote to open Couchy Home. Setup is already saved at that point. If the TV keeps a known stock launcher active after accepting the switch, Couchy offers to pause it after you confirm. Later, open **Settings → Launcher settings → Home launcher** and choose **Switch to** followed by the other launcher’s name.
 
 The status at the bottom of **Home launcher** shows whether the TV’s network ADB listener is available to Couchy. Select **Network ADB debugging disabled** to open the TV’s debugging settings. Enable network ADB, then approve Couchy’s authorization prompt when switching. Couchy connects only to the same TV at `127.0.0.1:5555`. If Android offers its Home permission prompt, Couchy can also request to become Home through that prompt.
 

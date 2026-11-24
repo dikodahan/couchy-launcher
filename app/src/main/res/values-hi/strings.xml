@@ -176,7 +176,7 @@
     <string name="about_desc">Android TV और Google TV के लिए एक हल्का, एकल-स्क्रीन लॉन्चर।\n\nकोई विज्ञापन नहीं · कोई ट्रैकिंग नहीं · कोई बैकग्राउंड सेवाएँ नहीं। नेटवर्क का उपयोग केवल अंतर्निहित हवाई वॉलपेपर स्ट्रीम करने के लिए किया जाता है। आपकी सभी सेटिंग्स इस डिवाइस पर एक स्थानीय फ़ाइल में रहती हैं।</string>
     <string name="about_foss">मुक्त &amp; ओपन सोर्स</string>
     <string name="about_license">GNU General Public License v3.0 (GPLv3) के तहत लाइसेंस प्राप्त। आप Couchy Launcher का उपयोग, अध्ययन, साझा और संशोधन करने के लिए स्वतंत्र हैं।</string>
-    <string name="about_thirdparty">सोफ़ा कलाकृति: Twemoji (MIT)। हवाई वीडियो: Apple, Amazon और समुदाय संग्रह, उनके मालिकों से स्ट्रीम किए गए।</string>
+    <string name="about_thirdparty">हवाई वीडियो: Apple, Amazon और समुदाय संग्रह, उनके मालिकों से स्ट्रीम किए गए।</string>
     <string name="rerun_wizard">सेटअप विज़ार्ड फिर से चलाएँ</string>
     <string name="rerun_wizard_sub">डिफ़ॉल्ट लॉन्चर सेटअप और पहली बार की युक्तियाँ</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">कीबोर्ड की भाषाएँ</string>
     <string name="shortcut_screensaver">स्क्रीन सेवर चुनें</string>
     <string name="shortcut_power_timeout">अपने आप बंद करें</string>
+    <string name="wizard_language_title">Couchy किस भाषा में इस्तेमाल करना चाहते हैं?</string>
 </resources>

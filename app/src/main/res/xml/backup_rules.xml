@@ -5,4 +5,5 @@
     <exclude domain="sharedpref" path="home_launcher.xml" />
     <exclude domain="sharedpref" path="home_diagnostics.xml" />
     <exclude domain="sharedpref" path="recommended_downloads.xml" />
+    <exclude domain="sharedpref" path="startup.xml" />
 </full-backup-content>

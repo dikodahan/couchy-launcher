@@ -176,7 +176,7 @@
     <string name="about_desc">Launcher một màn hình nhẹ cho Android TV và Google TV.\n\nKhông quảng cáo · không theo dõi · không dịch vụ nền. Mạng chỉ được dùng để phát hình nền trên không tích hợp. Tất cả cài đặt của bạn nằm trong một tệp cục bộ trên thiết bị này.</string>
     <string name="about_foss">Tự do &amp; nguồn mở</string>
     <string name="about_license">Được cấp phép theo GNU General Public License v3.0 (GPLv3). Bạn được tự do sử dụng, nghiên cứu, chia sẻ và sửa đổi Couchy Launcher.</string>
-    <string name="about_thirdparty">Hình ghế sofa: Twemoji (MIT). Video trên không: bộ sưu tập Apple, Amazon và cộng đồng, phát từ chủ sở hữu.</string>
+    <string name="about_thirdparty">Video trên không: bộ sưu tập Apple, Amazon và cộng đồng, phát từ chủ sở hữu.</string>
     <string name="rerun_wizard">Chạy lại trình hướng dẫn cài đặt</string>
     <string name="rerun_wizard_sub">Thiết lập launcher mặc định và mẹo lần đầu</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">Ngôn ngữ bàn phím</string>
     <string name="shortcut_screensaver">Chọn trình bảo vệ màn hình</string>
     <string name="shortcut_power_timeout">Tự động tắt</string>
+    <string name="wizard_language_title">Bạn muốn sử dụng Couchy bằng ngôn ngữ nào?</string>
 </resources>

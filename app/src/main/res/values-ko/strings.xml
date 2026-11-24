@@ -176,7 +176,7 @@
     <string name="about_desc">Android TV 및 Google TV를 위한 가벼운 단일 화면 런처입니다.\n\n광고 없음 · 추적 없음 · 백그라운드 서비스 없음. 네트워크는 내장 항공 배경화면 스트리밍에만 사용됩니다. 모든 설정은 이 기기의 단일 로컬 파일에 저장됩니다.</string>
     <string name="about_foss">자유 &amp; 오픈소스</string>
     <string name="about_license">GNU General Public License v3.0 (GPLv3)에 따라 라이선스가 부여됩니다. Couchy Launcher를 자유롭게 사용, 연구, 공유 및 수정할 수 있습니다.</string>
-    <string name="about_thirdparty">소파 아트워크: Twemoji (MIT). 항공 영상: Apple, Amazon 및 커뮤니티 컬렉션, 소유자로부터 스트리밍.</string>
+    <string name="about_thirdparty">항공 영상: Apple, Amazon 및 커뮤니티 컬렉션, 소유자로부터 스트리밍.</string>
     <string name="rerun_wizard">설정 마법사 다시 실행</string>
     <string name="rerun_wizard_sub">기본 런처 설정 및 첫 실행 팁</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">키보드 언어</string>
     <string name="shortcut_screensaver">화면 보호기 선택</string>
     <string name="shortcut_power_timeout">자동으로 끄기</string>
+    <string name="wizard_language_title">Couchy에서 어떤 언어를 사용할까요?</string>
 </resources>

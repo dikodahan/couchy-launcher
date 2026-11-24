@@ -255,6 +255,18 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
         return
     }
 
+    val startupPrefs = remember(context) { context.getSharedPreferences("startup", android.content.Context.MODE_PRIVATE) }
+    var startupIntroSeen by remember(startupPrefs) {
+        mutableStateOf(startupPrefs.getBoolean("intro_seen", false))
+    }
+    if (!config.setupDone && !startupIntroSeen) {
+        StartupIntro {
+            startupPrefs.edit().putBoolean("intro_seen", true).apply()
+            startupIntroSeen = true
+        }
+        return
+    }
+
     val uiScale = uiScaleFactor(
         config.uiScale,
         androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp,
@@ -294,6 +306,8 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                 SetupWizard(
                     config = config,
                     saving = savingSetup,
+                    languageApplied = (activity as? com.conreo.couchytv.MainActivity)?.attachedLanguage == config.language,
+                    onChooseLanguage = { language -> store.update { it.copy(language = language) } },
                     onDone = { pressHome, vpnPackage, useIpWeather ->
                         if (!savingSetup) {
                             savingSetup = true
@@ -1859,9 +1873,7 @@ private fun LoadingScreen() {
             ),
             label = "pulse",
         )
-        Image(
-            painter = androidx.compose.ui.res.painterResource(com.conreo.couchytv.R.drawable.ic_couch),
-            contentDescription = null,
+        BrandLogo(
             modifier = Modifier
                 .size(88.dp)
                 .graphicsLayer { scaleX = scale; scaleY = scale },

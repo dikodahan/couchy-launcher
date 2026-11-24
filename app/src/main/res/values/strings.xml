@@ -82,7 +82,7 @@
     <string name="item_icon_pack_sub">Use an installed icon pack for banner-less apps</string>
     <string name="item_language">Language</string>
     <string name="item_language_sub">Interface language</string>
-    <string name="lang_system">System default</string>
+    <string name="lang_system">System language</string>
     <string name="item_save_config">Save configuration</string>
     <string name="item_save_config_sub">Export your settings, categories and layout</string>
     <string name="item_load_config">Load configuration</string>
@@ -245,7 +245,7 @@
     <string name="about_license">Licensed under the GNU GPLv3 — use, study, share and modify freely.</string>
     <string name="about_source">Source code</string>
     <string name="github_url" translatable="false">https://github.com/dikodahan/couchy-launcher</string>
-    <string name="about_thirdparty">Couch artwork: Twemoji (MIT). Aerial videos: Apple, Amazon and community collections.</string>
+    <string name="about_thirdparty">Aerial videos: Apple, Amazon and community collections.</string>
     <string name="rerun_wizard">Run setup wizard again</string>
     <string name="rerun_wizard_sub">Default-launcher setup and first-run tips</string>
 
@@ -399,4 +399,5 @@
     <string name="shortcut_keyboard_languages">Keyboard languages</string>
     <string name="shortcut_screensaver">Choose screen saver</string>
     <string name="shortcut_power_timeout">Automatically turn off</string>
+    <string name="wizard_language_title">Which language should Couchy use?</string>
 </resources>

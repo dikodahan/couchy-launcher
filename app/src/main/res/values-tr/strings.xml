@@ -176,7 +176,7 @@
     <string name="about_desc">Android TV ve Google TV için hafif, tek ekranlı bir başlatıcı.\n\nReklamsız · izlemesiz · arka plan hizmeti yok. Ağ yalnızca yerleşik hava duvar kağıtlarını yayınlamak için kullanılır. Tüm ayarlarınız bu cihazdaki tek bir yerel dosyada saklanır.</string>
     <string name="about_foss">Özgür &amp; açık kaynak</string>
     <string name="about_license">GNU General Public License v3.0 (GPLv3) altında lisanslanmıştır. Couchy Launcher\'ı kullanmakta, incelemekte, paylaşmakta ve değiştirmekte özgürsünüz.</string>
-    <string name="about_thirdparty">Kanepe çizimi: Twemoji (MIT). Hava videoları: Apple, Amazon ve topluluk koleksiyonları, sahiplerinden yayınlanır.</string>
+    <string name="about_thirdparty">Hava videoları: Apple, Amazon ve topluluk koleksiyonları, sahiplerinden yayınlanır.</string>
     <string name="rerun_wizard">Kurulum sihirbazını tekrar çalıştır</string>
     <string name="rerun_wizard_sub">Varsayılan başlatıcı kurulumu ve ilk çalıştırma ipuçları</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">Klavye dilleri</string>
     <string name="shortcut_screensaver">Ekran koruyucu seç</string>
     <string name="shortcut_power_timeout">Otomatik kapat</string>
+    <string name="wizard_language_title">Couchy hangi dili kullansın?</string>
 </resources>

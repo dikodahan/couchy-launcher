@@ -32,7 +32,7 @@ These keep their own licenses, all compatible with GPLv3:
 
 | Component | Where | License |
 |---|---|---|
-| Couch artwork — Twemoji couch emoji ([source](https://github.com/twitter/twemoji)) | `art/couchy-launcher.svg`, `res/drawable/ic_couch.xml`, app icon & banner | **MIT** |
+| Couch artwork — Twemoji couch emoji ([source](https://github.com/twitter/twemoji)) | `art/couchy-launcher.svg` (original logo retained in the source tree) | **MIT** |
 | Material Design icon path data — Google | `ui/Icons.kt` (vector path strings) | Apache-2.0 |
 | Google Material Symbols ([source](https://github.com/google/material-design-icons)), via [Iconify Material Symbols 1.2.95](https://www.npmjs.com/package/@iconify-json/material-symbols/v/1.2.95) | `app/src/main/assets/material-symbols.tsv` and accompanying license | Apache-2.0 |
 | AndroidX / Jetpack Compose, `androidx.tv`, DataStore | framework / UI | Apache-2.0 |

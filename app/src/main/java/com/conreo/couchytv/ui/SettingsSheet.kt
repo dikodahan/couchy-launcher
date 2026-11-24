@@ -532,7 +532,7 @@ private fun MainScreen(
             modifier = focusFor(SettingsScreen.Launcher),
             headlineContent = { Text(stringResource(R.string.item_launcher_settings)) },
             supportingContent = { Text(stringResource(R.string.item_launcher_settings_sub)) },
-            leadingContent = { Icon(painter = androidx.compose.ui.res.painterResource(R.drawable.ic_couch), contentDescription = null, modifier = Modifier.size(24.dp)) },
+            leadingContent = { BrandLogo(Modifier.size(24.dp)) },
         )
         SettingsItem(
             onClick = onAndroidShortcuts,
@@ -581,11 +581,7 @@ private fun AboutScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.padding(start = 8.dp, top = 4.dp),
         ) {
-            Image(
-                painter = androidx.compose.ui.res.painterResource(R.drawable.ic_couch),
-                contentDescription = null,
-                modifier = Modifier.size(44.dp),
-            )
+            BrandLogo(Modifier.size(44.dp))
             Column {
                 Text(
                     stringResource(R.string.app_name),
@@ -1188,10 +1184,7 @@ private fun LanguageScreen(
         )
         val f = initialFocus()
         com.conreo.couchytv.data.LANGUAGES.forEachIndexed { i, code ->
-            // Endonym: each language named in its own tongue (no per-language strings)
-            val label = if (code.isEmpty()) stringResource(R.string.lang_system)
-            else java.util.Locale.forLanguageTag(code).let { it.getDisplayLanguage(it) }
-                .replaceFirstChar { it.uppercase() }
+            val label = languageName(code)
             SettingsItem(
                 selected = false,
                 onClick = {

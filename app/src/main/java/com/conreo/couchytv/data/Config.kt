@@ -156,13 +156,16 @@ const val WEATHER_ICONS_ANIMATED = 2
 const val WEATHER_CLICK_FORECAST = 1
 const val WEATHER_CLICK_APP = 2
 
-/** Sorted by user base — the display name is localized in the UI via string resource. */
-val LANGUAGES = listOf(
-    "",     // system default
-    "zh", "es", "ja", "de", "fr",   // tier 1
-    "pt", "ru", "ko", "ar", "it",   // tier 2
-    "tr", "pl", "nl", "hi", "th", "in", "vi", "he", // tier 3
+/** Representative flags for the language picker. The system option has no fixed country. */
+internal val LANGUAGE_REGIONS = linkedMapOf(
+    "" to "",
+    "en" to "US",
+    "zh" to "CN", "es" to "ES", "ja" to "JP", "de" to "DE", "fr" to "FR",
+    "pt" to "BR", "ru" to "RU", "ko" to "KR", "ar" to "SA", "it" to "IT",
+    "tr" to "TR", "pl" to "PL", "nl" to "NL", "hi" to "IN", "th" to "TH",
+    "in" to "ID", "vi" to "VN", "he" to "IL",
 )
+val LANGUAGES = LANGUAGE_REGIONS.keys.toList()
 
 private val Context.dataStore by preferencesDataStore(name = "launcher")
 private val KEY_CONFIG = stringPreferencesKey("config")

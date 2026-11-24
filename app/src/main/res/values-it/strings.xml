@@ -176,7 +176,7 @@
     <string name="about_desc">Un launcher leggero a schermo singolo per Android TV e Google TV.\n\nNessuna pubblicità · nessun tracciamento · nessun servizio in background. La rete è usata solo per lo streaming degli sfondi aerei integrati. Tutte le tue impostazioni risiedono in un singolo file locale su questo dispositivo.</string>
     <string name="about_foss">Libero &amp; open source</string>
     <string name="about_license">Concesso in licenza sotto GNU General Public License v3.0 (GPLv3). Sei libero di usare, studiare, condividere e modificare Couchy Launcher.</string>
-    <string name="about_thirdparty">Grafica divano: Twemoji (MIT). Video aerei: collezioni Apple, Amazon e community, trasmesse dai loro proprietari.</string>
+    <string name="about_thirdparty">Video aerei: collezioni Apple, Amazon e community, trasmesse dai loro proprietari.</string>
     <string name="rerun_wizard">Esegui di nuovo la configurazione guidata</string>
     <string name="rerun_wizard_sub">Configurazione launcher predefinito e suggerimenti iniziali</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">Lingue della tastiera</string>
     <string name="shortcut_screensaver">Scegli salvaschermo</string>
     <string name="shortcut_power_timeout">Spegni automaticamente</string>
+    <string name="wizard_language_title">In quale lingua vuoi usare Couchy?</string>
 </resources>

@@ -176,7 +176,7 @@
     <string name="about_desc">ลอนเชอร์หน้าจอเดียวที่เบาสำหรับ Android TV และ Google TV\n\nไม่มีโฆษณา · ไม่มีการติดตาม · ไม่มีบริการพื้นหลัง ใช้เครือข่ายเพื่อสตรีมวอลเปเปอร์ทางอากาศในตัวเท่านั้น การตั้งค่าทั้งหมดของคุณอยู่ในไฟล์ในเครื่องเดียวบนอุปกรณ์นี้</string>
     <string name="about_foss">ฟรี &amp; โอเพนซอร์ส</string>
     <string name="about_license">ได้รับอนุญาตภายใต้ GNU General Public License v3.0 (GPLv3) คุณมีอิสระในการใช้ ศึกษา แบ่งปัน และแก้ไข Couchy Launcher</string>
-    <string name="about_thirdparty">ภาพโซฟา: Twemoji (MIT) วิดีโอทางอากาศ: คอลเล็กชัน Apple, Amazon และชุมชน สตรีมจากเจ้าของ</string>
+    <string name="about_thirdparty">วิดีโอทางอากาศ: คอลเล็กชัน Apple, Amazon และชุมชน สตรีมจากเจ้าของ</string>
     <string name="rerun_wizard">เรียกใช้ตัวช่วยตั้งค่าอีกครั้ง</string>
     <string name="rerun_wizard_sub">การตั้งค่าลอนเชอร์เริ่มต้นและเคล็ดลับการใช้งานครั้งแรก</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">ภาษาของแป้นพิมพ์</string>
     <string name="shortcut_screensaver">เลือกโปรแกรมรักษาหน้าจอ</string>
     <string name="shortcut_power_timeout">ปิดอัตโนมัติ</string>
+    <string name="wizard_language_title">ต้องการใช้ Couchy ในภาษาใด</string>
 </resources>

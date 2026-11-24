@@ -221,7 +221,7 @@
     <string name="about_desc">一款适用于 Android TV 和 Google TV 的轻量级单屏启动器。\n\n无广告 · 无跟踪 · 无后台服务。网络仅用于串流内置航拍壁纸。您的所有设置均保存在此设备上的单个本地文件中。</string>
     <string name="about_foss">自由开源</string>
     <string name="about_license">基于 GNU General Public License v3.0（GPLv3）许可。您可以自由使用、研究、分享和修改 Couchy Launcher。</string>
-    <string name="about_thirdparty">沙发图标：Twemoji（MIT）。航拍视频：Apple、Amazon 和社区合集，从其所有者处串流。</string>
+    <string name="about_thirdparty">航拍视频：Apple、Amazon 和社区合集，从其所有者处串流。</string>
     <string name="rerun_wizard">重新运行设置向导</string>
     <string name="rerun_wizard_sub">默认启动器设置和首次使用提示</string>
 
@@ -395,4 +395,5 @@
     <string name="shortcut_keyboard_languages">键盘语言</string>
     <string name="shortcut_screensaver">选择屏幕保护程序</string>
     <string name="shortcut_power_timeout">自动关闭</string>
+    <string name="wizard_language_title">你希望 Couchy 使用哪种语言？</string>
 </resources>

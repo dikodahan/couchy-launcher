@@ -176,7 +176,7 @@
     <string name="about_desc">Launcher ringan satu layar untuk Android TV dan Google TV.\n\nTanpa iklan · tanpa pelacakan · tanpa layanan latar belakang. Jaringan hanya digunakan untuk streaming wallpaper udara bawaan. Semua pengaturan Anda disimpan dalam satu file lokal di perangkat ini.</string>
     <string name="about_foss">Bebas &amp; sumber terbuka</string>
     <string name="about_license">Dilisensikan di bawah GNU General Public License v3.0 (GPLv3). Anda bebas menggunakan, mempelajari, membagikan, dan memodifikasi Couchy Launcher.</string>
-    <string name="about_thirdparty">Seni sofa: Twemoji (MIT). Video udara: koleksi Apple, Amazon, dan komunitas, streaming dari pemiliknya.</string>
+    <string name="about_thirdparty">Video udara: koleksi Apple, Amazon, dan komunitas, streaming dari pemiliknya.</string>
     <string name="rerun_wizard">Jalankan wizard penyiapan lagi</string>
     <string name="rerun_wizard_sub">Penyiapan launcher default dan tips pertama kali</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">Bahasa keyboard</string>
     <string name="shortcut_screensaver">Pilih screensaver</string>
     <string name="shortcut_power_timeout">Matikan otomatis</string>
+    <string name="wizard_language_title">Bahasa apa yang ingin Anda gunakan di Couchy?</string>
 </resources>

@@ -176,7 +176,7 @@
     <string name="about_desc">Um launcher leve de tela única para Android TV e Google TV.\n\nSem anúncios · sem rastreamento · sem serviços em segundo plano. A rede é usada apenas para transmitir os papéis de parede aéreos integrados. Todas as suas configurações vivem em um único arquivo local neste dispositivo.</string>
     <string name="about_foss">Livre &amp; código aberto</string>
     <string name="about_license">Licenciado sob a GNU General Public License v3.0 (GPLv3). Você é livre para usar, estudar, compartilhar e modificar o Couchy Launcher.</string>
-    <string name="about_thirdparty">Arte do sofá: Twemoji (MIT). Vídeos aéreos: coleções Apple, Amazon e da comunidade, transmitidos de seus proprietários.</string>
+    <string name="about_thirdparty">Vídeos aéreos: coleções Apple, Amazon e da comunidade, transmitidos de seus proprietários.</string>
     <string name="rerun_wizard">Executar assistente novamente</string>
     <string name="rerun_wizard_sub">Configuração do launcher padrão e dicas iniciais</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">Idiomas do teclado</string>
     <string name="shortcut_screensaver">Escolher protetor de tela</string>
     <string name="shortcut_power_timeout">Desligar automaticamente</string>
+    <string name="wizard_language_title">Em qual idioma você quer usar o Couchy?</string>
 </resources>

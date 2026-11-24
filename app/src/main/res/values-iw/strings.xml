@@ -215,7 +215,7 @@
     <string name="about_foss">חופשי ובקוד פתוח</string>
     <string name="about_license">ברישיון GNU GPLv3. אפשר להשתמש, ללמוד, לשתף ולשנות בחופשיות.</string>
     <string name="about_source">קוד מקור</string>
-    <string name="about_thirdparty">איור הספה מאת Twemoji ‏(MIT). סרטוני הנוף מהאוויר מאוספי Apple,‏ Amazon והקהילה.</string>
+    <string name="about_thirdparty">סרטוני הנוף מהאוויר מאוספי Apple,‏ Amazon והקהילה.</string>
     <string name="rerun_wizard">הפעלה מחדש של אשף ההגדרה</string>
     <string name="rerun_wizard_sub">בחירת מסך בית וטיפים לשימוש ראשון</string>
     <string name="wizard_welcome_title">ברוכים הבאים ל־Couchy Launcher</string>
@@ -366,4 +366,5 @@
     <string name="shortcut_keyboard_languages">שפות המקלדת</string>
     <string name="shortcut_screensaver">בחירת שומר מסך</string>
     <string name="shortcut_power_timeout">כיבוי אוטומטי</string>
+    <string name="wizard_language_title">באיזו שפה תרצו להשתמש ב־Couchy?</string>
 </resources>

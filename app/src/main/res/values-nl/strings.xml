@@ -176,7 +176,7 @@
     <string name="about_desc">Een lichte, enkel-scherm launcher voor Android TV en Google TV.\n\nGeen advertenties · geen tracking · geen achtergrondservices. Netwerktoegang wordt alleen gebruikt om de ingebouwde luchtachtergronden te streamen. Al je instellingen staan in één lokaal bestand op dit apparaat.</string>
     <string name="about_foss">Vrij &amp; open source</string>
     <string name="about_license">Gelicentieerd onder de GNU General Public License v3.0 (GPLv3). Je bent vrij om Couchy Launcher te gebruiken, bestuderen, delen en wijzigen.</string>
-    <string name="about_thirdparty">Bank-illustratie: Twemoji (MIT). Luchtvideo\'s: Apple-, Amazon- en communitycollecties, gestreamd van hun eigenaars.</string>
+    <string name="about_thirdparty">Luchtvideo\'s: Apple-, Amazon- en communitycollecties, gestreamd van hun eigenaars.</string>
     <string name="rerun_wizard">Installatiewizard opnieuw uitvoeren</string>
     <string name="rerun_wizard_sub">Standaardlauncher instellen en eerste gebruikstips</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">Toetsenbordtalen</string>
     <string name="shortcut_screensaver">Schermbeveiliging kiezen</string>
     <string name="shortcut_power_timeout">Automatisch uitschakelen</string>
+    <string name="wizard_language_title">In welke taal wil je Couchy gebruiken?</string>
 </resources>

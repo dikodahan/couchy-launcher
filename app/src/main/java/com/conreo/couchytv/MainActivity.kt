@@ -24,6 +24,9 @@ class MainActivity : ComponentActivity() {
 
     private var homeIntentTick by mutableIntStateOf(0)
 
+    internal var attachedLanguage: String = ""
+        private set
+
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val pkg = intent.data?.schemeSpecificPart
@@ -46,6 +49,7 @@ class MainActivity : ComponentActivity() {
         // this mirror in sync with the DataStore config and triggers recreate().
         val lang = newBase.getSharedPreferences(LOCALE_PREFS, MODE_PRIVATE)
             .getString(LOCALE_KEY, "").orEmpty()
+        attachedLanguage = lang
         if (lang.isEmpty()) Locale.setDefault(newBase.resources.configuration.locales[0])
         super.attachBaseContext(if (lang.isEmpty()) newBase else applyLocale(newBase, lang))
     }

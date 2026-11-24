@@ -176,7 +176,7 @@
     <string name="about_desc">Lekki, jednoekranowy launcher dla Android TV i Google TV.\n\nBez reklam · bez śledzenia · bez usług w tle. Sieć jest używana tylko do przesyłania wbudowanych tapet lotniczych. Wszystkie ustawienia znajdują się w jednym lokalnym pliku na tym urządzeniu.</string>
     <string name="about_foss">Wolne i otwarte oprogramowanie</string>
     <string name="about_license">Na licencji GNU General Public License v3.0 (GPLv3). Możesz swobodnie używać, studiować, udostępniać i modyfikować Couchy Launcher.</string>
-    <string name="about_thirdparty">Grafika kanapy: Twemoji (MIT). Filmy lotnicze: kolekcje Apple, Amazon i społeczności, przesyłane od ich właścicieli.</string>
+    <string name="about_thirdparty">Filmy lotnicze: kolekcje Apple, Amazon i społeczności, przesyłane od ich właścicieli.</string>
     <string name="rerun_wizard">Uruchom ponownie kreatora konfiguracji</string>
     <string name="rerun_wizard_sub">Konfiguracja domyślnego launchera i wskazówki na początek</string>
 
@@ -381,4 +381,5 @@
     <string name="shortcut_keyboard_languages">Języki klawiatury</string>
     <string name="shortcut_screensaver">Wybierz wygaszacz ekranu</string>
     <string name="shortcut_power_timeout">Wyłącz automatycznie</string>
+    <string name="wizard_language_title">W jakim języku chcesz używać Couchy?</string>
 </resources>
