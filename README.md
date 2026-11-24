@@ -18,10 +18,6 @@ https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
 
 **An updated open-source fork.** This repository, [dikodahan/couchy-launcher](https://github.com/dikodahan/couchy-launcher), builds on the original [Couchy Launcher by conreo](https://github.com/conreo/couchy-launcher). It is maintained independently and remains licensed under GPLv3. The original author created the launcher, design and foundation; this fork adapts community contributions and adds compatibility and reliability fixes.
 
-### Thanks and community contributions
-
-Thank you to **[conreo](https://github.com/conreo)** and all original Couchy contributors for making the project open source; **[Xaero252](https://github.com/Xaero252)** for [weather and forecasts (#19)](https://github.com/conreo/couchy-launcher/pull/19) and [app customization (#20)](https://github.com/conreo/couchy-launcher/pull/20); and **[9Chrk](https://github.com/9Chrk)** for [performance and aerial playback improvements (#27)](https://github.com/conreo/couchy-launcher/pull/27). These contributions were adapted and reviewed against this fork rather than merged unchanged. Existing Telegram/ADB backup and close-app functionality is retained. Household profiles and restore-preview/undo are not part of 1.1.0.
-
 One screen, remote-driven, for 1080p and 4K TVs. Optional weather, aerial video and Telegram backup stay off until selected. Settings and custom artwork are stored locally.
 
 |                                              Launcher Home with a custom icon                                               |                                                      Offline icon library                                                      |
@@ -130,8 +126,6 @@ adb shell pm enable --user current com.google.android.apps.tv.launcherx   # Goog
 adb shell pm enable --user current com.google.android.tvlauncher        # Android TV
 adb shell pm enable --user current com.google.android.tungsten.setupwraith # Google TV companion
 ```
-
-Only enable packages actually present on your TV. See [Launcher Manager analysis and safeguards](docs/LAUNCHER-MANAGER-REVIEW.md) for the REA findings, supported mechanism and limitations.
 
 ---
 
