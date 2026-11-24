@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="art/couchy-launcher.png" width="120" alt="Couchy Launcher logo" />
+<img src="art/couchy-launcher.png" width="360" alt="Couchy Launcher logo" />
 
 # Couchy Launcher
 
