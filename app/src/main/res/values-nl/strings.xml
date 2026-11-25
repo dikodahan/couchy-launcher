@@ -119,6 +119,7 @@
     <string name="builtin_aerials">Luchtvideo\'s (ingebouwd)</string>
     <string name="builtin_aerials_sub">Streamt video van internet — zwaarder voor bronnen</string>
     <string name="aerial_src_label">Collectie</string>
+    <string name="aerial_restart_playback">Luchtvideo’s opnieuw starten</string>
     <string name="speed_label">Afspeelsnelheid</string>
     <string name="aerial_src_all">Alle (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

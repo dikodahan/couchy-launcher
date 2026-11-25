@@ -119,6 +119,7 @@
     <string name="builtin_aerials">فيديوهات جوية (مدمجة)</string>
     <string name="builtin_aerials_sub">يبث الفيديو من الإنترنت — يستهلك موارد أكثر</string>
     <string name="aerial_src_label">المجموعة</string>
+    <string name="aerial_restart_playback">إعادة تشغيل مقاطع الفيديو الجوية</string>
     <string name="speed_label">سرعة التشغيل</string>
     <string name="aerial_src_all">الكل (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

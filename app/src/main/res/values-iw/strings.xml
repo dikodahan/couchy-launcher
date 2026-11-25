@@ -153,6 +153,7 @@
     <string name="builtin_aerials">סרטוני נוף מהאוויר (מובנים)</string>
     <string name="builtin_aerials_sub">הזרמת וידאו מהאינטרנט צורכת יותר משאבים</string>
     <string name="aerial_src_label">אוסף</string>
+    <string name="aerial_restart_playback">הפעלה מחדש של סרטוני האוויר</string>
     <string name="speed_label">מהירות הפעלה</string>
     <string name="aerial_src_all">הכול (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

@@ -119,6 +119,7 @@
     <string name="builtin_aerials">항공 영상 (내장)</string>
     <string name="builtin_aerials_sub">인터넷에서 비디오 스트리밍 — 리소스 사용량이 더 많습니다</string>
     <string name="aerial_src_label">컬렉션</string>
+    <string name="aerial_restart_playback">항공 영상 재생 다시 시작</string>
     <string name="speed_label">재생 속도</string>
     <string name="aerial_src_all">전체 (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

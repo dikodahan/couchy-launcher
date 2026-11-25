@@ -130,6 +130,7 @@ internal fun SettingsSheet(
     onAppInfo: (String) -> Unit,
     onUninstallApp: (String) -> Unit,
     onWallpaperChanged: () -> Unit,
+    onRestartAerials: () -> Unit,
     onRerunWizard: () -> Unit,
     updatePrompt: AppUpdatePrompt?,
     startAtWeather: Boolean = false,
@@ -323,6 +324,7 @@ internal fun SettingsSheet(
                         onSelectBuiltinSource = { v ->
                             scope.launch { store.update { it.copy(builtinSource = v) } }
                         },
+                        onRestartAerials = onRestartAerials,
                         onSelectAerialQuality = { quality ->
                             scope.launch { store.update { it.copy(aerialQuality = quality) } }
                         },
@@ -2074,6 +2076,7 @@ private fun WallpaperScreen(
     onSelectBuiltinAerials: () -> Unit,
     onSelectBuiltinSource: (Int) -> Unit,
     onSelectAerialQuality: (Int) -> Unit,
+    onRestartAerials: () -> Unit,
     onSetScrim: (Int) -> Unit,
     onSetSpeed: (Int) -> Unit,
     onPreset: (Int) -> Unit,
@@ -2194,6 +2197,11 @@ private fun WallpaperScreen(
                     onSelect = { v -> onSelectBuiltinSource(v) },
                 )
             }
+            SettingsItem(
+                onClick = onRestartAerials,
+                headlineContent = { Text(stringResource(R.string.aerial_restart_playback)) },
+                leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
+            )
         }
 
         // A video file of your own

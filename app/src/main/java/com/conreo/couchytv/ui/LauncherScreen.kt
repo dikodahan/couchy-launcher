@@ -479,6 +479,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     var settingsSuppressRelease by remember { mutableStateOf(false) }
     var showForecast by remember { mutableStateOf(false) }
     var wallpaperVersion by remember { mutableIntStateOf(0) }
+    var aerialRestart by remember { mutableIntStateOf(0) }
 
     var pinPrompt by remember { mutableStateOf<PinPrompt?>(null) }
     var closingApp by remember { mutableStateOf(false) }
@@ -609,7 +610,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
 
     // ----- Built-in aerial videos: keep a shuffled queue so ExoPlayer can
     // prepare the successor before the current clip reaches its last frame. -----
-    val aerialPlaylist by key(config.useBuiltinAerials, config.builtinSource, config.aerialQuality, wallpaperVersion, restoreRevision) {
+    val aerialPlaylist by key(config.useBuiltinAerials, config.builtinSource, config.aerialQuality, wallpaperVersion, restoreRevision, aerialRestart) {
         produceState<List<String>>(initialValue = emptyList()) {
             if (!config.useBuiltinAerials) return@produceState
             value = withContext(Dispatchers.IO) {
@@ -627,13 +628,13 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     // Keep the player and its surface during a quick skip. Repeated failures
     // fall back to the gradient briefly before trying the next clip.
     // Give a restored wallpaper the same fresh playback state as a newly selected source.
-    var aerialError by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected) {
+    var aerialError by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected, aerialRestart) {
         mutableStateOf(false)
     }
-    var aerialFailureStreak by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected) {
+    var aerialFailureStreak by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected, aerialRestart) {
         mutableIntStateOf(0)
     }
-    var aerialCoolingDown by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected) {
+    var aerialCoolingDown by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected, aerialRestart) {
         mutableStateOf(false)
     }
     fun recordAerialFailure() {
@@ -839,11 +840,14 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                 // focusable: Up from the top row slides it back into view.
                 var statusBarFocused by remember { mutableStateOf(false) }
                 val firstAppFocus = remember { FocusRequester() }
+                var firstAppFocused by remember { mutableStateOf(false) }
+                val firstAppModifier = Modifier.focusRequester(firstAppFocus)
+                    .onFocusChanged { firstAppFocused = it.isFocused }
                 val sectionsList = rememberLazyListState()
                 val firstCarousel = key(categorized.firstOrNull()?.first?.id) { rememberLazyListState() }
                 var resetHomeFocus by remember { mutableStateOf(false) }
                 val isDock = config.layout == LAYOUT_DOCK
-                BackHandler(enabled = (isDock && dockExpanded) || (statusBarFocused && categorized.isNotEmpty())) {
+                BackHandler(enabled = (isDock && dockExpanded) || (!firstAppFocused && categorized.isNotEmpty())) {
                     if (isDock && dockExpanded) dockExpanded = false
                     else resetHomeFocus = true
                 }
@@ -914,6 +918,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                         intro = introShown,
                         expanded = dockExpanded,
                         dockFocus = firstAppFocus,
+                        firstAppModifier = firstAppModifier,
                         onExpandChange = { dockExpanded = it },
                         onLaunch = { app -> launchApp(app.pkg) },
                         onMenu = { app -> openAppMenu(app) },
@@ -1011,7 +1016,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                                     GridSection(
                                         catApps, config, accent,
                                         cardWidth, gap, introShown,
-                                        firstAppFocus = firstAppFocus.takeIf { rowIndex == 0 },
+                                        firstAppModifier = if (rowIndex == 0) firstAppModifier else Modifier,
                                         onLaunch = { app -> launchApp(app.pkg) },
                                         onMenu = { app -> openAppMenu(app, cat.id) },
                                     )
@@ -1020,7 +1025,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                                         catApps, config, accent,
                                         cardWidth, gap,
                                         state = if (rowIndex == 0) firstCarousel else rememberLazyListState(),
-                                        firstAppFocus = firstAppFocus.takeIf { rowIndex == 0 },
+                                        firstAppModifier = if (rowIndex == 0) firstAppModifier else Modifier,
                                         onLaunch = { app -> launchApp(app.pkg) },
                                         onMenu = { app -> openAppMenu(app, cat.id) },
                                     )
@@ -1200,6 +1205,10 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                     onUninstallApp = ::uninstallApp,
                     onDismiss = { showSettings = false },
                     onWallpaperChanged = { wallpaperVersion++ },
+                    onRestartAerials = {
+                        aerialHttpClient.connectionPool.evictAll()
+                        aerialRestart++
+                    },
                     // Runs on LauncherApp's scope, which survives the dialog
                     // teardown — otherwise the setupDone write gets cancelled.
                     onRerunWizard = {
@@ -1282,7 +1291,7 @@ private fun CarouselSection(
     cardWidth: Dp,
     gap: Dp,
     state: LazyListState,
-    firstAppFocus: FocusRequester?,
+    firstAppModifier: Modifier,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
 ) {
@@ -1318,7 +1327,7 @@ private fun CarouselSection(
                     accent = accent,
                     cardWidth = cardWidth,
                     showLabel = config.showAppLabels,
-                    modifier = if (i == 0 && firstAppFocus != null) Modifier.focusRequester(firstAppFocus) else Modifier,
+                    modifier = if (i == 0) firstAppModifier else Modifier,
                     onLaunch = { onLaunch(app) },
                     onLongPress = { onMenu(app) },
                 )
@@ -1339,7 +1348,7 @@ private fun GridSection(
     cardWidth: Dp,
     gap: Dp,
     intro: Boolean,
-    firstAppFocus: FocusRequester?,
+    firstAppModifier: Modifier,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
 ) {
@@ -1385,9 +1394,7 @@ private fun GridSection(
                             accent = accent,
                             cardWidth = cardWidth,
                             showLabel = config.showAppLabels,
-                            modifier = (if (r == 0 && c == 0 && firstAppFocus != null) {
-                                Modifier.focusRequester(firstAppFocus)
-                            } else Modifier).graphicsLayer {
+                            modifier = (if (r == 0 && c == 0) firstAppModifier else Modifier).graphicsLayer {
                                     alpha = bloom
                                     val s = 0.8f + 0.2f * bloom
                                     scaleX = s
@@ -1416,6 +1423,7 @@ private fun DockArea(
     intro: Boolean,
     expanded: Boolean,
     dockFocus: FocusRequester,
+    firstAppModifier: Modifier,
     onExpandChange: (Boolean) -> Unit,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
@@ -1479,7 +1487,7 @@ private fun DockArea(
                     rowApps = rows.firstOrNull().orEmpty(),
                     config = config,
                     accent = accent,
-                    dockFocus = dockFocus,
+                    firstAppModifier = firstAppModifier,
                     cardWidth = cardWidth,
                     gapUsed = gapUsed,
                     innerPadding = DockPanelPadding,
@@ -1581,7 +1589,7 @@ private fun DockGlassPanel(
     rowApps: List<AppEntry>,
     config: LauncherConfig,
     accent: Color,
-    dockFocus: FocusRequester,
+    firstAppModifier: Modifier,
     cardWidth: Dp,
     gapUsed: Dp,
     innerPadding: Dp,
@@ -1626,10 +1634,7 @@ private fun DockGlassPanel(
                         accent = accent,
                         cardWidth = cardWidth,
                         showLabel = config.showAppLabels,
-                        modifier = (when {
-                            i == 0 -> Modifier.focusRequester(dockFocus)
-                            else -> Modifier
-                        }).onPreviewKeyEvent { e ->
+                        modifier = (if (i == 0) firstAppModifier else Modifier).onPreviewKeyEvent { e ->
                             if (
                                 e.type == KeyEventType.KeyDown &&
                                 e.key == Key.DirectionDown
@@ -1704,8 +1709,6 @@ private fun VideoWallpaper(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
-    val transitionVeil = remember { androidx.compose.animation.core.Animatable(0f) }
     val playerScope = rememberCoroutineScope()
     var firstFrameGen by remember { mutableIntStateOf(0) }
 
@@ -1782,9 +1785,19 @@ private fun VideoWallpaper(
     }
 
     val activePlayer = player
-    // On release the cover is snapped back opaque so the NEXT visible state shows
-    // the gradient (not a black hole) until the rebuilt player renders its frame.
-    LaunchedEffect(activePlayer == null) { if (activePlayer == null) alpha.snapTo(0f) }
+    val alpha = remember(activePlayer) { androidx.compose.animation.core.Animatable(0f) }
+    val transitionVeil = remember(activePlayer) { androidx.compose.animation.core.Animatable(0f) }
+
+    fun playbackFailed() {
+        // Stop the watchdog for this attempt and uncover the gradient before the next clip.
+        awaitingFrameAt = null
+        playerScope.launch {
+            transitionVeil.snapTo(0f)
+            alpha.snapTo(0f)
+        }
+        latestOnError()
+    }
+
     LaunchedEffect(activePlayer, speed) { activePlayer?.setPlaybackSpeed(speed) }
 
     DisposableEffect(activePlayer) {
@@ -1824,7 +1837,7 @@ private fun VideoWallpaper(
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 val activeUri = p.currentMediaItem?.localConfiguration?.uri ?: uri
                 android.util.Log.w("LiteTV", "wallpaper play error ${error.errorCodeName}: $activeUri")
-                latestOnError()
+                playbackFailed()
             }
         }
         p.addListener(listener)
@@ -1857,7 +1870,7 @@ private fun VideoWallpaper(
             p.prepare()
         }
     }
-    LaunchedEffect(activePlayer, awaitingFrameAt) {
+    LaunchedEffect(activePlayer, uri, awaitingFrameAt) {
         val expected = awaitingFrameAt ?: return@LaunchedEffect
         val p = activePlayer ?: return@LaunchedEffect
         // A restore may prepare while Home is behind the document picker. Start
@@ -1865,9 +1878,9 @@ private fun VideoWallpaper(
         lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
             if (firstFrameGen != expected) return@repeatOnLifecycle
             delay(20_000L)
-            if (firstFrameGen == expected && !p.isPlaying) {
+            if (firstFrameGen == expected && awaitingFrameAt == expected && !p.isPlaying) {
                 android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 20s), skipping: $uri")
-                latestOnError()
+                playbackFailed()
             }
         }
     }
@@ -1880,7 +1893,7 @@ private fun VideoWallpaper(
         while (true) {
             val duration = p.duration
             val remaining = ((duration - p.currentPosition) / p.playbackParameters.speed).toLong()
-            if (duration > 0L && remaining in 1L..1_150L && transitionVeil.value < 0.05f) {
+            if (p.isPlaying && duration > 0L && remaining in 1L..1_150L && transitionVeil.value < 0.05f) {
                 transitionVeil.animateTo(0.82f, tween(850, easing = FastOutSlowInEasing))
             }
             delay(180L)

@@ -119,6 +119,7 @@
     <string name="builtin_aerials">Hava videoları (yerleşik)</string>
     <string name="builtin_aerials_sub">İnternetten video akışı — kaynak kullanımı daha yüksek</string>
     <string name="aerial_src_label">Koleksiyon</string>
+    <string name="aerial_restart_playback">Havadan çekim videolarını yeniden başlat</string>
     <string name="speed_label">Oynatma hızı</string>
     <string name="aerial_src_all">Tümü (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

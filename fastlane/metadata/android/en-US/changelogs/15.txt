@@ -1,0 +1,3 @@
+Restore HTTPS playback for the Apple aerial collection.
+Improve automatic recovery and add Restart aerial playback under Wallpaper.
+Back from another Home app focuses the first app for Top Shelf.

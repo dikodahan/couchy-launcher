@@ -119,6 +119,7 @@
     <string name="builtin_aerials">Filmy lotnicze (wbudowane)</string>
     <string name="builtin_aerials_sub">Strumieniuje wideo z internetu — bardziej obciąża zasoby</string>
     <string name="aerial_src_label">Kolekcja</string>
+    <string name="aerial_restart_playback">Uruchom ponownie filmy lotnicze</string>
     <string name="speed_label">Prędkość odtwarzania</string>
     <string name="aerial_src_all">Wszystkie (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

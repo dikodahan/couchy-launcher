@@ -162,6 +162,7 @@
     <string name="builtin_aerials">航拍视频（内置）</string>
     <string name="builtin_aerials_sub">从互联网串流视频 — 占用更多资源</string>
     <string name="aerial_src_label">合集</string>
+    <string name="aerial_restart_playback">重新播放航拍视频</string>
     <string name="speed_label">播放速度</string>
     <string name="aerial_src_all">全部（289）</string>
     <string name="aerial_src_apple">Apple（139）</string>

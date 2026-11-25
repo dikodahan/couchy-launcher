@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Allow cleartext only for known wallpaper CDNs -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">sylvan.apple.com</domain>
-        <domain includeSubdomains="true">aerial.apple.com</domain>
+    <base-config cleartextTrafficPermitted="false" />
+    <!-- The Apple aerial CDN serves a chain issued by Apple's own root.
+         Keep the extra trust anchor scoped to the exact CDN hostname. -->
+    <domain-config>
+        <domain includeSubdomains="false">sylvan.apple.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/apple_aerial_root" />
+        </trust-anchors>
     </domain-config>
 </network-security-config>

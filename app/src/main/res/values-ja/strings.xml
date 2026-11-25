@@ -119,6 +119,7 @@
     <string name="builtin_aerials">空撮動画（内蔵）</string>
     <string name="builtin_aerials_sub">インターネットから動画をストリーミング — リソースを多く消費します</string>
     <string name="aerial_src_label">コレクション</string>
+    <string name="aerial_restart_playback">空撮動画を再開する</string>
     <string name="speed_label">再生速度</string>
     <string name="aerial_src_all">すべて（289）</string>
     <string name="aerial_src_apple">Apple（139）</string>

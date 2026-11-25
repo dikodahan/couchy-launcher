@@ -119,6 +119,7 @@
     <string name="builtin_aerials">วิดีโอทางอากาศ (ในตัว)</string>
     <string name="builtin_aerials_sub">สตรีมวิดีโอจากอินเทอร์เน็ต — ใช้ทรัพยากรมากกว่า</string>
     <string name="aerial_src_label">คอลเล็กชัน</string>
+    <string name="aerial_restart_playback">เริ่มเล่นวิดีโอมุมสูงใหม่</string>
     <string name="speed_label">ความเร็วในการเล่น</string>
     <string name="aerial_src_all">ทั้งหมด (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

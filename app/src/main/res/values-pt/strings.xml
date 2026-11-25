@@ -119,6 +119,7 @@
     <string name="builtin_aerials">Vídeos aéreos (integrado)</string>
     <string name="builtin_aerials_sub">Transmite vídeo da internet — mais pesado em recursos</string>
     <string name="aerial_src_label">Coleção</string>
+    <string name="aerial_restart_playback">Reiniciar os vídeos aéreos</string>
     <string name="speed_label">Velocidade de reprodução</string>
     <string name="aerial_src_all">Todos (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

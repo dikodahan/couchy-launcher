@@ -119,6 +119,7 @@
     <string name="builtin_aerials">Video udara (bawaan)</string>
     <string name="builtin_aerials_sub">Streaming video dari internet — lebih berat di sumber daya</string>
     <string name="aerial_src_label">Koleksi</string>
+    <string name="aerial_restart_playback">Mulai ulang video udara</string>
     <string name="speed_label">Kecepatan putar</string>
     <string name="aerial_src_all">Semua (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>

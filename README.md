@@ -210,7 +210,7 @@ The same menu opens **Keyboard languages** for Gboard and the Android **Screen s
 
 No ads, analytics or tracking. Aerial wallpapers stream by default and can be changed in Wallpaper settings. Weather forecasts, Top Shelf artwork, and Telegram Saved Messages backup depend on the features you select. Top Shelf reads the focused app’s published TV listings on the device and may load images from the HTTPS hosts named in those listings. GeoJS receives the public IP address on first launch to estimate a default location and select weather units. The wizard reuses that lookup, and Couchy saves a location only after you confirm it. Your choice is stored locally. Third-party endpoints receive ordinary network connection information; manual/selected weather coordinates are sent to Open-Meteo. Settings and custom artwork remain local unless you export settings.
 
-Aerial HTTPS now validates certificates and hostnames. A TV with an outdated trust store may fall back to a gradient; update its firmware or choose local media rather than disabling TLS checks. Telegram session files are excluded from Android cloud backup and device transfer. Telegram app credentials are set when building Couchy. Telegram account linking happens on each TV.
+Aerial streams use HTTPS with certificate and hostname validation. Couchy includes the [Apple root certificate](https://www.apple.com/certificateauthority/) for the Apple aerial CDN hostname. If a stream fails, the launcher shows the gradient while retrying. Use **Settings → Wallpaper → Restart aerial playback** to reconnect with the selected collection and quality. Telegram session files are excluded from Android cloud backup and device transfer. Telegram app credentials are set when building Couchy. Telegram account linking happens on each TV.
 
 Dependency versions and checksums are pinned. See [the dependency risk review](docs/DEPENDENCY-REVIEW.md) for coverage, the native Telegram update, compatibility decisions and remaining limitations.
 
@@ -218,6 +218,12 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 
 <details>
 <summary>Click to expand</summary>
+
+**v1.2.3**
+
+- Restore Apple aerial playback on TVs that lack the required certificate. Apple’s published root is trusted only for the Apple aerial hostname.
+- Retry failed aerial clips automatically and show the gradient while recovering. **Settings → Wallpaper → Restart aerial playback** retries immediately at the selected quality.
+- Press **Back** from a Home app tile or tray icon to focus the first app for Top Shelf.
 
 **v1.2.2**
 

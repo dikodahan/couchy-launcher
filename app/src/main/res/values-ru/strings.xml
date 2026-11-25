@@ -119,6 +119,7 @@
     <string name="builtin_aerials">Аэросъёмка (встроенная)</string>
     <string name="builtin_aerials_sub">Потоковое видео из интернета — требует больше ресурсов</string>
     <string name="aerial_src_label">Коллекция</string>
+    <string name="aerial_restart_playback">Перезапустить аэросъёмку</string>
     <string name="speed_label">Скорость воспроизведения</string>
     <string name="aerial_src_all">Все (289)</string>
     <string name="aerial_src_apple">Apple (139)</string>
