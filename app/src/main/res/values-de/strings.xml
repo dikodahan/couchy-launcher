@@ -394,8 +394,8 @@
     <string name="wizard_language_title">Welche Sprache soll Couchy verwenden?</string>
     <string name="wizard_developer_options">Entwickleroptionen aktivieren</string>
     <string name="wizard_developer_steps">Wähle unter „Info“ den Android TV OS-Build und drücke siebenmal OK. Drücke dann Zurück.</string>
-    <string name="wizard_enable_adb">ADB-Debugging aktivieren</string>
-    <string name="wizard_adb_steps">Aktiviere in den Entwickleroptionen Netzwerk- oder ADB-Debugging und drücke Zurück.</string>
+    <string name="wizard_enable_adb">USB-Debugging aktivieren</string>
+    <string name="wizard_adb_steps">Aktiviere in den Entwickleroptionen USB-Debugging und drücke dann Zurück.</string>
     <string name="recommended_catalog_prompt">Konfigurations-URL</string>
     <string name="recommended_catalog_description">Gib den HTTPS-Link zur JSON-Datei mit deinen empfohlenen Apps ein.</string>
     <string name="recommended_adb_commands">ADB-Befehle</string>

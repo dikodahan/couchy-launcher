@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -176,9 +178,11 @@ internal fun HomeLauncherControls(
             modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp))
         val couchy = status?.choices?.firstOrNull { it.component.packageName == context.packageName }
         if (onWizardDone != null) {
-            val wizardReady = !busy && !wizardSaving && adbAvailable == true && couchy != null
-            val focus = key(adbAvailable == false) { initialFocus() }
-            if (adbAvailable == false) {
+            val needsDebugSetup = adbAvailable == false
+            val canUseCouchy = adbAvailable == true && couchy != null
+            val wizardReady = canUseCouchy && !busy && !wizardSaving
+            val focus = key(needsDebugSetup, canUseCouchy) { initialFocus() }
+            if (needsDebugSetup) {
                 SettingsItem(
                     onClick = { onWizardSettings?.invoke(Settings.ACTION_DEVICE_INFO_SETTINGS) },
                     modifier = Modifier.focusRequester(focus),
@@ -208,9 +212,12 @@ internal fun HomeLauncherControls(
                     }
                 },
                 enabled = wizardReady,
-                modifier = Modifier.focusProperties { canFocus = wizardReady },
+                modifier = (if (canUseCouchy) Modifier.focusRequester(focus) else Modifier)
+                    .focusProperties { canFocus = wizardReady },
                 headlineContent = { Text(stringResource(R.string.home_use_couchy)) },
-                leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
+                leadingContent = {
+                    Icon(painterResource(R.drawable.brand_silhouette), contentDescription = null, modifier = Modifier.size(24.dp))
+                },
             )
             Row(
                 Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -219,7 +226,7 @@ internal fun HomeLauncherControls(
                 SettingsButton(
                     onClick = { onWizardDone(false) },
                     enabled = !busy && !wizardSaving,
-                    modifier = if (adbAvailable != false) Modifier.focusRequester(focus) else Modifier,
+                    modifier = if (!needsDebugSetup && !canUseCouchy) Modifier.focusRequester(focus) else Modifier,
                 ) { Text(stringResource(R.string.home_keep_current)) }
                 if (wizardBack != null) {
                     SettingsButton(onClick = wizardBack, enabled = !busy && !wizardSaving) {

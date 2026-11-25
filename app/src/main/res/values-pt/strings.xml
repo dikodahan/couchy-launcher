@@ -394,8 +394,8 @@
     <string name="wizard_language_title">Em qual idioma você quer usar o Couchy?</string>
     <string name="wizard_developer_options">Ativar as opções do desenvolvedor</string>
     <string name="wizard_developer_steps">Em Sobre, selecione a versão do sistema Android TV e pressione OK sete vezes. Pressione Voltar.</string>
-    <string name="wizard_enable_adb">Ativar a depuração ADB</string>
-    <string name="wizard_adb_steps">Nas opções do desenvolvedor, ative a depuração pela rede ou por ADB e pressione Voltar.</string>
+    <string name="wizard_enable_adb">Ativar a depuração USB</string>
+    <string name="wizard_adb_steps">Nas opções do desenvolvedor, ative Depuração USB e pressione Voltar.</string>
     <string name="recommended_catalog_prompt">URL de configuração</string>
     <string name="recommended_catalog_description">Insira o link HTTPS para o seu arquivo JSON de apps recomendados.</string>
     <string name="recommended_adb_commands">Comandos ADB</string>

@@ -394,8 +394,8 @@
     <string name="wizard_language_title">Couchy किस भाषा में इस्तेमाल करना चाहते हैं?</string>
     <string name="wizard_developer_options">डेवलपर विकल्प चालू करें</string>
     <string name="wizard_developer_steps">जानकारी में Android TV OS बिल्ड चुनें और सात बार ठीक दबाएँ। वापस आने के लिए पीछे दबाएँ।</string>
-    <string name="wizard_enable_adb">ADB डीबगिंग चालू करें</string>
-    <string name="wizard_adb_steps">डेवलपर विकल्पों में नेटवर्क या ADB डीबगिंग चालू करें और पीछे दबाएँ।</string>
+    <string name="wizard_enable_adb">USB डीबगिंग चालू करें</string>
+    <string name="wizard_adb_steps">डेवलपर विकल्पों में USB डीबगिंग चालू करें और फिर वापस जाएँ।</string>
     <string name="recommended_catalog_prompt">कॉन्फ़िगरेशन URL</string>
     <string name="recommended_catalog_description">सुझाए गए ऐप्लिकेशन की अपनी JSON फ़ाइल का HTTPS लिंक डालें।</string>
     <string name="recommended_adb_commands">ADB कमांड</string>

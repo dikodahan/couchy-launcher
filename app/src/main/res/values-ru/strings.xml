@@ -394,8 +394,8 @@
     <string name="wizard_language_title">На каком языке вы хотите использовать Couchy?</string>
     <string name="wizard_developer_options">Включить параметры разработчика</string>
     <string name="wizard_developer_steps">В разделе «Об устройстве» выберите сборку Android TV и семь раз нажмите OK. Нажмите «Назад».</string>
-    <string name="wizard_enable_adb">Включить отладку ADB</string>
-    <string name="wizard_adb_steps">В параметрах разработчика включите отладку по сети или ADB, затем нажмите «Назад».</string>
+    <string name="wizard_enable_adb">Включить отладку по USB</string>
+    <string name="wizard_adb_steps">В параметрах разработчика включите «Отладка по USB», затем нажмите «Назад».</string>
     <string name="recommended_catalog_prompt">URL конфигурации</string>
     <string name="recommended_catalog_description">Введите HTTPS-ссылку на ваш JSON-файл с рекомендуемыми приложениями.</string>
     <string name="recommended_adb_commands">Команды ADB</string>

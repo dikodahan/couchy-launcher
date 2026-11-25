@@ -394,8 +394,8 @@
     <string name="wizard_language_title">W jakim języku chcesz używać Couchy?</string>
     <string name="wizard_developer_options">Włącz opcje programistyczne</string>
     <string name="wizard_developer_steps">W sekcji Informacje wybierz kompilację Android TV i naciśnij OK siedem razy. Naciśnij Wstecz, aby wrócić.</string>
-    <string name="wizard_enable_adb">Włącz debugowanie ADB</string>
-    <string name="wizard_adb_steps">W opcjach programistycznych włącz debugowanie sieciowe lub ADB, a następnie naciśnij Wstecz.</string>
+    <string name="wizard_enable_adb">Włącz debugowanie USB</string>
+    <string name="wizard_adb_steps">W opcjach programistycznych włącz Debugowanie USB, a następnie naciśnij Wstecz.</string>
     <string name="recommended_catalog_prompt">URL konfiguracji</string>
     <string name="recommended_catalog_description">Wpisz link HTTPS do pliku JSON z polecanymi aplikacjami.</string>
     <string name="recommended_adb_commands">Polecenia ADB</string>

@@ -26,6 +26,7 @@ data class CategoryCfg(
     val name: String,
     val iconName: String? = null,
     val iconEnabled: Boolean = false,
+    val useDefaultName: Boolean = false,
 ) {
     val visibleIcon: String? get() = iconName.takeIf { iconEnabled }
 }
@@ -123,8 +124,23 @@ data class LauncherConfig(
     val iconPackPkg: String = "",
 )
 
+private val installSections = listOf(
+    CategoryCfg("streaming", "Streaming", "movie", iconEnabled = true, useDefaultName = true) to R.string.cat_streaming,
+    CategoryCfg("games", "Games", "videogame-asset", iconEnabled = true, useDefaultName = true) to R.string.cat_games,
+    CategoryCfg("music", "Music", "music-note", iconEnabled = true, useDefaultName = true) to R.string.cat_music,
+    CategoryCfg("apps", "Apps", "apps", iconEnabled = true, useDefaultName = true) to R.string.cat_apps,
+    CategoryCfg("settings", "Settings", "settings", iconEnabled = true, useDefaultName = true) to R.string.settings_title,
+)
+
+internal fun LauncherConfig.withLocalizedSectionNames(labelFor: (Int) -> String): LauncherConfig =
+    copy(categories = categories.map { section ->
+        val title = installSections.firstOrNull { (default, _) -> default.id == section.id }?.second
+        if (section.useDefaultName && title != null) section.copy(name = labelFor(title)) else section
+    })
+
 // Keep serialization defaults stable so saved settings and legacy backups decode as before.
 internal fun newInstallDefaults() = LauncherConfig(
+    categories = installSections.map { it.first },
     useBuiltinAerials = true,
     h24 = false,
     showVpnButton = false,
@@ -216,9 +232,12 @@ class ConfigStore(private val context: Context) {
 
     val flow: Flow<LauncherConfig> = storedConfig.map { it.config }
 
-    private fun decodeConfig(saved: String?): LauncherConfig = saved?.let {
-        runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
-    } ?: newInstallDefaults().copy(categories = defaultCategories(context))
+    private fun decodeConfig(saved: String?): LauncherConfig {
+        val config = saved?.let {
+            runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
+        } ?: newInstallDefaults()
+        return config.withLocalizedSectionNames(context::getString)
+    }
 
     /** Record initial defaults without waiting for the network or changing an existing installation. */
     internal suspend fun prepareFirstLaunch(): Boolean {
@@ -243,13 +262,6 @@ class ConfigStore(private val context: Context) {
             }
         }
     }
-
-    private fun defaultCategories(ctx: Context) = listOf(
-        CategoryCfg("streaming", ctx.getString(R.string.cat_streaming)),
-        CategoryCfg("games", ctx.getString(R.string.cat_games)),
-        CategoryCfg("music", ctx.getString(R.string.cat_music)),
-        CategoryCfg("apps", ctx.getString(R.string.cat_apps)),
-    )
 
     suspend fun update(transform: (LauncherConfig) -> LauncherConfig) {
         context.dataStore.edit { prefs ->

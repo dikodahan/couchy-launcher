@@ -379,8 +379,8 @@
     <string name="wizard_language_title">באיזו שפה תרצו להשתמש ב־Couchy?</string>
     <string name="wizard_developer_options">הפעלת אפשרויות למפתחים</string>
     <string name="wizard_developer_steps">במסך ״מידע על המכשיר״, בחרו בגרסת ה־Build של Android TV ולחצו על אישור שבע פעמים. לחצו על כפתור החזרה.</string>
-    <string name="wizard_enable_adb">הפעלת ניפוי באגים ב־ADB</string>
-    <string name="wizard_adb_steps">באפשרויות למפתחים, הפעילו ניפוי באגים ברשת או ב־ADB ולחצו על כפתור החזרה.</string>
+    <string name="wizard_enable_adb">הפעלת ניפוי באגים ב־USB</string>
+    <string name="wizard_adb_steps">באפשרויות למפתחים, הפעילו ניפוי באגים ב־USB ולחצו על כפתור החזרה.</string>
     <string name="recommended_catalog_prompt">כתובת קובץ התצורה (URL)</string>
     <string name="recommended_catalog_description">יש להזין את קישור ה־HTTPS לקובץ ה־JSON של האפליקציות המומלצות.</string>
     <string name="recommended_adb_commands">פקודות ADB</string>

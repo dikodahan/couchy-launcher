@@ -394,8 +394,8 @@
     <string name="wizard_language_title">Bahasa apa yang ingin Anda gunakan di Couchy?</string>
     <string name="wizard_developer_options">Aktifkan opsi developer</string>
     <string name="wizard_developer_steps">Di Tentang, pilih build OS Android TV dan tekan OK tujuh kali. Tekan Kembali untuk kembali.</string>
-    <string name="wizard_enable_adb">Aktifkan debugging ADB</string>
-    <string name="wizard_adb_steps">Di opsi developer, aktifkan debugging jaringan atau ADB, lalu tekan Kembali.</string>
+    <string name="wizard_enable_adb">Aktifkan debugging USB</string>
+    <string name="wizard_adb_steps">Di Opsi developer, aktifkan Debugging USB, lalu tekan Kembali.</string>
     <string name="recommended_catalog_prompt">URL konfigurasi</string>
     <string name="recommended_catalog_description">Masukkan tautan HTTPS ke file JSON aplikasi rekomendasi Anda.</string>
     <string name="recommended_adb_commands">Perintah ADB</string>

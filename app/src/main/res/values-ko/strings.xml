@@ -394,8 +394,8 @@
     <string name="wizard_language_title">Couchy에서 어떤 언어를 사용할까요?</string>
     <string name="wizard_developer_options">개발자 옵션 사용</string>
     <string name="wizard_developer_steps">정보에서 Android TV OS 빌드를 선택하고 확인 버튼을 일곱 번 누르세요. 뒤로 버튼을 눌러 돌아오세요.</string>
-    <string name="wizard_enable_adb">ADB 디버깅 사용</string>
-    <string name="wizard_adb_steps">개발자 옵션에서 네트워크 또는 ADB 디버깅을 켠 뒤 뒤로 버튼을 누르세요.</string>
+    <string name="wizard_enable_adb">USB 디버깅 사용</string>
+    <string name="wizard_adb_steps">개발자 옵션에서 USB 디버깅을 켠 뒤 뒤로 버튼을 누르세요.</string>
     <string name="recommended_catalog_prompt">구성 URL</string>
     <string name="recommended_catalog_description">추천 앱 목록 JSON 파일의 HTTPS 링크를 입력하세요.</string>
     <string name="recommended_adb_commands">ADB 명령어</string>

@@ -394,8 +394,8 @@
     <string name="wizard_language_title">Couchy で使う言語を選んでください</string>
     <string name="wizard_developer_options">開発者向けオプションを有効にする</string>
     <string name="wizard_developer_steps">端末情報で Android TV OS のビルドを選び、決定を7回押します。戻るボタンで戻ります。</string>
-    <string name="wizard_enable_adb">ADB デバッグを有効にする</string>
-    <string name="wizard_adb_steps">開発者向けオプションでネットワークデバッグまたは ADB デバッグを有効にし、戻るボタンを押します。</string>
+    <string name="wizard_enable_adb">USB デバッグを有効にする</string>
+    <string name="wizard_adb_steps">開発者向けオプションで「USB デバッグ」を有効にし、戻るボタンを押します。</string>
     <string name="recommended_catalog_prompt">設定 URL</string>
     <string name="recommended_catalog_description">おすすめアプリの JSON ファイルへの HTTPS リンクを入力してください。</string>
     <string name="recommended_adb_commands">ADB コマンド</string>

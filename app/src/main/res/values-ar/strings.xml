@@ -394,8 +394,8 @@
     <string name="wizard_language_title">ما اللغة التي تريد أن يستخدمها Couchy؟</string>
     <string name="wizard_developer_options">تفعيل خيارات المطوّر</string>
     <string name="wizard_developer_steps">في «لمحة»، اختر إصدار نظام Android TV واضغط موافق سبع مرات، ثم اضغط رجوع.</string>
-    <string name="wizard_enable_adb">تفعيل تصحيح أخطاء ADB</string>
-    <string name="wizard_adb_steps">في خيارات المطوّر، فعّل تصحيح الأخطاء عبر الشبكة أو ADB، ثم اضغط رجوع.</string>
+    <string name="wizard_enable_adb">تفعيل تصحيح أخطاء USB</string>
+    <string name="wizard_adb_steps">في خيارات المطوّر، فعّل تصحيح أخطاء USB، ثم اضغط رجوع.</string>
     <string name="recommended_catalog_prompt">رابط الإعدادات</string>
     <string name="recommended_catalog_description">أدخل رابط HTTPS لملف JSON الخاص بالتطبيقات الموصى بها.</string>
     <string name="recommended_adb_commands">أوامر ADB</string>

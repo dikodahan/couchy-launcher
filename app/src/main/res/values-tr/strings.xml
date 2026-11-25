@@ -394,8 +394,8 @@
     <string name="wizard_language_title">Couchy hangi dili kullansın?</string>
     <string name="wizard_developer_options">Geliştirici seçeneklerini etkinleştir</string>
     <string name="wizard_developer_steps">Hakkında bölümünde Android TV OS derlemesini seç ve Tamam düğmesine yedi kez bas. Geri dönmek için Geri düğmesine bas.</string>
-    <string name="wizard_enable_adb">ADB hata ayıklamayı etkinleştir</string>
-    <string name="wizard_adb_steps">Geliştirici seçeneklerinde ağ veya ADB hata ayıklamayı aç ve Geri düğmesine bas.</string>
+    <string name="wizard_enable_adb">USB hata ayıklamayı etkinleştir</string>
+    <string name="wizard_adb_steps">Geliştirici seçeneklerinde USB hata ayıklamayı aç ve ardından Geri düğmesine bas.</string>
     <string name="recommended_catalog_prompt">Yapılandırma URL’si</string>
     <string name="recommended_catalog_description">Önerilen uygulamalar JSON dosyanızın HTTPS bağlantısını girin.</string>
     <string name="recommended_adb_commands">ADB Komutları</string>

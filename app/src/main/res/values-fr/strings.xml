@@ -408,8 +408,8 @@
     <string name="wizard_language_title">Dans quelle langue souhaitez-vous utiliser Couchy ?</string>
     <string name="wizard_developer_options">Activer les options pour les développeurs</string>
     <string name="wizard_developer_steps">Dans À propos, sélectionnez la version du système Android TV et appuyez sept fois sur OK. Appuyez ensuite sur Retour.</string>
-    <string name="wizard_enable_adb">Activer le débogage ADB</string>
-    <string name="wizard_adb_steps">Dans les options pour les développeurs, activez le débogage réseau ou ADB, puis appuyez sur Retour.</string>
+    <string name="wizard_enable_adb">Activer le débogage USB</string>
+    <string name="wizard_adb_steps">Dans les options pour les développeurs, activez Débogage USB, puis appuyez sur Retour.</string>
     <string name="recommended_catalog_prompt">URL de configuration</string>
     <string name="recommended_catalog_description">Saisissez le lien HTTPS vers votre fichier JSON des applications recommandées.</string>
     <string name="recommended_adb_commands">Commandes ADB</string>

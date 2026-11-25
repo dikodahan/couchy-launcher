@@ -1,9 +1,37 @@
 package com.conreo.couchytv.data
 
+import com.conreo.couchytv.R
 import org.junit.Assert.*
 import org.junit.Test
 
 class CompatibilityTest {
+    @Test fun freshSectionsMatchOfficeDefaultsAndStayLocalizableThroughBackup() {
+        val fresh = newInstallDefaults()
+        assertEquals(listOf("streaming", "games", "music", "apps", "settings"), fresh.categories.map { it.id })
+        assertEquals(listOf("movie", "videogame-asset", "music-note", "apps", "settings"), fresh.categories.map { it.visibleIcon })
+        assertTrue(fresh.order.isEmpty())
+        assertTrue(fresh.dockOrder.isEmpty())
+        assertTrue(fresh.sections.isEmpty())
+
+        val restored = ConfigBackup.decode(ConfigBackup.encode(fresh))
+        val names = mapOf(
+            R.string.cat_streaming to "סטרימינג",
+            R.string.cat_games to "משחקים",
+            R.string.cat_music to "מוזיקה",
+            R.string.cat_apps to "אפליקציות",
+            R.string.settings_title to "הגדרות",
+        )
+        assertEquals(names.values.toList(), restored.withLocalizedSectionNames(names::getValue).categories.map { it.name })
+    }
+
+    @Test fun existingAndRenamedSectionsKeepTheirNames() {
+        val custom = CategoryCfg("streaming", "My favorites", "movie", iconEnabled = true)
+        val original = LauncherConfig(categories = listOf(custom))
+        val restored = ConfigBackup.decode(ConfigBackup.encode(original))
+        assertEquals(listOf(custom), restored.withLocalizedSectionNames { "Translated" }.categories)
+        assertFalse(LauncherConfig().categories.any { it.useDefaultName })
+    }
+
     @Test fun originalBackupsGetSafeDefaultsForNewFeatures() {
         val old = """{"categories":[{"id":"apps","name":"Apps"}],"layout":2,"setupDone":true,"futureOption":true}"""
         val config = ConfigBackup.decode(old)

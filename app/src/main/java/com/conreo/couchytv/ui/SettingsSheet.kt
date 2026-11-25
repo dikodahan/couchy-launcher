@@ -1773,7 +1773,7 @@ private fun CategoriesScreen(
                 scope.launch {
                     store.update { cfg ->
                         cfg.copy(categories = cfg.categories.map {
-                            if (it.id == cat.id) it.copy(name = newName) else it
+                            if (it.id == cat.id) it.copy(name = newName, useDefaultName = false) else it
                         })
                     }
                 }

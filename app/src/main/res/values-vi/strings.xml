@@ -394,8 +394,8 @@
     <string name="wizard_language_title">Bạn muốn sử dụng Couchy bằng ngôn ngữ nào?</string>
     <string name="wizard_developer_options">Bật tùy chọn nhà phát triển</string>
     <string name="wizard_developer_steps">Trong mục Giới thiệu, chọn bản dựng hệ điều hành Android TV và nhấn OK bảy lần. Nhấn Quay lại để trở về.</string>
-    <string name="wizard_enable_adb">Bật gỡ lỗi ADB</string>
-    <string name="wizard_adb_steps">Trong tùy chọn nhà phát triển, bật gỡ lỗi qua mạng hoặc ADB, rồi nhấn Quay lại.</string>
+    <string name="wizard_enable_adb">Bật gỡ lỗi USB</string>
+    <string name="wizard_adb_steps">Trong Tùy chọn nhà phát triển, bật Gỡ lỗi USB, rồi nhấn Quay lại.</string>
     <string name="recommended_catalog_prompt">URL cấu hình</string>
     <string name="recommended_catalog_description">Nhập liên kết HTTPS đến tệp JSON chứa các ứng dụng đề xuất của bạn.</string>
     <string name="recommended_adb_commands">Lệnh ADB</string>

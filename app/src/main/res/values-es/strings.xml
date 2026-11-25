@@ -408,8 +408,8 @@
     <string name="wizard_language_title">¿En qué idioma quieres usar Couchy?</string>
     <string name="wizard_developer_options">Activar las opciones para desarrolladores</string>
     <string name="wizard_developer_steps">En Información, selecciona la compilación del SO Android TV y pulsa OK siete veces. Pulsa Atrás para volver.</string>
-    <string name="wizard_enable_adb">Activar la depuración ADB</string>
-    <string name="wizard_adb_steps">En las opciones para desarrolladores, activa la depuración por red o ADB y pulsa Atrás.</string>
+    <string name="wizard_enable_adb">Activar la depuración USB</string>
+    <string name="wizard_adb_steps">En las opciones para desarrolladores, activa Depuración USB y pulsa Atrás.</string>
     <string name="recommended_catalog_prompt">URL de configuración</string>
     <string name="recommended_catalog_description">Introduce el enlace HTTPS a tu archivo JSON de aplicaciones recomendadas.</string>
     <string name="recommended_adb_commands">Comandos ADB</string>

@@ -1,0 +1,2 @@
+New installs start with five localized sections and matching icons.
+Home setup points to USB debugging and focuses Use Couchy as Home when available.

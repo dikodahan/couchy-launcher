@@ -394,8 +394,8 @@
     <string name="wizard_language_title">In quale lingua vuoi usare Couchy?</string>
     <string name="wizard_developer_options">Attiva le opzioni sviluppatore</string>
     <string name="wizard_developer_steps">In Informazioni, seleziona la build del sistema Android TV e premi OK sette volte. Premi Indietro per tornare.</string>
-    <string name="wizard_enable_adb">Attiva il debug ADB</string>
-    <string name="wizard_adb_steps">Nelle opzioni sviluppatore, attiva il debug di rete o ADB e premi Indietro.</string>
+    <string name="wizard_enable_adb">Attiva il debug USB</string>
+    <string name="wizard_adb_steps">Nelle opzioni sviluppatore, attiva Debug USB, poi premi Indietro.</string>
     <string name="recommended_catalog_prompt">URL di configurazione</string>
     <string name="recommended_catalog_description">Inserisci il link HTTPS al tuo file JSON delle app consigliate.</string>
     <string name="recommended_adb_commands">Comandi ADB</string>

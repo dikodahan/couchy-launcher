@@ -219,6 +219,11 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 <details>
 <summary>Click to expand</summary>
 
+**v1.2.4**
+
+- New installs start with Streaming, Games, Music, Apps, and Settings, each with its own icon. Built-in section names follow Couchy’s selected language.
+- The Home setup wizard points to **USB debugging** and focuses **Use Couchy as Home** when the switch is available. The action uses Couchy’s silhouette.
+
 **v1.2.3**
 
 - Restore Apple aerial playback on TVs that lack the required certificate. Apple’s published root is trusted only for the Apple aerial hostname.

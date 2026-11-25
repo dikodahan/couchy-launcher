@@ -394,8 +394,8 @@
     <string name="wizard_language_title">ต้องการใช้ Couchy ในภาษาใด</string>
     <string name="wizard_developer_options">เปิดตัวเลือกสำหรับนักพัฒนา</string>
     <string name="wizard_developer_steps">ในหน้าเกี่ยวกับ ให้เลือกบิลด์ Android TV OS แล้วกดตกลงเจ็ดครั้ง จากนั้นกดย้อนกลับ</string>
-    <string name="wizard_enable_adb">เปิดการแก้ไขข้อบกพร่อง ADB</string>
-    <string name="wizard_adb_steps">ในตัวเลือกสำหรับนักพัฒนา ให้เปิดการแก้ไขข้อบกพร่องผ่านเครือข่ายหรือ ADB แล้วกดย้อนกลับ</string>
+    <string name="wizard_enable_adb">เปิดการแก้ไขข้อบกพร่อง USB</string>
+    <string name="wizard_adb_steps">ในตัวเลือกสำหรับนักพัฒนา ให้เปิดการแก้ไขข้อบกพร่อง USB แล้วกดย้อนกลับ</string>
     <string name="recommended_catalog_prompt">URL การกำหนดค่า</string>
     <string name="recommended_catalog_description">ป้อนลิงก์ HTTPS ของไฟล์ JSON สำหรับแอปแนะนำของคุณ</string>
     <string name="recommended_adb_commands">คำสั่ง ADB</string>

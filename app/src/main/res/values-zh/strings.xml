@@ -408,8 +408,8 @@
     <string name="wizard_language_title">你希望 Couchy 使用哪种语言？</string>
     <string name="wizard_developer_options">启用开发者选项</string>
     <string name="wizard_developer_steps">在“关于”中选择 Android TV 操作系统版本，按七次确定键，再按返回键。</string>
-    <string name="wizard_enable_adb">启用 ADB 调试</string>
-    <string name="wizard_adb_steps">在开发者选项中开启网络调试或 ADB 调试，然后按返回键。</string>
+    <string name="wizard_enable_adb">启用 USB 调试</string>
+    <string name="wizard_adb_steps">在开发者选项中开启 USB 调试，然后按返回键。</string>
     <string name="recommended_catalog_prompt">配置网址</string>
     <string name="recommended_catalog_description">输入推荐应用 JSON 文件的 HTTPS 链接。</string>
     <string name="recommended_adb_commands">ADB 命令</string>
