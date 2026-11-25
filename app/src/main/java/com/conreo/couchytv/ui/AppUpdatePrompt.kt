@@ -35,7 +35,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.tv.material3.Button
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
@@ -224,12 +223,12 @@ internal fun AppUpdateDialog(prompt: AppUpdatePrompt) {
                 }
                 if (statusText != null) Text(statusText, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 val focus = initialFocus()
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp),
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(SettingsControlGap),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Button(onClick = prompt::later, modifier = Modifier.focusRequester(focus)) {
+                    SettingsButton(onClick = prompt::later, modifier = Modifier.focusRequester(focus)) {
                         Text(stringResource(R.string.update_later))
                     }
-                    Button(onClick = ::requestUpdate, enabled = status != UpdateStatus.Downloading) {
+                    SettingsButton(onClick = ::requestUpdate, enabled = status != UpdateStatus.Downloading) {
                         Text(stringResource(R.string.update_action))
                     }
                 }

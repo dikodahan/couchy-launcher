@@ -7,7 +7,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Box
@@ -19,14 +18,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -60,6 +57,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextAlign
 import com.conreo.couchytv.BuildConfig
 import com.conreo.couchytv.data.RecommendedCatalog
 import com.conreo.couchytv.data.RecommendedApps
@@ -69,11 +67,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Button
-import androidx.tv.material3.ButtonDefaults
-import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
-import androidx.tv.material3.ListItem
+import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
@@ -90,6 +85,7 @@ import com.conreo.couchytv.data.ConfigBackup
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.DATE_FORMATS
 import com.conreo.couchytv.data.IconPack
+import com.conreo.couchytv.data.ICON_SCALE_EXTRA_SMALL
 import com.conreo.couchytv.data.GLASS_STYLE_LIQUID
 import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
@@ -453,20 +449,13 @@ private fun MainScreen(
         SettingsScreen.Apps
     } else returnTo
     fun focusFor(row: SettingsScreen) = if (row == target) Modifier.focusRequester(focus) else Modifier
-    Column(
-        Modifier.fillMaxSize().verticalScroll(scroll).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.settings_title),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
+    SettingsPage(scroll) {
+        SettingsTitle(stringResource(R.string.settings_title))
 
         // ---- Content: what shows on the home screen ----
-        SectionLabel(stringResource(R.string.group_content))
+        SettingsSectionLabel(stringResource(R.string.group_content).uppercase())
         SettingsItem(
-            selected = false, onClick = onApps,
+            onClick = onApps,
             modifier = focusFor(SettingsScreen.Apps),
             headlineContent = { Text(stringResource(R.string.item_app)) },
             supportingContent = { Text(stringResource(R.string.item_app_sub)) },
@@ -481,13 +470,13 @@ private fun MainScreen(
             )
         }
         SettingsItem(
-            selected = false, onClick = onCategories,
+            onClick = onCategories,
             modifier = focusFor(SettingsScreen.Categories),
             headlineContent = { Text(stringResource(R.string.item_sections)) },
             leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
         )
         SettingsItem(
-            selected = false, onClick = onIconPack,
+            onClick = onIconPack,
             modifier = focusFor(SettingsScreen.IconPack),
             headlineContent = { Text(stringResource(R.string.item_icon_pack)) },
             supportingContent = { Text(stringResource(R.string.item_icon_pack_sub)) },
@@ -495,37 +484,37 @@ private fun MainScreen(
         )
 
         SettingsItem(
-            selected = false, onClick = onParental,
+            onClick = onParental,
             modifier = focusFor(SettingsScreen.Parental),
             headlineContent = { Text(stringResource(R.string.parental_controls)) },
             leadingContent = { Icon(AppIcons.Lock, contentDescription = null) },
         )
 
         // ---- Appearance: how it looks ----
-        SectionLabel(stringResource(R.string.group_appearance))
+        SettingsSectionLabel(stringResource(R.string.group_appearance).uppercase())
         SettingsItem(
-            selected = false, onClick = onDisplay,
+            onClick = onDisplay,
             modifier = focusFor(SettingsScreen.Display),
             headlineContent = { Text(stringResource(R.string.item_display)) },
             supportingContent = { Text(stringResource(R.string.item_display_sub)) },
             leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
         )
         SettingsItem(
-            selected = false, onClick = onWallpaper,
+            onClick = onWallpaper,
             modifier = focusFor(SettingsScreen.Wallpaper),
             headlineContent = { Text(stringResource(R.string.item_wallpaper)) },
             supportingContent = { Text(stringResource(R.string.item_wallpaper_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
         )
         SettingsItem(
-            selected = false, onClick = onStatusBar,
+            onClick = onStatusBar,
             modifier = focusFor(SettingsScreen.StatusBar),
             headlineContent = { Text(stringResource(R.string.item_statusbar)) },
             supportingContent = { Text(stringResource(R.string.item_statusbar_sub)) },
             leadingContent = { Icon(AppIcons.Wifi, contentDescription = null) },
         )
         SettingsItem(
-            selected = false, onClick = onWeather,
+            onClick = onWeather,
             modifier = focusFor(SettingsScreen.Weather),
             headlineContent = { Text(stringResource(R.string.item_weather)) },
             supportingContent = { Text(stringResource(R.string.item_weather_sub)) },
@@ -533,9 +522,9 @@ private fun MainScreen(
         )
 
         // ---- System ----
-        SectionLabel(stringResource(R.string.group_system))
+        SettingsSectionLabel(stringResource(R.string.group_system).uppercase())
         SettingsItem(
-            selected = false, onClick = onLauncher,
+            onClick = onLauncher,
             modifier = focusFor(SettingsScreen.Launcher),
             headlineContent = { Text(stringResource(R.string.item_launcher_settings)) },
             supportingContent = { Text(stringResource(R.string.item_launcher_settings_sub)) },
@@ -566,7 +555,7 @@ private fun MainScreen(
             )
         }
         SettingsItem(
-            selected = false, onClick = onAbout,
+            onClick = onAbout,
             modifier = focusFor(SettingsScreen.About),
             headlineContent = { Text(stringResource(R.string.item_about)) },
             leadingContent = { Icon(AppIcons.Info, contentDescription = null) },
@@ -581,15 +570,8 @@ private fun AboutScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.item_about),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.item_about))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -615,7 +597,7 @@ private fun AboutScreen(
             modifier = Modifier.padding(start = 8.dp, top = 12.dp),
         )
 
-        SectionLabel(stringResource(R.string.about_foss))
+        SettingsSectionLabel(stringResource(R.string.about_foss).uppercase())
         Text(
             stringResource(R.string.about_license),
             style = MaterialTheme.typography.bodyMedium,
@@ -651,16 +633,9 @@ private fun DisplayScreen(
     fun update(transform: (LauncherConfig) -> LauncherConfig) {
         scope.launch { store.update(transform) }
     }
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.item_display),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
-        SectionLabel(stringResource(R.string.section_layout))
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.item_display))
+        SettingsSectionLabel(stringResource(R.string.section_layout).uppercase())
         val f = initialFocus()
         SelectorRow(
             modifier = Modifier.focusRequester(f),
@@ -688,15 +663,14 @@ private fun DisplayScreen(
         )
         // Section names are only drawn in carousel/grid — hide the toggle in dock.
         if (config.layout != LAYOUT_DOCK) {
-            SectionLabel(stringResource(R.string.section_elements))
+            SettingsSectionLabel(stringResource(R.string.section_elements).uppercase())
             SettingsItem(
-                selected = false,
                 onClick = { update { it.copy(showCategoryNames = !it.showCategoryNames) } },
                 headlineContent = { Text(stringResource(R.string.section_names_label)) },
                 trailingContent = { CheckMark(checked = config.showCategoryNames) },
             )
         }
-        SectionLabel(stringResource(R.string.section_size))
+        SettingsSectionLabel(stringResource(R.string.section_size).uppercase())
         run {
             val labels = listOf(stringResource(R.string.scale_auto), "75%", "90%", "100%", "115%", "130%")
             val idx = config.uiScale.coerceIn(0, labels.size - 1)
@@ -716,12 +690,22 @@ private fun DisplayScreen(
             current = config.cornerRadius.coerceIn(0, 4),
             onSelect = { v -> update { it.copy(cornerRadius = v) } },
         )
+        val iconSizes = listOf(
+            ICON_SCALE_EXTRA_SMALL to R.string.icon_size_extra_small,
+            0 to R.string.icon_size_compact,
+            1 to R.string.size_s,
+            2 to R.string.size_n,
+            3 to R.string.size_l,
+            4 to R.string.size_xl,
+        )
+        val iconSizeIndex = iconSizes.indexOfFirst { it.first == config.iconScale }
+            .takeIf { it >= 0 } ?: (config.iconScale.coerceIn(0, 4) + 1)
         SelectorRow(
             label = stringResource(R.string.icon_size),
-            value = listOf(stringResource(R.string.size_xs), stringResource(R.string.size_s), stringResource(R.string.size_n), stringResource(R.string.size_l), stringResource(R.string.size_xl))[config.iconScale.coerceIn(0, 4)],
-            steps = 5,
-            current = config.iconScale.coerceIn(0, 4),
-            onSelect = { v -> update { it.copy(iconScale = v) } },
+            value = stringResource(iconSizes[iconSizeIndex].second),
+            steps = iconSizes.size,
+            current = iconSizeIndex,
+            onSelect = { index -> update { it.copy(iconScale = iconSizes[index].first) } },
         )
         SelectorRow(
             label = stringResource(R.string.spacing),
@@ -750,15 +734,18 @@ private fun SelectorRow(
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val towardEnd = if (rtl) -1 else 1
     SettingsItem(
-        selected = false,
         onClick = { onSelect((current + 1) % steps) },
         headlineContent = { Text(label) },
         supportingContent = { if (description != null) Text(description) },
         trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(if (rtl) "►" else "◄", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(value)
-                Text(if (rtl) "◄" else "►", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                Modifier.widthIn(max = 156.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(SettingsRowGap),
+            ) {
+                Text(if (rtl) "►" else "◄")
+                Text(value, Modifier.weight(1f, fill = false), textAlign = TextAlign.Center)
+                Text(if (rtl) "◄" else "►")
             }
         },
         modifier = modifier.onPreviewKeyEvent { e ->
@@ -786,12 +773,8 @@ private fun AppsScreen(
 ) {
     val catNames = remember(config.categories) { config.categories.associate { it.id to it.name } }
 
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        Text(
-            stringResource(R.string.item_app),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 4.dp, start = 8.dp),
-        )
+    Column(Modifier.fillMaxSize().padding(SettingsPageInset)) {
+        SettingsTitle(stringResource(R.string.item_app))
         Text(
             stringResource(R.string.app_hint),
             style = MaterialTheme.typography.bodySmall,
@@ -801,18 +784,17 @@ private fun AppsScreen(
         val f = initialFocus()
         LazyColumn(
             Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(SettingsRowGap),
         ) {
             items(apps.size, key = { apps[it].pkg }) { i ->
                 val app = apps[i]
                 Row(
                     Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(SettingsControlGap),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.weight(1f)) {
                         SettingsItem(
-                            selected = false,
                             onClick = { onLaunch(app.pkg) },
                             modifier = if (i == 0) Modifier.focusRequester(f) else Modifier,
                             headlineContent = { Text(app.label) },
@@ -826,12 +808,12 @@ private fun AppsScreen(
                         )
                     }
                     val isHidden = app.pkg in config.hidden
-                    SmallIconButton(
+                    SettingsIconButton(
                         if (isHidden) AppIcons.Hide else AppIcons.Show,
                         stringResource(if (isHidden) R.string.menu_unhide else R.string.menu_hide),
                     ) { onToggleHide(app.pkg) }
-                    SmallIconButton(AppIcons.Info, stringResource(R.string.menu_app_info)) { onAppInfo(app.pkg) }
-                    SmallIconButton(AppIcons.Delete, stringResource(R.string.menu_uninstall)) { onUninstall(app.pkg) }
+                    SettingsIconButton(AppIcons.Info, stringResource(R.string.menu_app_info)) { onAppInfo(app.pkg) }
+                    SettingsIconButton(AppIcons.Delete, stringResource(R.string.menu_uninstall)) { onUninstall(app.pkg) }
                 }
             }
         }
@@ -1054,26 +1036,18 @@ private fun LauncherSettingsSubscreen(
             onCloud = { onCloudChosen(LauncherPane.Load) },
             onDisconnect = { scope.launch { cloud.signOut() } },
         )
-        LauncherPane.Menu -> Column(
-            Modifier.fillMaxSize().verticalScroll(launcherMenuScroll).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(
-                stringResource(R.string.item_launcher_settings),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-            )
+        LauncherPane.Menu -> SettingsPage(launcherMenuScroll) {
+            SettingsTitle(stringResource(R.string.item_launcher_settings))
             val focus = initialFocus()
             fun focusFor(row: LauncherPane) = if (row == launcherReturnTo) Modifier.focusRequester(focus) else Modifier
             SettingsItem(
-                selected = false, onClick = { openPane(LauncherPane.Home) },
+                onClick = { openPane(LauncherPane.Home) },
                 modifier = focusFor(LauncherPane.Home),
                 headlineContent = { Text(stringResource(R.string.home_launcher_title)) },
                 supportingContent = { Text(stringResource(R.string.home_launcher_settings_sub)) },
                 leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
             )
             SettingsItem(
-                selected = false,
                 onClick = { openPane(LauncherPane.Language) },
                 modifier = focusFor(LauncherPane.Language),
                 headlineContent = { Text(stringResource(R.string.item_language)) },
@@ -1090,7 +1064,6 @@ private fun LauncherSettingsSubscreen(
                 )
             }
             SettingsItem(
-                selected = false,
                 onClick = { openPane(LauncherPane.Save) },
                 modifier = focusFor(LauncherPane.Save),
                 headlineContent = { Text(stringResource(R.string.item_save_config)) },
@@ -1098,7 +1071,6 @@ private fun LauncherSettingsSubscreen(
                 leadingContent = { Icon(AppIcons.Save, contentDescription = null) },
             )
             SettingsItem(
-                selected = false,
                 onClick = { openPane(LauncherPane.Load) },
                 modifier = focusFor(LauncherPane.Load),
                 headlineContent = { Text(stringResource(R.string.item_load_config)) },
@@ -1106,7 +1078,6 @@ private fun LauncherSettingsSubscreen(
                 leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
             )
             SettingsItem(
-                selected = false,
                 onClick = { confirmWizardRerun = true },
                 headlineContent = { Text(stringResource(R.string.rerun_wizard)) },
                 supportingContent = { Text(stringResource(R.string.rerun_wizard_sub)) },
@@ -1128,12 +1099,12 @@ private fun LauncherSettingsSubscreen(
                         style = MaterialTheme.typography.titleMedium,
                     )
                     val cancelFocus = initialFocus()
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
+                    Column(verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
+                        SettingsButton(
                             onClick = dismiss,
                             modifier = Modifier.fillMaxWidth().focusRequester(cancelFocus),
                         ) { Text(stringResource(R.string.cancel)) }
-                        Button(
+                        SettingsButton(
                             onClick = {
                                 dismiss()
                                 onRerunWizard()
@@ -1180,18 +1151,10 @@ private fun BackupTargetScreen(
     onCloud: () -> Unit,
     onDisconnect: () -> Unit,
 ) {
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            title,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(title)
         val f = initialFocus()
         SettingsItem(
-            selected = false,
             onClick = onLocal,
             modifier = Modifier.focusRequester(f),
             headlineContent = { Text(localLabel) },
@@ -1204,7 +1167,6 @@ private fun BackupTargetScreen(
             stringResource(R.string.cloud_sign_in_hint)
         }
         SettingsItem(
-            selected = false,
             onClick = onCloud,
             headlineContent = { Text(cloudLabel) },
             supportingContent = { Text("$cloudSub\n$cloudHint") },
@@ -1212,7 +1174,6 @@ private fun BackupTargetScreen(
         )
         if (session.signedIn) {
             SettingsItem(
-                selected = false,
                 onClick = onDisconnect,
                 headlineContent = { Text(stringResource(R.string.cloud_disconnect)) },
                 supportingContent = { Text(stringResource(R.string.cloud_disconnect_sub)) },
@@ -1231,20 +1192,12 @@ private fun LanguageScreen(
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.item_language),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.item_language))
         val f = initialFocus()
         com.conreo.couchytv.data.LANGUAGES.forEachIndexed { i, code ->
             val label = languageName(code)
             SettingsItem(
-                selected = false,
                 onClick = {
                     // Just persist it; LauncherApp mirrors it and recreates.
                     if (code != config.language) scope.launch {
@@ -1272,18 +1225,10 @@ private fun StatusBarScreen(
     var pickVpn by remember { mutableStateOf(false) }
     val vpnLabel = apps.firstOrNull { it.pkg == config.vpnApp }?.label ?: stringResource(R.string.vpn_system)
 
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.item_statusbar),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.item_statusbar))
         val f = initialFocus()
         SettingsItem(
-            selected = false,
             onClick = { scope.launch { store.update { it.copy(showStatusBar = !it.showStatusBar) } } },
             modifier = Modifier.focusRequester(f),
             headlineContent = { Text(stringResource(R.string.show_statusbar)) },
@@ -1291,14 +1236,12 @@ private fun StatusBarScreen(
             trailingContent = { CheckMark(checked = config.showStatusBar) },
         )
         SettingsItem(
-            selected = false,
             onClick = { scope.launch { store.update { it.copy(statusBarGlass = !it.statusBarGlass) } } },
             headlineContent = { Text(stringResource(R.string.statusbar_glass)) },
             supportingContent = { Text(stringResource(R.string.statusbar_glass_sub)) },
             trailingContent = { CheckMark(checked = config.statusBarGlass) },
         )
         SettingsItem(
-            selected = false,
             onClick = { scope.launch { store.update { it.copy(h24 = !it.h24) } } },
             headlineContent = { Text(stringResource(R.string.clock_24h)) },
             trailingContent = { CheckMark(checked = config.h24) },
@@ -1317,7 +1260,6 @@ private fun StatusBarScreen(
             )
         }
         SettingsItem(
-            selected = false,
             onClick = { scope.launch { store.update { it.copy(showVpnButton = !it.showVpnButton) } } },
             headlineContent = { Text(stringResource(R.string.show_vpn_button)) },
             leadingContent = { Icon(AppIcons.Vpn, contentDescription = null) },
@@ -1325,7 +1267,6 @@ private fun StatusBarScreen(
         )
         // Grayed out (and not focusable) while the VPN button is hidden
         SettingsItem(
-            selected = false,
             enabled = config.showVpnButton,
             onClick = { pickVpn = true },
             headlineContent = { Text(stringResource(R.string.vpn_opens)) },
@@ -1348,10 +1289,9 @@ private fun StatusBarScreen(
                         modifier = Modifier.padding(start = 8.dp, bottom = 10.dp),
                     )
                     val fv = initialFocus()
-                    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
                         item {
                             SettingsItem(
-                                selected = false,
                                 onClick = {
                                     scope.launch { store.update { it.copy(vpnApp = "") } }
                                     pickVpn = false
@@ -1364,7 +1304,6 @@ private fun StatusBarScreen(
                         items(apps.size, key = { apps[it].pkg }) { i ->
                             val app = apps[i]
                             SettingsItem(
-                                selected = false,
                                 onClick = {
                                     scope.launch { store.update { it.copy(vpnApp = app.pkg) } }
                                     pickVpn = false
@@ -1401,15 +1340,8 @@ private fun WeatherScreen(
     var findCity by remember { mutableStateOf(false) }
     var savingCity by remember { mutableStateOf(false) }
 
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.item_weather),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 4.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.item_weather))
         Text(
             stringResource(R.string.weather_hint),
             style = MaterialTheme.typography.bodySmall,
@@ -1418,30 +1350,28 @@ private fun WeatherScreen(
         )
         val f = initialFocus()
         SettingsItem(
-            selected = false,
             onClick = { scope.launch { store.update { it.copy(weatherEnabled = !it.weatherEnabled) } } },
             modifier = Modifier.focusRequester(f),
             headlineContent = { Text(stringResource(R.string.weather_enable)) },
             trailingContent = { CheckMark(checked = config.weatherEnabled) },
         )
-        if (!config.weatherEnabled) return@Column
+        if (!config.weatherEnabled) return@SettingsPage
         if (weatherStatus != null) {
             Text(
                 stringResource(weatherStatus),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp),
             )
         }
         if (canRetry && weatherStatus != null) {
-            androidx.tv.material3.Button(
+            SettingsItem(
                 onClick = onRetry,
-                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
-            ) { Text(stringResource(R.string.weather_retry)) }
+                headlineContent = { Text(stringResource(R.string.weather_retry)) },
+            )
         }
 
         SettingsItem(
-            selected = false,
             onClick = { findCity = true },
             headlineContent = { Text(stringResource(R.string.weather_find_city)) },
             supportingContent = {
@@ -1470,7 +1400,7 @@ private fun WeatherScreen(
                 Text(
                     stringResource(R.string.weather_ip_city, weatherLocationName),
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp),
                 )
             }
             // Full-width note, not squeezed into the row's supporting-text column
@@ -1479,37 +1409,37 @@ private fun WeatherScreen(
                 stringResource(R.string.weather_geoip_notice),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp),
             )
             if (!config.weatherGeoJsEnabled) {
-                Button(
+                SettingsItem(
                     onClick = { scope.launch { store.update { it.copy(weatherGeoJsEnabled = true) } } },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                ) { Text(stringResource(R.string.weather_ip_enable)) }
+                    headlineContent = { Text(stringResource(R.string.weather_ip_enable)) },
+                )
             }
         }
 
         when (srcIdx) {
             WEATHER_SRC_LATLONG -> {
                 SettingsItem(
-                    selected = false, onClick = { editField = "lat" },
+                    onClick = { editField = "lat" },
                     headlineContent = { Text(stringResource(R.string.weather_lat)) },
                     supportingContent = { Text(config.weatherLat.toString()) },
                 )
                 SettingsItem(
-                    selected = false, onClick = { editField = "lon" },
+                    onClick = { editField = "lon" },
                     headlineContent = { Text(stringResource(R.string.weather_lon)) },
                     supportingContent = { Text(config.weatherLon.toString()) },
                 )
             }
             WEATHER_SRC_ZIP -> {
                 SettingsItem(
-                    selected = false, onClick = { editField = "zip" },
+                    onClick = { editField = "zip" },
                     headlineContent = { Text(stringResource(R.string.weather_zip)) },
                     supportingContent = { Text(config.weatherZip.ifEmpty { stringResource(R.string.weather_not_set) }) },
                 )
                 SettingsItem(
-                    selected = false, onClick = { editField = "country" },
+                    onClick = { editField = "country" },
                     headlineContent = { Text(stringResource(R.string.weather_country)) },
                     supportingContent = {
                         Text(config.weatherCountry.ifEmpty { "US" })
@@ -1588,7 +1518,7 @@ private fun WeatherScreen(
             val appLabel = apps.firstOrNull { it.pkg == config.weatherApp }?.label
                 ?: stringResource(R.string.weather_not_set)
             SettingsItem(
-                selected = false, onClick = { pickWeatherApp = true },
+                onClick = { pickWeatherApp = true },
                 headlineContent = { Text(stringResource(R.string.weather_app_opens)) },
                 supportingContent = { Text(appLabel) },
             )
@@ -1630,11 +1560,10 @@ private fun WeatherScreen(
                         modifier = Modifier.padding(start = 8.dp, bottom = 10.dp),
                     )
                     val fw = initialFocus()
-                    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
                         items(apps.size, key = { apps[it].pkg }) { i ->
                             val app = apps[i]
                             SettingsItem(
-                                selected = false,
                                 onClick = {
                                     scope.launch { store.update { it.copy(weatherApp = app.pkg) } }
                                     pickWeatherApp = false
@@ -1711,21 +1640,14 @@ private fun CategoriesScreen(
         }
     }
 
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Text(
-            stringResource(R.string.item_sections),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.item_sections))
         val f = initialFocus()
         val allSection = config.categories.firstOrNull { it.id == AppRepository.ALL_APPS_ID }
         val allName = stringResource(R.string.cat_all_apps)
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(SettingsControlGap),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.weight(1f)) {
@@ -1744,13 +1666,13 @@ private fun CategoriesScreen(
                     supportingContent = { Text(stringResource(R.string.all_apps_sub)) },
                     leadingContent = {
                         if (allSection?.visibleIcon == null) Icon(AppIcons.Apps, contentDescription = null)
-                        else SectionIcon(allSection.visibleIcon, Modifier.size(24.dp))
+                        else SectionIcon(allSection.visibleIcon, Modifier.size(24.dp), tint = LocalContentColor.current)
                     },
                     trailingContent = { CheckMark(checked = allSection != null) },
                 )
             }
             if (allSection != null) {
-                SmallIconButton(AppIcons.Pencil, stringResource(R.string.edit_section)) {
+                SettingsIconButton(AppIcons.Pencil, stringResource(R.string.edit_section)) {
                     editingId = allSection.id
                 }
             }
@@ -1759,21 +1681,20 @@ private fun CategoriesScreen(
             if (cat.id == AppRepository.ALL_APPS_ID) return@forEachIndexed
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(SettingsControlGap),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.weight(1f)) {
                     SettingsItem(
-                        selected = false,
                         onClick = { editingId = cat.id },
                         headlineContent = { Text(cat.name) },
                         leadingContent = {
                             if (cat.visibleIcon == null) Icon(AppIcons.Folder, contentDescription = null)
-                            else SectionIcon(cat.visibleIcon, Modifier.size(24.dp))
+                            else SectionIcon(cat.visibleIcon, Modifier.size(24.dp), tint = LocalContentColor.current)
                         },
                     )
                 }
-                SmallIconButton(AppIcons.Up, stringResource(R.string.cd_move_up)) {
+                SettingsIconButton(AppIcons.Up, stringResource(R.string.cd_move_up)) {
                     if (i > 0) scope.launch {
                         store.update { cfg ->
                             val l = cfg.categories.toMutableList()
@@ -1782,7 +1703,7 @@ private fun CategoriesScreen(
                         }
                     }
                 }
-                SmallIconButton(AppIcons.Down, stringResource(R.string.cd_move_down)) {
+                SettingsIconButton(AppIcons.Down, stringResource(R.string.cd_move_down)) {
                     if (i < config.categories.size - 1) scope.launch {
                         store.update { cfg ->
                             val l = cfg.categories.toMutableList()
@@ -1792,7 +1713,7 @@ private fun CategoriesScreen(
                     }
                 }
                 if (config.categories.size > 1) {
-                    SmallIconButton(AppIcons.Delete, stringResource(R.string.cd_delete_section)) {
+                    SettingsIconButton(AppIcons.Delete, stringResource(R.string.cd_delete_section)) {
                         scope.launch {
                             store.update { cfg ->
                                 cfg.copy(categories = cfg.categories.filter { it.id != cat.id })
@@ -1804,7 +1725,6 @@ private fun CategoriesScreen(
         }
         val newSectionName = stringResource(R.string.new_section)
         SettingsItem(
-            selected = false,
             onClick = {
                 scope.launch {
                     store.update {
@@ -1875,7 +1795,7 @@ private fun SectionEditDialog(
             shape = RoundedCornerShape(18.dp),
             colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
-            Column(Modifier.width(410.dp).padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.width(410.dp).padding(SettingsPageInset), verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
                 Text(section.name, style = MaterialTheme.typography.titleMedium)
                 val focus = initialFocus()
                 if (onRename != null) {
@@ -1896,10 +1816,10 @@ private fun SectionEditDialog(
                     SettingsItem(
                         onClick = onChooseIcon,
                         headlineContent = { Text(stringResource(R.string.section_choose_icon)) },
-                        leadingContent = { SectionIcon(section.visibleIcon, Modifier.size(24.dp)) },
+                        leadingContent = { SectionIcon(section.visibleIcon, Modifier.size(24.dp), tint = LocalContentColor.current) },
                     )
                 }
-                Button(onClick = onDismiss) { Text(stringResource(R.string.done)) }
+                SettingsButton(onClick = onDismiss) { Text(stringResource(R.string.done)) }
             }
         }
     }
@@ -1914,50 +1834,25 @@ private fun RecommendedAppsSettings(config: LauncherConfig, store: ConfigStore) 
     var error by remember { mutableStateOf<Int?>(null) }
     val focus = initialFocus()
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.recommended_settings), style = MaterialTheme.typography.titleLarge)
-        Button(
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.recommended_settings))
+        SettingsItem(
             onClick = { error = null; editUrl = true },
-            modifier = Modifier.fillMaxWidth().focusRequester(focus),
-            colors = ButtonDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                focusedContainerColor = Color(0xFFF1F2F4),
-                focusedContentColor = Color(0xFF14151A),
-            ),
-            scale = ButtonDefaults.scale(focusedScale = 1f),
-            shape = ButtonDefaults.shape(shape = RoundedCornerShape(12.dp)),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(AppIcons.Link, contentDescription = null, modifier = Modifier.size(24.dp))
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
+            modifier = Modifier.focusRequester(focus),
+            leadingContent = { Icon(AppIcons.Link, contentDescription = null) },
+            headlineContent = { Text(stringResource(R.string.recommended_catalog_prompt)) },
+            supportingContent = {
+                Text(stringResource(R.string.recommended_catalog_description))
+                if (config.recommendedAppsUrl.isNotBlank()) {
                     Text(
-                        stringResource(R.string.recommended_catalog_prompt),
-                        style = MaterialTheme.typography.titleSmall,
+                        config.recommendedAppsUrl,
+                        style = MaterialTheme.typography.bodySmall.copy(textDirection = TextDirection.Ltr),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    Text(
-                        stringResource(R.string.recommended_catalog_description),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    if (config.recommendedAppsUrl.isNotBlank()) {
-                        Text(
-                            config.recommendedAppsUrl,
-                            style = MaterialTheme.typography.bodySmall.copy(textDirection = TextDirection.Ltr),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
                 }
-            }
-        }
+            },
+        )
         if (config.recommendedAppsUrl.isNotBlank()) {
             SettingsItem(
                 onClick = {
@@ -2046,8 +1941,7 @@ internal fun TextEntryDialog(
                 }
                 Box(
                     Modifier.fillMaxWidth()
-                        .background(Color(0xFF252C37), RoundedCornerShape(8.dp))
-                        .border(1.dp, if (editorFocused) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(8.dp))
+                        .settingsFieldFrame(editorFocused)
                         .padding(horizontal = 12.dp, vertical = 12.dp),
                 ) {
                     BasicTextField(
@@ -2091,11 +1985,11 @@ internal fun TextEntryDialog(
                     )
                 }
                 if (status != null) Text(stringResource(status))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = ::submit, enabled = !urlInput || canSave, modifier = Modifier.focusRequester(saveFocus)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(SettingsControlGap)) {
+                    SettingsButton(onClick = ::submit, enabled = !urlInput || canSave, modifier = Modifier.focusRequester(saveFocus)) {
                         Text(stringResource(submitLabel))
                     }
-                    Button(onClick = onDismiss, modifier = Modifier.focusRequester(cancelFocus)) {
+                    SettingsButton(onClick = onDismiss, modifier = Modifier.focusRequester(cancelFocus)) {
                         Text(stringResource(R.string.cancel))
                     }
                 }
@@ -2127,15 +2021,8 @@ private fun IconPackScreen(
         }
     }
 
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.item_icon_pack),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 4.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.item_icon_pack))
         Text(
             stringResource(R.string.icon_pack_hint),
             style = MaterialTheme.typography.bodySmall,
@@ -2144,7 +2031,6 @@ private fun IconPackScreen(
         )
         val f = initialFocus()
         SettingsItem(
-            selected = false,
             onClick = { scope.launch { store.update { it.copy(iconPackPkg = "") } } },
             modifier = Modifier.focusRequester(f),
             headlineContent = { Text(stringResource(R.string.icon_pack_none)) },
@@ -2152,7 +2038,6 @@ private fun IconPackScreen(
         )
         packs.forEach { pack ->
             SettingsItem(
-                selected = false,
                 onClick = { scope.launch { store.update { it.copy(iconPackPkg = pack.pkg) } } },
                 headlineContent = { Text(pack.label) },
                 supportingContent = {
@@ -2196,15 +2081,8 @@ private fun WallpaperScreen(
     onPickPhoto: () -> Unit,
     onPickVideo: () -> Unit,
 ) {
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.item_wallpaper),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.item_wallpaper))
         val f = initialFocus()
         val staticActive = !config.useBuiltinAerials &&
             !config.useVideoWallpaper && !config.useCustomWallpaper && !config.useTopShelf
@@ -2231,13 +2109,13 @@ private fun WallpaperScreen(
         }
 
         /* ---------------- STATIC: color gradient + your own photo ---------------- */
-        SectionLabel(stringResource(R.string.wp_section_static))
+        SettingsSectionLabel(stringResource(R.string.wp_section_static).uppercase())
 
         // Color gradient mode — checkmark like every other mode; the picker
         // below appears once it's active (mirrors the aerial collection row).
         val presetIdx = config.wallpaper.coerceIn(0, WALLPAPERS.size - 1)
         SettingsItem(
-            selected = false, onClick = { onPreset(presetIdx) },
+            onClick = { onPreset(presetIdx) },
             headlineContent = { Text(stringResource(R.string.color_gradient)) },
             leadingContent = { Icon(AppIcons.Palette, contentDescription = null) },
             trailingContent = { CheckMark(checked = staticActive) },
@@ -2261,7 +2139,7 @@ private fun WallpaperScreen(
 
         // A photo of your own
         SettingsItem(
-            selected = false, onClick = onPickPhoto,
+            onClick = onPickPhoto,
             headlineContent = { Text(stringResource(R.string.pick_photo)) },
             supportingContent = { Text(stringResource(R.string.pick_photo_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
@@ -2269,7 +2147,7 @@ private fun WallpaperScreen(
         )
 
         SettingsItem(
-            selected = false, onClick = onSelectTopShelf,
+            onClick = onSelectTopShelf,
             headlineContent = { Text(stringResource(R.string.top_shelf)) },
             supportingContent = { Text(stringResource(R.string.top_shelf_desc)) },
             leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
@@ -2277,11 +2155,11 @@ private fun WallpaperScreen(
         )
 
         /* ---------------- VIDEO: built-in aerials + your own video ---------------- */
-        SectionLabel(stringResource(R.string.wp_section_video))
+        SettingsSectionLabel(stringResource(R.string.wp_section_video).uppercase())
 
         // Built-in aerial videos
         SettingsItem(
-            selected = false, onClick = onSelectBuiltinAerials,
+            onClick = onSelectBuiltinAerials,
             headlineContent = { Text(stringResource(R.string.builtin_aerials)) },
             supportingContent = { Text(stringResource(R.string.builtin_aerials_sub)) },
             leadingContent = { Icon(AppIcons.Play, contentDescription = null) },
@@ -2320,7 +2198,7 @@ private fun WallpaperScreen(
 
         // A video file of your own
         SettingsItem(
-            selected = false, onClick = onPickVideo,
+            onClick = onPickVideo,
             headlineContent = { Text(stringResource(R.string.pick_video)) },
             supportingContent = { Text(stringResource(R.string.pick_video_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
@@ -2338,127 +2216,6 @@ private fun WallpaperScreen(
                 current = idx,
                 onSelect = { v -> onSetSpeed(v) },
             )
-        }
-    }
-}
-
-/* ------------------------------ widgets ------------------------------ */
-
-/**
- * Every menu focuses its first item on entry (Back on the remote steps out,
- * so there are no on-screen Back buttons).
- */
-@Composable
-internal fun initialFocus(): FocusRequester {
-    val fr = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        // Claim focus the moment the first item's node is attached (retry per
-        // frame, stop on the first success) instead of after a fixed 300ms delay.
-        // A late request would yank focus back to item 1 if the user had already
-        // navigated down — the "quick navigation resets to the top" bug.
-        repeat(30) {
-            if (runCatching { fr.requestFocus() }.isSuccess) return@LaunchedEffect
-            withFrameNanos {}
-        }
-    }
-    return fr
-}
-
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text.uppercase(),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = 12.dp, start = 8.dp, bottom = 4.dp),
-    )
-}
-
-@Composable
-internal fun CheckMark(checked: Boolean, uncheckedColor: Color = Color.White.copy(alpha = 0.4f)) {
-    Box(
-        Modifier
-            .size(22.dp)
-            .background(
-                if (checked) MaterialTheme.colorScheme.primary else Color.Transparent,
-                RoundedCornerShape(5.dp),
-            )
-            .border(
-                width = 2.dp,
-                color = if (checked) MaterialTheme.colorScheme.primary
-                else uncheckedColor,
-                shape = RoundedCornerShape(5.dp),
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (checked) {
-            Icon(
-                AppIcons.Check,
-                contentDescription = null,
-                tint = Color.Black.copy(alpha = 0.8f),
-                modifier = Modifier.size(16.dp),
-            )
-        }
-    }
-}
-
-/**
- * A settings row with NO focus scale. tv-material's default focusedScale
- * scales the whole row — including its already-rasterized text — which looks
- * blurry on TV; the focused container colour alone signals selection.
- */
-@Composable
-internal fun SettingsItem(
-    onClick: () -> Unit,
-    headlineContent: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    selected: Boolean = false,
-    enabled: Boolean = true,
-    supportingContent: (@Composable () -> Unit)? = null,
-    leadingContent: (@Composable androidx.compose.foundation.layout.BoxScope.() -> Unit)? = null,
-    trailingContent: (@Composable () -> Unit)? = null,
-) {
-    var focused by remember { mutableStateOf(false) }
-    ListItem(
-        selected = selected,
-        enabled = enabled,
-        onClick = onClick,
-        modifier = modifier
-            .onFocusChanged { focused = it.isFocused || it.hasFocus }
-            .padding(horizontal = 8.dp)
-            .background(
-                if (focused) Color(0xFFF1F2F4) else Color.Transparent,
-                RoundedCornerShape(12.dp)
-            ),
-        headlineContent = headlineContent,
-        supportingContent = supportingContent,
-        leadingContent = leadingContent,
-        trailingContent = trailingContent,
-        colors = androidx.tv.material3.ListItemDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            focusedContentColor = Color(0xFF14151A),
-        ),
-    )
-}
-
-@Composable
-private fun SmallIconButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        shape = ClickableSurfaceDefaults.shape(CircleShape),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = Color.White.copy(alpha = 0.08f),
-            focusedContainerColor = Color.White.copy(alpha = 0.25f),
-        ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.15f),
-    ) {
-        Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
-            // label is the accessibility name announced by TalkBack.
-            Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp))
         }
     }
 }

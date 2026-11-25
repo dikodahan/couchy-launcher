@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Hava durumu</string>
     <string name="menu_open">Aç</string>
-    <string name="menu_move">Taşı</string>
+    <string name="menu_reorder">Yeniden sırala</string>
     <string name="menu_hide">Başlatıcıdan gizle</string>
     <string name="menu_unhide">Göster</string>
     <string name="menu_customize">Özelleştir</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Boyut — her satır, boyut + aralığın izin verdiği kadar simge sığdırır</string>
     <string name="roundness">Yuvarlaklık</string>
     <string name="icon_size">Simge boyutu</string>
+    <string name="icon_size_extra_small">Çok küçük</string>
+    <string name="icon_size_compact">Kompakt</string>
     <string name="spacing">Aralık</string>
     <string name="size_xs">ÇK</string>
     <string name="size_s">Küçük</string>

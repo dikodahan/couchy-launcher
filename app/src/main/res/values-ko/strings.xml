@@ -27,7 +27,7 @@
 
     <string name="cd_weather">날씨</string>
     <string name="menu_open">열기</string>
-    <string name="menu_move">이동</string>
+    <string name="menu_reorder">순서 변경</string>
     <string name="menu_hide">런처에서 숨기기</string>
     <string name="menu_unhide">숨기기 해제</string>
     <string name="menu_customize">사용자 지정</string>
@@ -91,6 +91,8 @@
     <string name="section_size">크기 — 각 행에는 크기 + 간격이 허용하는 만큼 아이콘이 표시됩니다</string>
     <string name="roundness">둥글기</string>
     <string name="icon_size">아이콘 크기</string>
+    <string name="icon_size_extra_small">아주 작게</string>
+    <string name="icon_size_compact">컴팩트</string>
     <string name="spacing">간격</string>
     <string name="size_xs">XS</string>
     <string name="size_s">작게</string>

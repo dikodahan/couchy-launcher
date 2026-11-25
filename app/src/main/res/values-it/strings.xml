@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Meteo</string>
     <string name="menu_open">Apri</string>
-    <string name="menu_move">Sposta</string>
+    <string name="menu_reorder">Riordina</string>
     <string name="menu_hide">Nascondi dal launcher</string>
     <string name="menu_unhide">Mostra</string>
     <string name="menu_customize">Personalizza</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Dimensione — ogni riga contiene tante icone quante dimensione + spaziatura consentono</string>
     <string name="roundness">Arrotondamento</string>
     <string name="icon_size">Dimensione icone</string>
+    <string name="icon_size_extra_small">Extra piccolo</string>
+    <string name="icon_size_compact">Compatto</string>
     <string name="spacing">Spaziatura</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Piccolo</string>

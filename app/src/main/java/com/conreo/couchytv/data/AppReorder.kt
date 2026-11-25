@@ -85,14 +85,33 @@ internal fun LauncherConfig.applyReorder(
                     if (app.pkg in nextSet) memberships + section else memberships - section
             }
         }
-        val pending = next.iterator()
-        updatedOrder[section] = buildList {
-            for (pkg in order[section].orEmpty()) {
-                if (pkg !in priorSet && pkg !in nextSet) add(pkg)
-                else if (pending.hasNext()) add(pending.next())
-            }
-            while (pending.hasNext()) add(pending.next())
-        }
+        updatedOrder[section] = mergeVisibleOrder(order[section].orEmpty(), priorSet, next)
     }
     return copy(sections = updatedSections, order = updatedOrder)
+}
+
+/** The same flat order is used by the Home dock and its reorder preview. */
+internal fun appsInDockOrder(
+    rows: List<Pair<CategoryCfg, List<AppEntry>>>,
+    order: List<String>,
+): List<AppEntry> {
+    val apps = rows.flatMap { it.second }.distinctBy { it.pkg }
+    if (order.isEmpty()) return apps
+    val positions = order.withIndex().associate { (index, pkg) -> pkg to index }
+    return apps.sortedBy { positions[it.pkg] ?: Int.MAX_VALUE }
+}
+
+internal fun LauncherConfig.applyDockReorder(original: List<AppEntry>, reordered: List<AppEntry>): LauncherConfig =
+    copy(dockOrder = mergeVisibleOrder(dockOrder, original.mapTo(hashSetOf()) { it.pkg }, reordered.map { it.pkg }))
+
+private fun mergeVisibleOrder(order: List<String>, prior: Set<String>, next: List<String>): List<String> {
+    val visible = prior + next
+    val pending = next.iterator()
+    return buildList {
+        for (pkg in order) {
+            if (pkg !in visible) add(pkg)
+            else if (pending.hasNext()) add(pending.next())
+        }
+        while (pending.hasNext()) add(pending.next())
+    }
 }

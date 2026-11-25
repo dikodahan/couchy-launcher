@@ -62,8 +62,8 @@ internal fun AndroidPowerTimeoutDialog(onDismiss: () -> Unit) {
             colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(
-                Modifier.width(440.dp).heightIn(max = 500.dp).verticalScroll(rememberScrollState()).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                Modifier.width(440.dp).heightIn(max = 500.dp).padding(16.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(SettingsRowGap),
             ) {
                 Text(
                     stringResource(R.string.shortcut_power_timeout),

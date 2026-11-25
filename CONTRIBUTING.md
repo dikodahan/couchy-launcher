@@ -63,6 +63,7 @@ app/src/main/res/          strings (values + 17 locales), drawables, themes
 - **Remote-first:** every control must be reachable with the D-pad alone. Text input only ever happens inside a dedicated dialog (see `RenameDialog`).
 - **No hardcoded user-facing text** — put it in `res/values/strings.xml` and reference it with `stringResource(...)`. Default category and wallpaper names are localized too.
 - **Match the surrounding style** — the codebase favors small, commented, self-explanatory composables. Comments explain *why*, not *what*.
+- **Settings UI** uses the shared components in `ui/SettingsControls.kt`. Use `SettingsPage` and `SettingsItem` for menus, `CheckMark` for toggle state, and `SettingsButton` or `SettingsIconButton` for actions. Custom controls can use `SettingsControl`, and editors can use `settingsFieldFrame`. Let the shared control supply the focus foreground to text and monochrome icons. Use `SettingsRowGap` for custom lists and check initial focus, scrolling, and focus after Back in both LTR and RTL.
 - **State** lives in `LauncherConfig` and persists via `ConfigStore`. New config fields need a sensible default (deserialization ignores unknown keys, so old installs stay compatible).
 - Keep dependencies minimal and FOSS (this ships on F-Droid — no Google Play Services, no trackers).
 

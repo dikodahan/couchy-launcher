@@ -32,7 +32,7 @@
     <string name="cd_weather">Tiempo</string>
     <!-- Menú de pulsación larga -->
     <string name="menu_open">Abrir</string>
-    <string name="menu_move">Mover</string>
+    <string name="menu_reorder">Reordenar</string>
     <string name="menu_hide">Ocultar del launcher</string>
     <string name="menu_unhide">Mostrar</string>
     <string name="menu_customize">Personalizar</string>
@@ -99,6 +99,8 @@
     <string name="section_size">Tamaño — cada fila cabe tantos iconos como tamaño + espaciado permitan</string>
     <string name="roundness">Redondez</string>
     <string name="icon_size">Tamaño de icono</string>
+    <string name="icon_size_extra_small">Extrapequeño</string>
+    <string name="icon_size_compact">Compacto</string>
     <string name="spacing">Espaciado</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Pequeño</string>

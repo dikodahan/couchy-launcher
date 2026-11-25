@@ -32,7 +32,7 @@
     <string name="cd_weather">Météo</string>
     <!-- Menu appui long -->
     <string name="menu_open">Ouvrir</string>
-    <string name="menu_move">Déplacer</string>
+    <string name="menu_reorder">Réorganiser</string>
     <string name="menu_hide">Masquer du launcher</string>
     <string name="menu_unhide">Réafficher</string>
     <string name="menu_customize">Personnaliser</string>
@@ -137,6 +137,8 @@
     <string name="ui_scale_auto_sub">Compacte les TV haute densité pour un rendu identique sur chaque appareil</string>
     <string name="roundness">Arrondi</string>
     <string name="icon_size">Taille des icônes</string>
+    <string name="icon_size_extra_small">Très petit</string>
+    <string name="icon_size_compact">Compact</string>
     <string name="spacing">Espacement</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Petit</string>

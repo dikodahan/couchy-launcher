@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Pogoda</string>
     <string name="menu_open">Otwórz</string>
-    <string name="menu_move">Przenieś</string>
+    <string name="menu_reorder">Zmień kolejność</string>
     <string name="menu_hide">Ukryj z launchera</string>
     <string name="menu_unhide">Pokaż</string>
     <string name="menu_customize">Dostosuj</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Rozmiar — każdy wiersz mieści tyle ikon, ile pozwala rozmiar + odstęp</string>
     <string name="roundness">Zaokrąglenie</string>
     <string name="icon_size">Rozmiar ikon</string>
+    <string name="icon_size_extra_small">Bardzo małe</string>
+    <string name="icon_size_compact">Kompaktowe</string>
     <string name="spacing">Odstęp</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Mały</string>

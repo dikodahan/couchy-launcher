@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Weer</string>
     <string name="menu_open">Openen</string>
-    <string name="menu_move">Verplaatsen</string>
+    <string name="menu_reorder">Volgorde wijzigen</string>
     <string name="menu_hide">Verbergen uit launcher</string>
     <string name="menu_unhide">Weergeven</string>
     <string name="menu_customize">Aanpassen</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Grootte — elke rij past zoveel pictogrammen als grootte + afstand toelaten</string>
     <string name="roundness">Ronding</string>
     <string name="icon_size">Pictogramgrootte</string>
+    <string name="icon_size_extra_small">Extra klein</string>
+    <string name="icon_size_compact">Compact</string>
     <string name="spacing">Afstand</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Klein</string>

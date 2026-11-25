@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
@@ -48,7 +49,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Button
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
@@ -149,6 +149,7 @@ fun TelegramAuthDialog(
                             color = Color.White.copy(alpha = 0.65f),
                         )
                     }
+                    var fieldFocused by remember { mutableStateOf(false) }
                     val fieldFocus = initialFocus()
                     val submitFocus = remember { FocusRequester() }
                     fun submitPassword() {
@@ -157,7 +158,7 @@ fun TelegramAuthDialog(
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+                            .settingsFieldFrame(fieldFocused)
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         BasicTextField(
@@ -172,7 +173,7 @@ fun TelegramAuthDialog(
                                 imeAction = ImeAction.Done,
                             ),
                             keyboardActions = KeyboardActions(onDone = { submitPassword() }),
-                            modifier = Modifier.fillMaxWidth().focusRequester(fieldFocus).onPreviewKeyEvent {
+                            modifier = Modifier.fillMaxWidth().focusRequester(fieldFocus).onFocusChanged { fieldFocused = it.isFocused }.onPreviewKeyEvent {
                                 if (it.type == KeyEventType.KeyDown && it.key == Key.DirectionDown) {
                                     submitFocus.requestFocus()
                                     true
@@ -180,12 +181,12 @@ fun TelegramAuthDialog(
                             },
                         )
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
+                    Row(horizontalArrangement = Arrangement.spacedBy(SettingsControlGap)) {
+                        SettingsButton(
                             onClick = ::submitPassword,
                             modifier = Modifier.focusRequester(submitFocus),
                         ) { Text(stringResource(R.string.cloud_auth_password_submit)) }
-                        Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                        SettingsButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                     }
                 } else {
                     val bitmap = qr
@@ -204,7 +205,7 @@ fun TelegramAuthDialog(
                     LaunchedEffect(qr) {
                         runCatching { cancelFocus.requestFocus() }
                     }
-                    Button(
+                    SettingsButton(
                         onClick = onDismiss,
                         modifier = Modifier
                             .padding(top = 8.dp)

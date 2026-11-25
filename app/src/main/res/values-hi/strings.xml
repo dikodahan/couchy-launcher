@@ -27,7 +27,7 @@
 
     <string name="cd_weather">मौसम</string>
     <string name="menu_open">खोलें</string>
-    <string name="menu_move">स्थानांतरित करें</string>
+    <string name="menu_reorder">क्रम बदलें</string>
     <string name="menu_hide">लॉन्चर से छिपाएँ</string>
     <string name="menu_unhide">दिखाएँ</string>
     <string name="menu_customize">अनुकूलित करें</string>
@@ -91,6 +91,8 @@
     <string name="section_size">आकार — प्रत्येक पंक्ति में उतने आइकन आते हैं जितने आकार + अंतराल अनुमति दें</string>
     <string name="roundness">गोलाई</string>
     <string name="icon_size">आइकन का आकार</string>
+    <string name="icon_size_extra_small">बहुत छोटा</string>
+    <string name="icon_size_compact">कॉम्पैक्ट</string>
     <string name="spacing">अंतराल</string>
     <string name="size_xs">XS</string>
     <string name="size_s">छोटा</string>

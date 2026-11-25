@@ -10,6 +10,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -23,7 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-internal fun SectionIcon(name: String?, modifier: Modifier = Modifier) {
+internal fun SectionIcon(name: String?, modifier: Modifier = Modifier, tint: Color = Color.Unspecified) {
     val context = LocalContext.current.applicationContext
     val icon by produceState<Pair<String, ImageBitmap>?>(null, name, context) {
         value = name?.let { key ->
@@ -33,7 +34,9 @@ internal fun SectionIcon(name: String?, modifier: Modifier = Modifier) {
             }
         }
     }
-    icon?.takeIf { it.first == name }?.second?.let { Image(it, contentDescription = null, modifier = modifier) }
+    icon?.takeIf { it.first == name }?.second?.let {
+        Image(it, contentDescription = null, modifier = modifier, colorFilter = tint.takeUnless { it == Color.Unspecified }?.let { ColorFilter.tint(it) })
+    }
 }
 
 @Composable

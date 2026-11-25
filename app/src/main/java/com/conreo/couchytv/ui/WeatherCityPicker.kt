@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.tv.material3.Button
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
@@ -88,7 +87,7 @@ internal fun WeatherCityPicker(onDismiss: () -> Unit, onSelect: (WeatherCity) ->
                         else -> R.string.weather_city_no_matches
                     }))
                 } else {
-                    LazyColumn(Modifier.heightIn(max = 260.dp)) {
+                    LazyColumn(Modifier.heightIn(max = 260.dp), verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
                         itemsIndexed(cities) { index, city ->
                             SettingsItem(
                                 onClick = { onSelect(city) },
@@ -99,12 +98,12 @@ internal fun WeatherCityPicker(onDismiss: () -> Unit, onSelect: (WeatherCity) ->
                         }
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
+                Row(horizontalArrangement = Arrangement.spacedBy(SettingsControlGap)) {
+                    SettingsButton(
                         onClick = { editing = true },
                         modifier = if (cities.isEmpty()) Modifier.focusRequester(first) else Modifier,
                     ) { Text(stringResource(R.string.weather_city_search_again)) }
-                    Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                    SettingsButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                 }
             }
         }

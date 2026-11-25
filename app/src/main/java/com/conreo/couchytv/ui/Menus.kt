@@ -1,17 +1,19 @@
 package com.conreo.couchytv.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -24,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import com.conreo.couchytv.R
 import androidx.compose.ui.window.Dialog
 import androidx.tv.material3.Icon
-import androidx.tv.material3.ListItem
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
@@ -53,7 +54,7 @@ fun AppContextMenu(
 ) {
     val entries = listOf(
         MenuEntry(stringResource(R.string.menu_open), AppIcons.Play, onOpen),
-        MenuEntry(stringResource(R.string.menu_move), AppIcons.Move, onMove),
+        MenuEntry(stringResource(R.string.menu_reorder), AppIcons.Move, onMove),
         MenuEntry(if (isHidden) stringResource(R.string.menu_unhide) else stringResource(R.string.menu_hide), AppIcons.Hide, onToggleHide),
         MenuEntry(stringResource(R.string.menu_customize), AppIcons.Pencil, onCustomize),
         MenuEntry(stringResource(R.string.menu_app_info), AppIcons.Info, onAppInfo),
@@ -115,17 +116,19 @@ internal fun MenuDialog(
                 }
             },
         ) {
-            Column(Modifier.width(320.dp).padding(12.dp)) {
+            Column(
+                Modifier.width(320.dp).heightIn(max = 540.dp).padding(12.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(SettingsRowGap),
+            ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 )
-                val firstFocus = remember { FocusRequester() }
+                val firstFocus = initialFocus()
                 entries.forEachIndexed { index, entry ->
-                    ListItem(
-                        selected = false,
+                    SettingsItem(
                         onClick = entry.action,
                         headlineContent = { Text(entry.label) },
                         leadingContent = {
@@ -133,9 +136,6 @@ internal fun MenuDialog(
                         },
                         modifier = if (index == 0) Modifier.focusRequester(firstFocus) else Modifier,
                     )
-                }
-                LaunchedEffect(Unit) {
-                    runCatching { firstFocus.requestFocus() }
                 }
             }
         }

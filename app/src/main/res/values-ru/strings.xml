@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Погода</string>
     <string name="menu_open">Открыть</string>
-    <string name="menu_move">Переместить</string>
+    <string name="menu_reorder">Изменить порядок</string>
     <string name="menu_hide">Скрыть из лаунчера</string>
     <string name="menu_unhide">Показать</string>
     <string name="menu_customize">Настроить</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Размер — в строку помещается столько значков, сколько позволяют размер + интервал</string>
     <string name="roundness">Скругление</string>
     <string name="icon_size">Размер значков</string>
+    <string name="icon_size_extra_small">Очень маленький</string>
+    <string name="icon_size_compact">Компактный</string>
     <string name="spacing">Интервал</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Малый</string>

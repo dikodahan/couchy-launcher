@@ -3,6 +3,7 @@ package com.conreo.couchytv.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -20,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,9 +55,13 @@ import com.conreo.couchytv.data.LauncherConfig
 import com.conreo.couchytv.data.ReorderDirection
 import com.conreo.couchytv.data.moveApp
 
+// Feed the flat Dock list through the same move logic as a single group.
+private val DockReorderSection = CategoryCfg("dock", "")
+
 @Composable
 internal fun AppReorderScreen(
     initialRows: List<Pair<CategoryCfg, List<AppEntry>>>,
+    dockApps: List<AppEntry>?,
     start: AppPlacement,
     config: LauncherConfig,
     accent: Color,
@@ -63,11 +70,14 @@ internal fun AppReorderScreen(
     saving: Boolean,
     onDone: (List<Pair<CategoryCfg, List<AppEntry>>>, List<Pair<CategoryCfg, List<AppEntry>>>) -> Unit,
 ) {
-    val original = remember { initialRows }
+    val dockMode = dockApps != null
+    val original = remember { if (dockApps == null) initialRows else listOf(DockReorderSection to dockApps) }
     var rows by remember { mutableStateOf(original) }
     var held by remember { mutableStateOf<AppPlacement?>(null) }
     var existingCopyIndex by remember { mutableStateOf<Int?>(null) }
-    var target by remember { mutableStateOf(start) }
+    var target by remember {
+        mutableStateOf(if (dockMode) start.copy(sectionId = DockReorderSection.id) else start)
+    }
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val focus = remember { FocusRequester() }
     val grid = rememberLazyGridState()
@@ -76,30 +86,56 @@ internal fun AppReorderScreen(
     }
     BackHandler { finish() }
 
-    LaunchedEffect(rows, target) {
-        var itemIndex = 0
-        for ((category, apps) in rows) {
-            itemIndex++ // Section header.
-            if (category.id == target.sectionId) {
-                val position = apps.indexOfFirst { it.pkg == target.packageName }
-                if (position >= 0) {
-                    itemIndex += position
-                    if (grid.layoutInfo.visibleItemsInfo.none { it.index == itemIndex }) grid.scrollToItem(itemIndex)
-                    repeat(3) {
-                        withFrameNanos {}
-                        if (runCatching { focus.requestFocus() }.isSuccess) return@LaunchedEffect
-                    }
-                }
-                return@LaunchedEffect
-            }
-            itemIndex += apps.size
-        }
-    }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val (columns, columnGap) = if (dockMode) fitDockRow(maxWidth, cardWidth, gap)
+        else fitRow(maxWidth - GroupedAppsSideInset * 2, cardWidth, gap)
+        val gridWidth = cardWidth * columns + columnGap * (columns - 1)
 
-    BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 44.dp)) {
-        val columns = fitRow(maxWidth, cardWidth, gap).first
+        LaunchedEffect(rows, target, columns) {
+            val index = if (dockMode) {
+                val flatIndex = rows.single().second.indexOfFirst { it.pkg == target.packageName }
+                if (flatIndex < 0) return@LaunchedEffect
+                // The dock is pinned above the scrollable grid.
+                (flatIndex - columns).takeIf { it >= 0 }
+            } else {
+                val sectionIndex = rows.indexOfFirst { it.first.id == target.sectionId }
+                if (sectionIndex < 0) return@LaunchedEffect
+                val position = rows[sectionIndex].second.indexOfFirst { it.pkg == target.packageName }
+                if (position < 0) return@LaunchedEffect
+                rows.take(sectionIndex).sumOf { it.second.size + 1 } + 1 + position
+            }
+            if (index != null && grid.layoutInfo.visibleItemsInfo.none { it.index == index }) grid.scrollToItem(index)
+            repeat(3) {
+                withFrameNanos {}
+                if (runCatching { focus.requestFocus() }.isSuccess) return@LaunchedEffect
+            }
+        }
+
+        val card: @Composable (CategoryCfg, AppEntry) -> Unit = { category, app ->
+            val placement = AppPlacement(category.id, app.pkg)
+            val selected = placement == held
+            AppCard(
+                app = app,
+                isMoving = selected,
+                isHidden = app.pkg in config.hidden,
+                accent = accent,
+                cardWidth = cardWidth,
+                showLabel = config.showAppLabels,
+                modifier = (if (placement == target) Modifier.focusRequester(focus) else Modifier)
+                    .semantics { this.selected = selected },
+                onLaunch = {
+                    if (!saving) {
+                        target = held ?: placement
+                        held = if (held == null) placement else null
+                        existingCopyIndex = null
+                    }
+                },
+                onLongPress = null,
+            )
+        }
+
         Column(
-            Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+            Modifier.fillMaxSize().padding(horizontal = if (dockMode) DockAppsSideInset else GroupedAppsSideInset).onPreviewKeyEvent { event ->
                 if (event.key == Key.Menu) return@onPreviewKeyEvent true
                 if (event.key == Key.Escape) {
                     if (event.type == KeyEventType.KeyUp) finish()
@@ -150,39 +186,45 @@ internal fun AppReorderScreen(
                     )
                 }
             }
+            if (dockMode) {
+                val apps = rows.single().second
+                val dock = apps.take(columns)
+                if (dock.isNotEmpty()) {
+                    Box(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = gap), contentAlignment = Alignment.Center) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Box(Modifier.matchParentSize()
+                                .launcherGlass(LocalCornerRadius.current + 14.dp, GlassPanel.Dock))
+                            Row(
+                                Modifier.padding(DockPanelPadding),
+                                horizontalArrangement = Arrangement.spacedBy(columnGap),
+                            ) {
+                                dock.forEach { app -> key(app.pkg) { card(DockReorderSection, app) } }
+                            }
+                        }
+                    }
+                }
+            }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
-                modifier = Modifier.fillMaxSize(),
+                modifier = if (dockMode) Modifier.width(gridWidth).align(Alignment.CenterHorizontally)
+                else Modifier.fillMaxSize(),
                 state = grid,
                 contentPadding = PaddingValues(top = 8.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(gap),
-                horizontalArrangement = Arrangement.spacedBy(gap),
+                horizontalArrangement = Arrangement.spacedBy(columnGap),
             ) {
-                for ((category, apps) in rows) {
-                    item(key = "header:${category.id}", span = { GridItemSpan(maxLineSpan) }) {
-                        SectionHeading(category, showName = true, modifier = Modifier.padding(top = 8.dp))
+                if (dockMode) {
+                    items(rows.single().second.drop(columns), key = { it.pkg }) { app ->
+                        card(DockReorderSection, app)
                     }
-                    items(apps, key = { "app:${category.id}:${it.pkg}" }) { app ->
-                        val placement = AppPlacement(category.id, app.pkg)
-                        val selected = placement == held
-                        AppCard(
-                            app = app,
-                            isMoving = selected,
-                            isHidden = app.pkg in config.hidden,
-                            accent = accent,
-                            cardWidth = cardWidth,
-                            showLabel = config.showAppLabels,
-                            modifier = (if (placement == target) Modifier.focusRequester(focus) else Modifier)
-                                .semantics { this.selected = selected },
-                            onLaunch = {
-                                if (!saving) {
-                                    target = held ?: placement
-                                    held = if (held == null) placement else null
-                                    existingCopyIndex = null
-                                }
-                            },
-                            onLongPress = null,
-                        )
+                } else {
+                    for ((category, apps) in rows) {
+                        item(key = "header:${category.id}", span = { GridItemSpan(maxLineSpan) }) {
+                            SectionHeading(category, showName = true, modifier = Modifier.padding(top = 8.dp))
+                        }
+                        items(apps, key = { "app:${category.id}:${it.pkg}" }) { app ->
+                            card(category, app)
+                        }
                     }
                 }
             }

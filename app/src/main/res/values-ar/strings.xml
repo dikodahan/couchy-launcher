@@ -27,7 +27,7 @@
 
     <string name="cd_weather">الطقس</string>
     <string name="menu_open">فتح</string>
-    <string name="menu_move">نقل</string>
+    <string name="menu_reorder">إعادة الترتيب</string>
     <string name="menu_hide">إخفاء من المشغّل</string>
     <string name="menu_unhide">إظهار</string>
     <string name="menu_customize">تخصيص</string>
@@ -91,6 +91,8 @@
     <string name="section_size">الحجم — كل صف يتسع لأكبر عدد من الأيقونات حسب الحجم + التباعد</string>
     <string name="roundness">الاستدارة</string>
     <string name="icon_size">حجم الأيقونة</string>
+    <string name="icon_size_extra_small">صغير جدًا</string>
+    <string name="icon_size_compact">مدمج</string>
     <string name="spacing">التباعد</string>
     <string name="size_xs">XS</string>
     <string name="size_s">صغير</string>

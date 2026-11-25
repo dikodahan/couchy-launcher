@@ -32,7 +32,7 @@
     <string name="cd_weather">Weather</string>
     <!-- Long-press menu -->
     <string name="menu_open">Open</string>
-    <string name="menu_move">Move</string>
+    <string name="menu_reorder">Reorder</string>
     <string name="menu_hide">Hide from launcher</string>
     <string name="menu_unhide">Unhide</string>
     <string name="menu_customize">Customize</string>
@@ -145,6 +145,8 @@
     <string name="ui_scale_auto_sub">Compacts high-DPI TVs so the interface reads the same on every device</string>
     <string name="roundness">Roundness</string>
     <string name="icon_size">Icon size</string>
+    <string name="icon_size_extra_small">Extra small</string>
+    <string name="icon_size_compact">Compact</string>
     <string name="spacing">Spacing</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Small</string>

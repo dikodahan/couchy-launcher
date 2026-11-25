@@ -10,13 +10,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -48,15 +45,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun HomeLauncherScreen() {
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(R.string.home_launcher_title),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
-        )
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.home_launcher_title))
         HomeLauncherControls()
     }
 }
@@ -181,7 +171,7 @@ internal fun HomeLauncherControls(
     }
     val bidi = android.text.BidiFormatter.getInstance(context.resources.configuration.locales[0])
     val currentLabel = status?.currentLabel?.ifBlank { null } ?: stringResource(R.string.home_not_selected)
-    Column(verticalArrangement = Arrangement.spacedBy(if (inWizard) 8.dp else 4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
         Text(stringResource(R.string.home_current, bidi.unicodeWrap(currentLabel)), style = MaterialTheme.typography.bodyMedium, color = Color.White,
             modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp))
         val couchy = status?.choices?.firstOrNull { it.component.packageName == context.packageName }
@@ -224,15 +214,15 @@ internal fun HomeLauncherControls(
             )
             Row(
                 Modifier.fillMaxWidth().padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(SettingsControlGap, Alignment.CenterHorizontally),
             ) {
-                Button(
+                SettingsButton(
                     onClick = { onWizardDone(false) },
                     enabled = !busy && !wizardSaving,
                     modifier = if (adbAvailable != false) Modifier.focusRequester(focus) else Modifier,
                 ) { Text(stringResource(R.string.home_keep_current)) }
                 if (wizardBack != null) {
-                    Button(onClick = wizardBack, enabled = !busy && !wizardSaving) {
+                    SettingsButton(onClick = wizardBack, enabled = !busy && !wizardSaving) {
                         Text(stringResource(R.string.back))
                     }
                 }
@@ -327,7 +317,7 @@ internal fun PressHomeDialog(waitForHome: Boolean = false, onDismiss: () -> Unit
                 if (!waitForHome) {
                     Text(stringResource(R.string.home_press_home_body), style = MaterialTheme.typography.bodyMedium)
                     val focus = initialFocus()
-                    Button(onClick = onDismiss, modifier = Modifier.focusRequester(focus)) {
+                    SettingsButton(onClick = onDismiss, modifier = Modifier.focusRequester(focus)) {
                         Text(stringResource(R.string.done))
                     }
                 }
@@ -344,15 +334,17 @@ private fun HomeChangeConfirmation(title: String, body: String, onCancel: () -> 
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(body, style = MaterialTheme.typography.bodyMedium)
                 val cancelFocus = initialFocus()
-                SettingsItem(
-                    onClick = onCancel,
-                    modifier = Modifier.focusRequester(cancelFocus),
-                    headlineContent = { Text(stringResource(R.string.cancel)) },
-                )
-                SettingsItem(
-                    onClick = onConfirm,
-                    headlineContent = { Text(stringResource(R.string.home_confirm_action)) },
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
+                    SettingsItem(
+                        onClick = onCancel,
+                        modifier = Modifier.focusRequester(cancelFocus),
+                        headlineContent = { Text(stringResource(R.string.cancel)) },
+                    )
+                    SettingsItem(
+                        onClick = onConfirm,
+                        headlineContent = { Text(stringResource(R.string.home_confirm_action)) },
+                    )
+                }
             }
         }
     }

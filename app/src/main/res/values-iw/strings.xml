@@ -22,7 +22,7 @@
     <string name="cd_settings">הגדרות</string>
     <string name="cd_weather">מזג האוויר</string>
     <string name="menu_open">פתיחה</string>
-    <string name="menu_move">העברה</string>
+    <string name="menu_reorder">שינוי סדר</string>
     <string name="menu_hide">הסתרה ממסך הבית</string>
     <string name="menu_unhide">ביטול הסתרה</string>
     <string name="menu_customize">התאמה אישית</string>
@@ -128,6 +128,8 @@
     <string name="ui_scale_auto_sub">מתאים את גודל הממשק למסכים בצפיפות פיקסלים גבוהה</string>
     <string name="roundness">עיגול פינות</string>
     <string name="icon_size">גודל סמלים</string>
+    <string name="icon_size_extra_small">קטן במיוחד</string>
+    <string name="icon_size_compact">קומפקטי</string>
     <string name="spacing">מרווח</string>
     <string name="size_xs">קטן מאוד</string>
     <string name="size_s">קטן</string>

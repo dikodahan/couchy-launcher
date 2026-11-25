@@ -1,6 +1,7 @@
 package com.conreo.couchytv.ui
 
 import android.graphics.BitmapFactory
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.res.stringResource
@@ -35,6 +36,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -86,7 +88,9 @@ import com.conreo.couchytv.R
 import com.conreo.couchytv.data.reconcileInstalledApps
 import com.conreo.couchytv.data.AppEntry
 import com.conreo.couchytv.data.AppPlacement
+import com.conreo.couchytv.data.applyDockReorder
 import com.conreo.couchytv.data.applyReorder
+import com.conreo.couchytv.data.appsInDockOrder
 import com.conreo.couchytv.data.AppRepository
 import com.conreo.couchytv.data.AerialVideoCache
 import com.conreo.couchytv.data.AerialLoadErrorPolicy
@@ -94,6 +98,7 @@ import com.conreo.couchytv.data.BuiltinAerials
 import com.conreo.couchytv.data.StoredConfig
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.IconPack
+import com.conreo.couchytv.data.ICON_SCALE_EXTRA_SMALL
 import com.conreo.couchytv.data.GLASS_STYLE_LIQUID
 import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
@@ -120,7 +125,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** Icon size steps (card width) — 5 levels for fine control. */
+/** Fixed card widths retained for existing settings and backups. */
 val ICON_SIZES = listOf(120.dp, 150.dp, 190.dp, 230.dp, 270.dp)
 
 /** Allocated ONCE — recomposition never rebuilds the scrim brushes. */
@@ -210,6 +215,25 @@ fun fitRow(available: Dp, cardWidth: Dp, gap: Dp): Pair<Int, Dp> {
         if (spread < gap) spread else gap
     } else 0.dp
     return cols to used
+}
+
+internal val GroupedAppsSideInset = 44.dp
+internal val DockAppsSideInset = 40.dp
+internal val DockPanelPadding = 18.dp
+
+private fun dockRowWidth(width: Dp): Dp = width - (DockAppsSideInset + DockPanelPadding) * 2
+
+internal fun fitDockRow(width: Dp, cardWidth: Dp, gap: Dp): Pair<Int, Dp> =
+    fitRow(dockRowWidth(width), cardWidth, gap)
+
+internal fun iconCardWidth(iconScale: Int, layout: Int, screenWidth: Dp, gap: Dp): Dp {
+    if (iconScale != ICON_SCALE_EXTRA_SMALL) return ICON_SIZES[iconScale.coerceIn(ICON_SIZES.indices)]
+
+    val available = if (layout == LAYOUT_DOCK) dockRowWidth(screenWidth)
+        else screenWidth - GroupedAppsSideInset * 2
+    val columns = fitRow(available, ICON_SIZES.first(), gap).first + 1
+    // Leave a fraction of a dp for repeated tile and gap rounding at fractional UI scales.
+    return (((available - gap * (columns - 1)) / columns) - 0.5.dp).coerceAtLeast(1.dp)
 }
 
 /** Unwrap a (possibly wrapped) Context to its host Activity, or null. */
@@ -542,14 +566,13 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     // The dock's flat app list (all sections concatenated, de-duped). Hoisted &
     // remembered so its identity stays stable across recompositions — otherwise a
     // fresh list on every clock tick blocks DockArea from strong-skipping.
-    val dockApps = remember(categorized) {
-        categorized.flatMap { it.second }.distinctBy { it.pkg }
+    val dockApps = remember(categorized, config.dockOrder) {
+        appsInDockOrder(categorized, config.dockOrder)
     }
     val accent = ACCENTS[config.accent.coerceIn(0, ACCENTS.size - 1)]
 
     // ----- display dimensions: size + spacing drive everything, columns
     // are always derived from available width (never a fixed count) -----
-    val cardWidth: Dp = ICON_SIZES[config.iconScale.coerceIn(0, ICON_SIZES.size - 1)]
     val gap: Dp = GAP_SIZES[config.spacing.coerceIn(0, GAP_SIZES.size - 1)]
 
     var dockExpanded by remember { mutableStateOf(false) }
@@ -683,7 +706,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
         LocalTopShelfFocus provides reportShelfFocus.takeIf { config.useTopShelf },
     ) {
     LiteTvTheme(accent = accent) {
-        Box(
+        BoxWithConstraints(
             Modifier
                 .fillMaxSize()
                 .onPreviewKeyEvent { event ->
@@ -693,6 +716,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                     } else false
                 }
         ) {
+            val cardWidth = iconCardWidth(config.iconScale, config.layout, maxWidth, gap)
             // Wallpaper + readability scrim.
             // Top Shelf fades over its gradient fallback. Other wallpaper modes are exclusive.
             val videoSpeed = VIDEO_SPEEDS[config.videoSpeed.coerceIn(0, VIDEO_SPEEDS.size - 1)]
@@ -777,14 +801,27 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
 
             val reorderStart = reorderFrom
             if (reorderStart != null) {
-                AppReorderScreen(sectionRows, reorderStart, config, accent, cardWidth, gap, savingReorder) { original, reordered ->
+                val dockMode = config.layout == LAYOUT_DOCK
+                AppReorderScreen(
+                    initialRows = sectionRows,
+                    dockApps = dockApps.takeIf { dockMode },
+                    start = reorderStart,
+                    config = config,
+                    accent = accent,
+                    cardWidth = cardWidth,
+                    gap = gap,
+                    saving = savingReorder,
+                ) { original, reordered ->
                     if (original == reordered) {
                         reorderFrom = null
                     } else if (!savingReorder) {
                         savingReorder = true
                         scope.launch {
                             try {
-                                store.update { it.applyReorder(original, reordered) }
+                                store.update {
+                                    if (dockMode) it.applyDockReorder(original.single().second, reordered.single().second)
+                                    else it.applyReorder(original, reordered)
+                                }
                                 reorderFrom = null
                             } catch (_: java.io.IOException) {
                                 Actions.toast(context, context.getString(R.string.toast_config_save_failed))
@@ -801,6 +838,31 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                 // When hidden it collapses to an invisible 4dp strip that is still
                 // focusable: Up from the top row slides it back into view.
                 var statusBarFocused by remember { mutableStateOf(false) }
+                val firstAppFocus = remember { FocusRequester() }
+                val sectionsList = rememberLazyListState()
+                val firstCarousel = key(categorized.firstOrNull()?.first?.id) { rememberLazyListState() }
+                var resetHomeFocus by remember { mutableStateOf(false) }
+                val isDock = config.layout == LAYOUT_DOCK
+                BackHandler(enabled = (isDock && dockExpanded) || (statusBarFocused && categorized.isNotEmpty())) {
+                    if (isDock && dockExpanded) dockExpanded = false
+                    else resetHomeFocus = true
+                }
+                LaunchedEffect(resetHomeFocus) {
+                    if (!resetHomeFocus) return@LaunchedEffect
+                    try {
+                        if (!isDock) {
+                            sectionsList.scrollToItem(0)
+                            if (config.layout != LAYOUT_GRID) firstCarousel.scrollToItem(0)
+                        }
+                        // Let the first tile attach before focusing it.
+                        repeat(4) {
+                            withFrameNanos {}
+                            if (runCatching { firstAppFocus.requestFocus() }.isSuccess) return@LaunchedEffect
+                        }
+                    } finally {
+                        resetHomeFocus = false
+                    }
+                }
                 val statusBarHeight by animateDpAsState(
                     targetValue = if (config.showStatusBar || statusBarFocused || updatePrompt?.available != null) 80.dp else 4.dp,
                     label = "statusBarHeight",
@@ -851,6 +913,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                         gap = gap,
                         intro = introShown,
                         expanded = dockExpanded,
+                        dockFocus = firstAppFocus,
                         onExpandChange = { dockExpanded = it },
                         onLaunch = { app -> launchApp(app.pkg) },
                         onMenu = { app -> openAppMenu(app) },
@@ -896,11 +959,12 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                             androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides vPivot
                         ) {
                             LazyColumn(
+                                state = sectionsList,
                                 modifier = Modifier
                                     .fillMaxSize()
                                     // Restore the last-focused card when focus returns
                                     // (e.g. coming back down from the status bar).
-                                    .focusRestorer()
+                                    .then(if (resetHomeFocus) Modifier else Modifier.focusRestorer())
                                     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                                     .drawWithContent {
                                         drawContent()
@@ -947,6 +1011,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                                     GridSection(
                                         catApps, config, accent,
                                         cardWidth, gap, introShown,
+                                        firstAppFocus = firstAppFocus.takeIf { rowIndex == 0 },
                                         onLaunch = { app -> launchApp(app.pkg) },
                                         onMenu = { app -> openAppMenu(app, cat.id) },
                                     )
@@ -954,6 +1019,8 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                                     CarouselSection(
                                         catApps, config, accent,
                                         cardWidth, gap,
+                                        state = if (rowIndex == 0) firstCarousel else rememberLazyListState(),
+                                        firstAppFocus = firstAppFocus.takeIf { rowIndex == 0 },
                                         onLaunch = { app -> launchApp(app.pkg) },
                                         onMenu = { app -> openAppMenu(app, cat.id) },
                                     )
@@ -1214,16 +1281,17 @@ private fun CarouselSection(
     accent: Color,
     cardWidth: Dp,
     gap: Dp,
+    state: LazyListState,
+    firstAppFocus: FocusRequester?,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
 ) {
-    val state = rememberLazyListState()
     // Pivot scrolling done RIGHT: instead of letting the default
     // bring-into-view scroll minimally and then re-pinning by hand (two
     // fighting animations = the janky feel), we replace the scroll spec so
     // the ONLY scroll that ever happens places the focused card at the
     // fixed pivot (the 44dp start padding) in one smooth motion.
-    val padPx = with(androidx.compose.ui.platform.LocalDensity.current) { 44.dp.toPx() }
+    val padPx = with(androidx.compose.ui.platform.LocalDensity.current) { GroupedAppsSideInset.toPx() }
     val pivotSpec = remember(padPx) {
         object : androidx.compose.foundation.gestures.BringIntoViewSpec {
             override fun calculateScrollDistance(
@@ -1238,7 +1306,7 @@ private fun CarouselSection(
     ) {
         LazyRow(
             state = state,
-            contentPadding = PaddingValues(horizontal = 44.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = GroupedAppsSideInset, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(gap),
         ) {
             items(catApps.size, key = { catApps[it].pkg }) { i ->
@@ -1250,6 +1318,7 @@ private fun CarouselSection(
                     accent = accent,
                     cardWidth = cardWidth,
                     showLabel = config.showAppLabels,
+                    modifier = if (i == 0 && firstAppFocus != null) Modifier.focusRequester(firstAppFocus) else Modifier,
                     onLaunch = { onLaunch(app) },
                     onLongPress = { onMenu(app) },
                 )
@@ -1270,11 +1339,12 @@ private fun GridSection(
     cardWidth: Dp,
     gap: Dp,
     intro: Boolean,
+    firstAppFocus: FocusRequester?,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
 ) {
     BoxWithConstraints(
-        Modifier.fillMaxWidth().padding(horizontal = 44.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = GroupedAppsSideInset, vertical = 8.dp),
         contentAlignment = Alignment.TopStart,
     ) {
         // fitRow only decides how MANY columns fit; the gap is then expanded so the
@@ -1315,7 +1385,9 @@ private fun GridSection(
                             accent = accent,
                             cardWidth = cardWidth,
                             showLabel = config.showAppLabels,
-                            modifier = Modifier.graphicsLayer {
+                            modifier = (if (r == 0 && c == 0 && firstAppFocus != null) {
+                                Modifier.focusRequester(firstAppFocus)
+                            } else Modifier).graphicsLayer {
                                     alpha = bloom
                                     val s = 0.8f + 0.2f * bloom
                                     scaleX = s
@@ -1343,15 +1415,12 @@ private fun DockArea(
     gap: Dp,
     intro: Boolean,
     expanded: Boolean,
+    dockFocus: FocusRequester,
     onExpandChange: (Boolean) -> Unit,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
 ) {
-    val dockFocus = remember { FocusRequester() }
     val gridFocus = remember { FocusRequester() }
-    // Back closes the open grid (returns to the dock); when closed it falls
-    // through to the activity's no-op, so Back never exits the home screen.
-    androidx.activity.compose.BackHandler(enabled = expanded) { onExpandChange(false) }
     // Which dock column the user pressed Down from, so the grid opens focused on
     // that column of the 2nd row — pressing Down moves down, not back to icon #1.
     var expandFromCol by remember { mutableIntStateOf(0) }
@@ -1371,9 +1440,7 @@ private fun DockArea(
     // becomes the grid's columns when unfolded, and both states are centered
     // with the same column math — so icons never shift horizontally.
     BoxWithConstraints(modifier) {
-        val panelInnerPadding = 18.dp
-        val available = maxWidth - 80.dp - panelInnerPadding * 2
-        val (cols, gapUsed) = fitRow(available, cardWidth, gap)
+        val (cols, gapUsed) = fitDockRow(maxWidth, cardWidth, gap)
         val cardHeight = cardWidth * 9f / 16f
         val rows = apps.chunked(cols)
         // The grid opens focused on row 0, same column as the dock icon we came
@@ -1415,7 +1482,7 @@ private fun DockArea(
                     dockFocus = dockFocus,
                     cardWidth = cardWidth,
                     gapUsed = gapUsed,
-                    innerPadding = panelInnerPadding,
+                    innerPadding = DockPanelPadding,
                     onExpandFrom = { i -> expandFromCol = i; onExpandChange(true) },
                     onLaunch = onLaunch,
                     onMenu = onMenu,

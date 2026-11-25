@@ -27,7 +27,7 @@
 
     <string name="cd_weather">天気</string>
     <string name="menu_open">開く</string>
-    <string name="menu_move">移動</string>
+    <string name="menu_reorder">並べ替え</string>
     <string name="menu_hide">ランチャーから非表示</string>
     <string name="menu_unhide">再表示</string>
     <string name="menu_customize">カスタマイズ</string>
@@ -91,6 +91,8 @@
     <string name="section_size">サイズ — 行にはサイズと間隔が許す限りのアイコンが収まります</string>
     <string name="roundness">丸み</string>
     <string name="icon_size">アイコンサイズ</string>
+    <string name="icon_size_extra_small">極小</string>
+    <string name="icon_size_compact">コンパクト</string>
     <string name="spacing">間隔</string>
     <string name="size_xs">XS</string>
     <string name="size_s">小</string>

@@ -16,8 +16,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,8 +54,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.tv.material3.Button
-import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
@@ -152,12 +150,8 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: Recommen
         else Actions.toast(context, context.getString(R.string.update_permission))
     }
 
-    Column(Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            stringResource(R.string.recommended_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+    Column(Modifier.fillMaxSize().padding(SettingsPageInset), verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
+        SettingsTitle(stringResource(R.string.recommended_title))
         when {
             apps.isEmpty() && commands.isEmpty() -> Text(
                 stringResource(R.string.recommended_empty),
@@ -165,10 +159,10 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: Recommen
             )
             else -> {
                 val first = initialFocus()
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
                     for ((category, group) in apps.groupBy(RecommendedApp::category)) {
                         item(key = "category:$category") {
-                            Text(category, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            SettingsSectionLabel(category)
                         }
                         items(group.size, key = { "app:${group[it].key}" }) { index ->
                             val entry = group[index]
@@ -216,11 +210,7 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: Recommen
                     }
                     if (commands.isNotEmpty()) {
                         item(key = "adb-commands") {
-                            Text(
-                                stringResource(R.string.recommended_adb_commands),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                            SettingsSectionLabel(stringResource(R.string.recommended_adb_commands))
                         }
                         items(commands.size, key = { "command:${commands[it].key}" }) { index ->
                             val entry = commands[index]
@@ -313,13 +303,14 @@ private fun RecommendedButton(
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    Button(
+    SettingsControl(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.size(42.dp).semantics { contentDescription = label },
-        contentPadding = PaddingValues(0.dp),
-        scale = ButtonDefaults.scale(focusedScale = 1f),
-    ) { content() }
+        filled = true,
+    ) {
+        Box(Modifier.align(Alignment.Center)) { content() }
+    }
 }
 
 @Composable

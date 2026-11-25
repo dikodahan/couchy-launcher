@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.Button
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.conreo.couchytv.Actions
@@ -86,8 +85,8 @@ internal fun WizardWeatherStep(
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.item_weather), style = MaterialTheme.typography.titleLarge, color = Color.White)
         Text(stringResource(R.string.weather_hint), style = MaterialTheme.typography.bodyMedium, color = Color.White)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Button(
+        Row(horizontalArrangement = Arrangement.spacedBy(SettingsControlGap)) {
+            SettingsButton(
                 onClick = {
                     ipFailed = false
                     locatingIp = true
@@ -95,7 +94,7 @@ internal fun WizardWeatherStep(
                 enabled = !locatingIp && !saving,
                 modifier = if (selected == null && !ipFailed && !locatingIp) Modifier.focusRequester(focus) else Modifier,
             ) { Text(stringResource(R.string.weather_ip_enable)) }
-            Button(
+            SettingsButton(
                 onClick = { findingCity = true },
                 enabled = !saving,
                 modifier = if (selected == null && (ipFailed || locatingIp)) Modifier.focusRequester(focus) else Modifier,
@@ -116,15 +115,15 @@ internal fun WizardWeatherStep(
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White,
             )
-            Button(
+            SettingsButton(
                 onClick = { save(selected) },
                 enabled = !locatingIp && !saving,
                 modifier = Modifier.focusRequester(focus),
             ) { Text(stringResource(R.string.wizard_weather_confirm)) }
         }
-        Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Button(onClick = onBack, enabled = !saving) { Text(stringResource(R.string.back)) }
-            Button(onClick = { save(null) }, enabled = !saving) { Text(stringResource(R.string.off)) }
+        Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(SettingsControlGap)) {
+            SettingsButton(onClick = onBack, enabled = !saving) { Text(stringResource(R.string.back)) }
+            SettingsButton(onClick = { save(null) }, enabled = !saving) { Text(stringResource(R.string.off)) }
         }
     }
     if (findingCity) {

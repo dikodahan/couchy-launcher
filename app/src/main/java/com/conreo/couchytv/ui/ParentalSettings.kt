@@ -3,12 +3,9 @@ package com.conreo.couchytv.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +21,6 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.tv.material3.Button
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
@@ -47,11 +43,8 @@ internal data class PinPrompt(
 internal fun ParentalSettings(state: ParentalState, controls: ParentalControls) {
     var prompt by remember { mutableStateOf<PinPrompt?>(null) }
     val focus = initialFocus()
-    Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(stringResource(R.string.parental_controls), style = MaterialTheme.typography.titleLarge)
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.parental_controls))
         Text(
             stringResource(R.string.parental_description),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -158,7 +151,7 @@ internal fun PinDialog(prompt: PinPrompt, onDismiss: () -> Unit) {
                 for (row in listOf(listOf(1, 2, 3), listOf(4, 5, 6), listOf(7, 8, 9))) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         for (number in row) {
-                            Button(
+                            SettingsButton(
                                 modifier = if (number == 1) Modifier.focusRequester(focus) else Modifier,
                                 onClick = { digit(number.toString()) },
                             ) { Text(number.toString()) }
@@ -166,9 +159,9 @@ internal fun PinDialog(prompt: PinPrompt, onDismiss: () -> Unit) {
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = ::erase) { Text(stringResource(R.string.parental_pin_erase)) }
-                    Button(onClick = { digit("0") }) { Text("0") }
-                    Button(onClick = ::submit, enabled = validPin(digits) && !busy) { Text(stringResource(R.string.done)) }
+                    SettingsButton(onClick = ::erase) { Text(stringResource(R.string.parental_pin_erase)) }
+                    SettingsButton(onClick = { digit("0") }) { Text("0") }
+                    SettingsButton(onClick = ::submit, enabled = validPin(digits) && !busy) { Text(stringResource(R.string.done)) }
                 }
             }
         }

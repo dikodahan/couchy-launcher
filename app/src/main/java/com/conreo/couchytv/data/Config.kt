@@ -43,6 +43,8 @@ data class LauncherConfig(
     val sections: Map<String, Set<String>> = emptyMap(),
     /** category id -> explicit package order */
     val order: Map<String, List<String>> = emptyMap(),
+    /** Package order for the ungrouped Dock layout. */
+    val dockOrder: List<String> = emptyList(),
     val hidden: Set<String> = emptySet(),
     /** packages seen on the last scan — new installs are auto-added to the first section */
     val knownApps: Set<String> = emptySet(),
@@ -81,7 +83,7 @@ data class LauncherConfig(
     val showAppLabels: Boolean = true,
     /** spacing step 0..4 (see GAP_SIZES) */
     val spacing: Int = 1, // Small
-    /** icon size step 0..4 (see ICON_SIZES) */
+    /** Icon size step. The original widths use 0–4, and 5 adds one column to the compact size. */
     val iconScale: Int = 1, // Small
     /** icon/panel corner roundness step 0..4 (see CORNER_RADII) */
     val cornerRadius: Int = 3, // Large
@@ -142,6 +144,8 @@ internal fun LauncherConfig.reconcileInstalledApps(installed: Set<String>): Laun
         sections = sections + unplaced.associateWith { setOf(firstSection) },
     )
 }
+
+internal const val ICON_SCALE_EXTRA_SMALL = 5
 
 const val LAYOUT_CAROUSEL = 0
 const val LAYOUT_GRID = 1

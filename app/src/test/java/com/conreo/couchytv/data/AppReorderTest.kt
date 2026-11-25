@@ -61,5 +61,28 @@ class AppReorderTest {
         assertEquals(setOf(alpha.id), config.applyReorder(rows, moved.rows).sections["b"])
     }
 
+    @Test fun dockOrderChangesTheFirstRowAndPreservesSectionMembershipAndSavedPositions() {
+        val a = app("a")
+        val b = app("b")
+        val c = app("c")
+        val grouped = listOf(alpha to listOf(a, b), beta to listOf(c, a), all to listOf(a, b, c))
+        val config = LauncherConfig(
+            categories = listOf(alpha, beta, all),
+            sections = mapOf("a" to setOf(alpha.id, beta.id)),
+            order = mapOf(alpha.id to listOf("a", "b")),
+            dockOrder = listOf("a", "hidden", "b", "c"),
+        )
+        assertEquals(listOf(a, b, c), appsInDockOrder(grouped, emptyList()))
+        val flat = appsInDockOrder(grouped, config.dockOrder)
+        val dock = listOf(alpha to flat)
+        val edited = requireNotNull(moveApp(dock, AppPlacement(alpha.id, "c"), ReorderDirection.Up, 2))
+        val saved = config.applyDockReorder(flat, edited.rows.single().second)
+        assertEquals(listOf("c", "hidden", "a", "b"), saved.dockOrder)
+        assertEquals(listOf(c, a), appsInDockOrder(grouped, saved.dockOrder).take(2))
+        assertEquals(config.sections, saved.sections)
+        assertEquals(config.order, saved.order)
+        assertEquals(saved, ConfigBackup.decode(ConfigBackup.encode(saved)))
+    }
+
     private fun app(pkg: String) = AppEntry(pkg, pkg, null, null, alpha.id, Color.Black, 0, 0)
 }

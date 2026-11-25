@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Clima</string>
     <string name="menu_open">Abrir</string>
-    <string name="menu_move">Mover</string>
+    <string name="menu_reorder">Reordenar</string>
     <string name="menu_hide">Ocultar do launcher</string>
     <string name="menu_unhide">Reexibir</string>
     <string name="menu_customize">Personalizar</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Tamanho — cada linha cabe quantos ícones o tamanho + espaçamento permitirem</string>
     <string name="roundness">Arredondamento</string>
     <string name="icon_size">Tamanho do ícone</string>
+    <string name="icon_size_extra_small">Extra pequeno</string>
+    <string name="icon_size_compact">Compacto</string>
     <string name="spacing">Espaçamento</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Pequeno</string>

@@ -219,6 +219,13 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 <details>
 <summary>Click to expand</summary>
 
+**v1.2.2**
+
+- Use consistent focus highlights, contrast, and spacing throughout settings, dialogs, and app menus.
+- Open **Reorder** from the long-press app menu. Dock view shows the dock above the remaining apps and backs up its order separately.
+- Choose **Extra small** in **Settings → Display → Icon size** for one more app per row than the previous smallest size, now called **Compact**.
+- Press **Back** from the Home status bar to focus the first app. If Top Shelf is enabled, a compatible first app can show its artwork.
+
 **v1.2.1**
 
 - Under **Settings → Display → Layout**, choose **Liquid glass** or **Transparent glass** for the dock and status bar. Android 13 and newer default to Liquid glass. Earlier versions default to a 90% transparent tint.

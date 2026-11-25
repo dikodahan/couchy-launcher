@@ -1,0 +1,4 @@
+Consistent focus, contrast, and spacing across settings.
+Reorder shows the dock and the apps below it.
+Extra small fits one more app per row than Compact.
+Back from the Home status bar focuses the first app for Top Shelf.

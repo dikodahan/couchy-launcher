@@ -32,7 +32,7 @@
     <string name="cd_weather">天气</string>
     <!-- 长按菜单 -->
     <string name="menu_open">打开</string>
-    <string name="menu_move">移动</string>
+    <string name="menu_reorder">调整顺序</string>
     <string name="menu_hide">从启动器隐藏</string>
     <string name="menu_unhide">取消隐藏</string>
     <string name="menu_customize">自定义</string>
@@ -131,6 +131,8 @@
     <string name="section_size">大小 — 每行显示尽可能多的图标</string>
     <string name="roundness">圆角</string>
     <string name="icon_size">图标大小</string>
+    <string name="icon_size_extra_small">超小</string>
+    <string name="icon_size_compact">紧凑</string>
     <string name="spacing">间距</string>
     <string name="size_xs">极小</string>
     <string name="size_s">小</string>

@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Wetter</string>
     <string name="menu_open">Öffnen</string>
-    <string name="menu_move">Verschieben</string>
+    <string name="menu_reorder">Neu anordnen</string>
     <string name="menu_hide">Im Launcher ausblenden</string>
     <string name="menu_unhide">Einblenden</string>
     <string name="menu_customize">Anpassen</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Größe — jede Zeile fasst so viele Symbole, wie Größe + Abstand erlauben</string>
     <string name="roundness">Rundung</string>
     <string name="icon_size">Symbolgröße</string>
+    <string name="icon_size_extra_small">Extra klein</string>
+    <string name="icon_size_compact">Kompakt</string>
     <string name="spacing">Abstand</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Klein</string>

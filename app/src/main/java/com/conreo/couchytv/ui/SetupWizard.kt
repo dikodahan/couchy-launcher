@@ -43,7 +43,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.tv.material3.Button
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
@@ -142,7 +141,7 @@ internal fun SetupWizard(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(SettingsControlGap),
             ) {
                 BrandLogo(Modifier.size(44.dp))
                 Text(
@@ -163,7 +162,7 @@ internal fun SetupWizard(
                         leadingContent = { LanguageFlag(config.language) },
                         trailingContent = { Icon(AppIcons.Down, contentDescription = null) },
                     )
-                    Button(
+                    SettingsButton(
                         onClick = { selectLanguage(config.language) },
                         enabled = pendingLanguage == null,
                         modifier = Modifier.padding(top = 8.dp),
@@ -178,7 +177,7 @@ internal fun SetupWizard(
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             vpns.forEach { (pkg, label) ->
-                                Button(onClick = {
+                                SettingsButton(onClick = {
                                     vpnPackage = pkg
                                     step = 2
                                 }) { Text(label) }
@@ -288,12 +287,12 @@ private fun NavRow(
     val nextFocus = initialFocus()
     Row(
         Modifier.padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(SettingsControlGap),
     ) {
         if (backAction != null) {
-            Button(onClick = backAction) { Text(stringResource(R.string.back)) }
+            SettingsButton(onClick = backAction) { Text(stringResource(R.string.back)) }
         }
-        Button(onClick = nextAction, modifier = Modifier.focusRequester(nextFocus)) {
+        SettingsButton(onClick = nextAction, modifier = Modifier.focusRequester(nextFocus)) {
             Text(nextLabel)
         }
     }

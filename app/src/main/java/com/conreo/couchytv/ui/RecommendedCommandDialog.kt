@@ -1,7 +1,5 @@
 package com.conreo.couchytv.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -35,7 +32,6 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.tv.material3.Button
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
@@ -98,16 +94,16 @@ internal fun RecommendedCommandDialog(name: String, commands: List<String>, onDi
 
                 if (finished) {
                     val doneFocus = initialFocus()
-                    Button(onClick = onDismiss, modifier = Modifier.focusRequester(doneFocus)) {
+                    SettingsButton(onClick = onDismiss, modifier = Modifier.focusRequester(doneFocus)) {
                         Text(stringResource(R.string.done))
                     }
                 } else {
                     val cancelFocus = initialFocus()
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = onDismiss, enabled = !running, modifier = Modifier.focusRequester(cancelFocus)) {
+                        SettingsButton(onClick = onDismiss, enabled = !running, modifier = Modifier.focusRequester(cancelFocus)) {
                             Text(stringResource(R.string.cancel))
                         }
-                        Button(
+                        SettingsButton(
                             onClick = {
                                 if (!running) {
                                     running = true
@@ -148,12 +144,10 @@ private fun CommandText(text: String) {
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(8.dp)
     Text(
         text,
         modifier = Modifier.fillMaxWidth().heightIn(max = 180.dp)
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), shape)
-            .border(1.dp, if (focused) MaterialTheme.colorScheme.primary else Color.Transparent, shape)
+            .settingsFieldFrame(focused)
             .onFocusChanged { focused = it.isFocused }
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false

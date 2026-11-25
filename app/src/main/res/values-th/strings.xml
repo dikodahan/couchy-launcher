@@ -27,7 +27,7 @@
 
     <string name="cd_weather">สภาพอากาศ</string>
     <string name="menu_open">เปิด</string>
-    <string name="menu_move">ย้าย</string>
+    <string name="menu_reorder">จัดลำดับใหม่</string>
     <string name="menu_hide">ซ่อนจากลอนเชอร์</string>
     <string name="menu_unhide">แสดง</string>
     <string name="menu_customize">ปรับแต่ง</string>
@@ -91,6 +91,8 @@
     <string name="section_size">ขนาด — แต่ละแถวมีไอคอนมากเท่าที่ขนาด + ระยะห่างจะอนุญาต</string>
     <string name="roundness">ความมน</string>
     <string name="icon_size">ขนาดไอคอน</string>
+    <string name="icon_size_extra_small">เล็กพิเศษ</string>
+    <string name="icon_size_compact">กะทัดรัด</string>
     <string name="spacing">ระยะห่าง</string>
     <string name="size_xs">XS</string>
     <string name="size_s">เล็ก</string>

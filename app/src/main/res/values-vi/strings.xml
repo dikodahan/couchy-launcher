@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Thời tiết</string>
     <string name="menu_open">Mở</string>
-    <string name="menu_move">Di chuyển</string>
+    <string name="menu_reorder">Sắp xếp lại</string>
     <string name="menu_hide">Ẩn khỏi launcher</string>
     <string name="menu_unhide">Hiện</string>
     <string name="menu_customize">Tùy chỉnh</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Kích thước — mỗi hàng chứa nhiều biểu tượng nhất có thể theo kích thước + khoảng cách</string>
     <string name="roundness">Độ bo tròn</string>
     <string name="icon_size">Kích thước biểu tượng</string>
+    <string name="icon_size_extra_small">Cực nhỏ</string>
+    <string name="icon_size_compact">Gọn</string>
     <string name="spacing">Khoảng cách</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Nhỏ</string>

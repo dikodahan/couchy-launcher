@@ -27,7 +27,7 @@
 
     <string name="cd_weather">Cuaca</string>
     <string name="menu_open">Buka</string>
-    <string name="menu_move">Pindahkan</string>
+    <string name="menu_reorder">Atur ulang urutan</string>
     <string name="menu_hide">Sembunyikan dari launcher</string>
     <string name="menu_unhide">Tampilkan</string>
     <string name="menu_customize">Sesuaikan</string>
@@ -91,6 +91,8 @@
     <string name="section_size">Ukuran — setiap baris memuat ikon sebanyak yang diizinkan ukuran + jarak</string>
     <string name="roundness">Kelengkungan</string>
     <string name="icon_size">Ukuran ikon</string>
+    <string name="icon_size_extra_small">Sangat kecil</string>
+    <string name="icon_size_compact">Ringkas</string>
     <string name="spacing">Jarak</string>
     <string name="size_xs">XS</string>
     <string name="size_s">Kecil</string>
