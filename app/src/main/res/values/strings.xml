@@ -126,6 +126,10 @@
 
     <!-- Settings: display -->
     <string name="section_layout">Layout</string>
+    <string name="glass_style">Glass style</string>
+    <string name="glass_liquid">Liquid glass</string>
+    <string name="glass_transparent">Transparent glass</string>
+    <string name="glass_liquid_hint">Liquid glass may render more slowly on older devices.</string>
     <string name="view_mode">View mode</string>
     <string name="mode_carousel">Carousel</string>
     <string name="mode_grid">Grid</string>

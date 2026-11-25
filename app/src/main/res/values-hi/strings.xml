@@ -75,6 +75,10 @@
     <string name="item_about">के बारे में</string>
 
     <string name="section_layout">लेआउट</string>
+    <string name="glass_style">काँच की शैली</string>
+    <string name="glass_liquid">तरल काँच</string>
+    <string name="glass_transparent">पारदर्शी काँच</string>
+    <string name="glass_liquid_hint">पुराने डिवाइस पर तरल काँच का प्रभाव धीमा हो सकता है।</string>
     <string name="view_mode">दृश्य मोड</string>
     <string name="mode_carousel">कैरोसेल</string>
     <string name="mode_grid">ग्रिड</string>

@@ -109,6 +109,10 @@
     <string name="toast_cloud_load_missing">לא נמצא גיבוי של Couchy בהודעות השמורות ב־Telegram</string>
     <string name="item_about">אודות</string>
     <string name="section_layout">פריסה</string>
+    <string name="glass_style">סגנון הזכוכית</string>
+    <string name="glass_liquid">זכוכית נוזלית</string>
+    <string name="glass_transparent">זכוכית שקופה</string>
+    <string name="glass_liquid_hint">אפקט הזכוכית הנוזלית עשוי לפעול לאט יותר במכשירים ישנים.</string>
     <string name="view_mode">מצב תצוגה</string>
     <string name="mode_carousel">קרוסלה</string>
     <string name="mode_grid">רשת</string>

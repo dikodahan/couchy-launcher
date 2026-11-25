@@ -90,6 +90,7 @@ import com.conreo.couchytv.data.ConfigBackup
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.DATE_FORMATS
 import com.conreo.couchytv.data.IconPack
+import com.conreo.couchytv.data.GLASS_STYLE_LIQUID
 import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
 import com.conreo.couchytv.data.LauncherConfig
@@ -105,6 +106,7 @@ import com.conreo.couchytv.data.WEATHER_CLICK_APP
 import com.conreo.couchytv.data.WEATHER_SRC_GEOIP
 import com.conreo.couchytv.data.WEATHER_SRC_LATLONG
 import com.conreo.couchytv.data.withWeatherLocation
+import com.conreo.couchytv.data.resolveGlassStyle
 import com.conreo.couchytv.data.WEATHER_SRC_ZIP
 import kotlinx.coroutines.Dispatchers
 import androidx.compose.runtime.withFrameNanos
@@ -672,6 +674,17 @@ private fun DisplayScreen(
             steps = 3,
             current = config.layout.coerceIn(0, 2),
             onSelect = { v -> update { it.copy(layout = v) } },
+        )
+        val glassStyle = resolveGlassStyle(config.glassStyle)
+        SelectorRow(
+            label = stringResource(R.string.glass_style),
+            value = stringResource(
+                if (glassStyle == GLASS_STYLE_LIQUID) R.string.glass_liquid else R.string.glass_transparent,
+            ),
+            description = stringResource(R.string.glass_liquid_hint),
+            steps = 2,
+            current = glassStyle,
+            onSelect = { style -> update { it.copy(glassStyle = style) } },
         )
         // Section names are only drawn in carousel/grid — hide the toggle in dock.
         if (config.layout != LAYOUT_DOCK) {

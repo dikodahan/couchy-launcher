@@ -75,6 +75,10 @@
     <string name="item_about">Hakkında</string>
 
     <string name="section_layout">Düzen</string>
+    <string name="glass_style">Cam stili</string>
+    <string name="glass_liquid">Sıvı cam</string>
+    <string name="glass_transparent">Saydam cam</string>
+    <string name="glass_liquid_hint">Sıvı cam efekti eski cihazlarda daha yavaş çalışabilir.</string>
     <string name="view_mode">Görünüm modu</string>
     <string name="mode_carousel">Döngü</string>
     <string name="mode_grid">Izgara</string>

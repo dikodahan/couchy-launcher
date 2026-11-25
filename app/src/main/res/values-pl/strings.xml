@@ -75,6 +75,10 @@
     <string name="item_about">O aplikacji</string>
 
     <string name="section_layout">Układ</string>
+    <string name="glass_style">Styl szkła</string>
+    <string name="glass_liquid">Płynne szkło</string>
+    <string name="glass_transparent">Przezroczyste szkło</string>
+    <string name="glass_liquid_hint">Efekt płynnego szkła może działać wolniej na starszych urządzeniach.</string>
     <string name="view_mode">Tryb widoku</string>
     <string name="mode_carousel">Karuzela</string>
     <string name="mode_grid">Siatka</string>

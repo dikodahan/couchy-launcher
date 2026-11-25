@@ -75,6 +75,10 @@
     <string name="item_about">Over</string>
 
     <string name="section_layout">Lay-out</string>
+    <string name="glass_style">Glasstijl</string>
+    <string name="glass_liquid">Vloeibaar glas</string>
+    <string name="glass_transparent">Transparant glas</string>
+    <string name="glass_liquid_hint">Vloeibaar glas kan op oudere apparaten minder vloeiend worden weergegeven.</string>
     <string name="view_mode">Weergavemodus</string>
     <string name="mode_carousel">Carrousel</string>
     <string name="mode_grid">Raster</string>

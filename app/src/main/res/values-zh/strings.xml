@@ -115,6 +115,10 @@
 
     <!-- 设置：显示 -->
     <string name="section_layout">布局</string>
+    <string name="glass_style">玻璃样式</string>
+    <string name="glass_liquid">液态玻璃</string>
+    <string name="glass_transparent">透明玻璃</string>
+    <string name="glass_liquid_hint">在较旧的设备上，液态玻璃效果的渲染速度可能较慢。</string>
     <string name="view_mode">视图模式</string>
     <string name="mode_carousel">轮播</string>
     <string name="mode_grid">网格</string>

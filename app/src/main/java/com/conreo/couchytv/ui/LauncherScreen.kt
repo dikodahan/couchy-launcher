@@ -94,6 +94,7 @@ import com.conreo.couchytv.data.BuiltinAerials
 import com.conreo.couchytv.data.StoredConfig
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.IconPack
+import com.conreo.couchytv.data.GLASS_STYLE_LIQUID
 import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
 import com.conreo.couchytv.data.LauncherConfig
@@ -107,6 +108,7 @@ import com.conreo.couchytv.data.WeatherFailure
 import com.conreo.couchytv.data.WeatherResult
 import com.conreo.couchytv.data.WeatherRepository
 import com.conreo.couchytv.data.networkStatusFlow
+import com.conreo.couchytv.data.resolveGlassStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOn
@@ -665,10 +667,11 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
         label = "dockOverlay",
     )
     val backdropPhoto = wallpaperSharp.takeUnless { config.useTopShelf || videoBackdropVisible }
-    val glassBackdrop = remember(backdropPhoto, presetBrush, wallpaperScrim, config.useTopShelf, videoBackdropVisible) {
-        LauncherBackdrop(backdropPhoto, presetBrush, wallpaperScrim, videoBackdropVisible, overlayAlpha)
+    val liquidGlass = resolveGlassStyle(config.glassStyle) == GLASS_STYLE_LIQUID
+    val glassBackdrop = remember(backdropPhoto, presetBrush, wallpaperScrim, config.useTopShelf, videoBackdropVisible, liquidGlass) {
+        LauncherBackdrop(backdropPhoto, presetBrush, wallpaperScrim, videoBackdropVisible, liquidGlass, overlayAlpha)
     }
-    val sampleGlassVideo = reorderFrom == null && LocalWindowInfo.current.isWindowFocused &&
+    val videoGlassActive = liquidGlass && reorderFrom == null && LocalWindowInfo.current.isWindowFocused &&
         (config.statusBarGlass || (config.layout == LAYOUT_DOCK && !dockExpanded))
 
     val corner: Dp = CORNER_RADII[config.cornerRadius.coerceIn(0, CORNER_RADII.size - 1)]
@@ -704,7 +707,8 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                     speed = videoSpeed,
                     loop = false, // play once, then shuffle to the next aerial
                     coverBrush = presetBrush,
-                    sampleGlass = sampleGlassVideo,
+                    glassActive = videoGlassActive,
+                    useGpuGlass = liquidGlass && (config.statusBarGlass || config.layout == LAYOUT_DOCK),
                     remoteCache = true,
                     onAdvanced = {
                         aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size)
@@ -727,7 +731,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                     speed = videoSpeed,
                     loop = true,
                     coverBrush = presetBrush,
-                    sampleGlass = sampleGlassVideo,
+                    glassActive = videoGlassActive,
                 )
             } else if (wallpaperSharp != null) {
                 Image(
@@ -1533,7 +1537,7 @@ private fun DockGlassPanel(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .launcherGlass(LocalCornerRadius.current + 14.dp)
+                    .launcherGlass(LocalCornerRadius.current + 14.dp, GlassPanel.Dock)
             )
         }
         // Icons — on OPEN they vanish almost instantly (the rising grid takes
@@ -1623,7 +1627,8 @@ private fun VideoWallpaper(
     speed: Float = 1f,
     loop: Boolean = true,
     coverBrush: Brush,
-    sampleGlass: Boolean,
+    glassActive: Boolean,
+    useGpuGlass: Boolean = false,
     remoteCache: Boolean = false,
     onEnded: () -> Unit = {},
     onAdvanced: () -> Unit = {},
@@ -1632,19 +1637,8 @@ private fun VideoWallpaper(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    val backdrop = LocalLauncherBackdrop.current
-    var videoSurface by remember { mutableStateOf<android.view.SurfaceView?>(null) }
-    // Keep the refracted sample in step with the first-frame cover and the clip transition.
     val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
     val transitionVeil = remember { androidx.compose.animation.core.Animatable(0f) }
-    DisposableEffect(backdrop) {
-        backdrop?.frameVisibility = { alpha.value * (1f - transitionVeil.value) }
-        onDispose {
-            backdrop?.frame = null
-            backdrop?.frameVisibility = null
-        }
-    }
-    SampleGlassVideo(videoSurface, backdrop, sampleGlass)
     val playerScope = rememberCoroutineScope()
     var firstFrameGen by remember { mutableIntStateOf(0) }
 
@@ -1829,21 +1823,11 @@ private fun VideoWallpaper(
     LaunchedEffect(firstFrameGen) {
         if (firstFrameGen > 0) alpha.animateTo(1f, tween(1100))
     }
-    // SurfaceView, NOT TextureView: it's composited by the system (SurfaceFlinger)
-    // on its own thread, so the video never stutters when the UI thread is busy
-    // (grid scroll, focus animations) — a TextureView composites on the UI thread
-    // and freezes under load. It shows through the transparent window (see
-    // MainActivity.setBackgroundDrawable(null)). A SurfaceView can't alpha-blend,
-    // so the clip fade is a black cover on top instead: opaque when nothing is
-    // shown yet, clear once the frame is up.
     Box(Modifier.fillMaxSize()) {
-        androidx.compose.ui.viewinterop.AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { ctx -> android.view.SurfaceView(ctx).also { videoSurface = it } },
-            // Bind the surface to whichever player is current. Re-runs when the
-            // player is rebuilt on return (the old, released one needs no cleanup);
-            // a no-op when it's null after release.
-            update = { view -> player?.setVideoSurfaceView(view) },
+        VideoGlassSurface(
+            player = activePlayer,
+            useFilter = useGpuGlass,
+            filterActive = glassActive && firstFrameGen > 0,
         )
         Box(
             Modifier

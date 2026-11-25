@@ -75,6 +75,10 @@
     <string name="item_about">Über</string>
 
     <string name="section_layout">Layout</string>
+    <string name="glass_style">Glasstil</string>
+    <string name="glass_liquid">Flüssiges Glas</string>
+    <string name="glass_transparent">Transparentes Glas</string>
+    <string name="glass_liquid_hint">Flüssiges Glas kann auf älteren Geräten langsamer dargestellt werden.</string>
     <string name="view_mode">Ansichtsmodus</string>
     <string name="mode_carousel">Karussell</string>
     <string name="mode_grid">Raster</string>

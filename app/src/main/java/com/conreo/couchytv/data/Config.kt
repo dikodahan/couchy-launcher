@@ -1,6 +1,7 @@
 package com.conreo.couchytv.data
 
 import android.content.Context
+import android.os.Build
 import android.os.Environment
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -90,6 +91,7 @@ data class LauncherConfig(
     val language: String = "",
     /** 0 = carousel (fixed selection), 1 = grid, 2 = dock */
     val layout: Int = 2, // Dock
+    val glassStyle: Int = GLASS_STYLE_AUTOMATIC,
     // ----- weather -----
     val weatherEnabled: Boolean = false,
     // Forecasts use IP-based location only when the user opts into that source.
@@ -144,6 +146,16 @@ internal fun LauncherConfig.reconcileInstalledApps(installed: Set<String>): Laun
 const val LAYOUT_CAROUSEL = 0
 const val LAYOUT_GRID = 1
 const val LAYOUT_DOCK = 2
+
+const val GLASS_STYLE_AUTOMATIC = -1
+const val GLASS_STYLE_LIQUID = 0
+const val GLASS_STYLE_TRANSPARENT = 1
+
+internal fun resolveGlassStyle(savedStyle: Int, sdk: Int = Build.VERSION.SDK_INT): Int =
+    when (savedStyle) {
+        GLASS_STYLE_LIQUID, GLASS_STYLE_TRANSPARENT -> savedStyle
+        else -> if (sdk >= Build.VERSION_CODES.TIRAMISU) GLASS_STYLE_LIQUID else GLASS_STYLE_TRANSPARENT
+    }
 
 /** Status bar date formats (SimpleDateFormat patterns); index 0 = off. */
 val DATE_FORMATS = listOf("", "EEE d", "EEE d MMM", "d MMM yyyy", "dd/MM", "MM/dd", "yyyy-MM-dd")

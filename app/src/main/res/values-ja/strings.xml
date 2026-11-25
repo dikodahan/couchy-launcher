@@ -75,6 +75,10 @@
     <string name="item_about">について</string>
 
     <string name="section_layout">レイアウト</string>
+    <string name="glass_style">ガラスのスタイル</string>
+    <string name="glass_liquid">リキッドガラス</string>
+    <string name="glass_transparent">透明ガラス</string>
+    <string name="glass_liquid_hint">古いデバイスではリキッドガラスの描画が遅くなる場合があります。</string>
     <string name="view_mode">表示モード</string>
     <string name="mode_carousel">カルーセル</string>
     <string name="mode_grid">グリッド</string>

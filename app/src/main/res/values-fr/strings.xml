@@ -118,6 +118,10 @@
 
     <!-- Paramètres : affichage -->
     <string name="section_layout">Disposition</string>
+    <string name="glass_style">Style de verre</string>
+    <string name="glass_liquid">Verre liquide</string>
+    <string name="glass_transparent">Verre transparent</string>
+    <string name="glass_liquid_hint">Le rendu du verre liquide peut être plus lent sur les appareils anciens.</string>
     <string name="view_mode">Mode d\'affichage</string>
     <string name="mode_carousel">Carrousel</string>
     <string name="mode_grid">Grille</string>

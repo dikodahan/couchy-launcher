@@ -75,6 +75,10 @@
     <string name="item_about">เกี่ยวกับ</string>
 
     <string name="section_layout">เค้าโครง</string>
+    <string name="glass_style">รูปแบบกระจก</string>
+    <string name="glass_liquid">กระจกเหลว</string>
+    <string name="glass_transparent">กระจกใส</string>
+    <string name="glass_liquid_hint">เอฟเฟกต์กระจกเหลวอาจแสดงผลช้าลงในอุปกรณ์รุ่นเก่า</string>
     <string name="view_mode">โหมดมุมมอง</string>
     <string name="mode_carousel">แบบหมุน</string>
     <string name="mode_grid">แบบตาราง</string>

@@ -90,7 +90,7 @@ fun StatusBar(
     // panel, corners follow the roundness setting.
     val cluster = if (glass) {
         Modifier
-            .launcherGlass(LocalCornerRadius.current)
+            .launcherGlass(LocalCornerRadius.current, GlassPanel.Status)
             .padding(horizontal = 12.dp, vertical = 4.dp)
     } else Modifier
     Row(

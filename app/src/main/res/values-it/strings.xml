@@ -75,6 +75,10 @@
     <string name="item_about">Informazioni</string>
 
     <string name="section_layout">Layout</string>
+    <string name="glass_style">Stile del vetro</string>
+    <string name="glass_liquid">Vetro liquido</string>
+    <string name="glass_transparent">Vetro trasparente</string>
+    <string name="glass_liquid_hint">Il vetro liquido può risultare meno fluido sui dispositivi meno recenti.</string>
     <string name="view_mode">Modalità di visualizzazione</string>
     <string name="mode_carousel">Carosello</string>
     <string name="mode_grid">Griglia</string>

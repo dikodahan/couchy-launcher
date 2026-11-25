@@ -1,17 +1,14 @@
 package com.conreo.couchytv.ui
 
-import android.graphics.Bitmap
 import android.graphics.Paint as AndroidPaint
-import android.os.Handler
-import android.os.Looper
-import android.view.PixelCopy
-import android.view.SurfaceView
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,28 +24,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.findRootCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
-import kotlin.coroutines.resume
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.roundToInt
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 
 @Stable
 internal class LauncherBackdrop(
@@ -56,10 +46,23 @@ internal class LauncherBackdrop(
     val preset: Brush,
     val scrim: Brush?,
     val isVideo: Boolean,
+    val liquidGlass: Boolean,
     val overlayAlpha: State<Float>,
 ) {
     var frame by mutableStateOf<ImageBitmap?>(null)
     var frameVisibility by mutableStateOf<(() -> Float)?>(null)
+
+    private val lenses = mutableStateMapOf<GlassPanel, Pair<Any, GlassLens>>()
+
+    fun videoLens(panel: GlassPanel): GlassLens? = lenses[panel]?.second
+
+    fun registerLens(panel: GlassPanel, owner: Any, lens: GlassLens) {
+        lenses[panel] = owner to lens
+    }
+
+    fun clearLens(panel: GlassPanel, owner: Any) {
+        if (lenses[panel]?.first === owner) lenses.remove(panel)
+    }
 }
 
 internal val LocalLauncherBackdrop = compositionLocalOf<LauncherBackdrop?> { null }
@@ -67,14 +70,42 @@ internal val LocalLauncherBackdrop = compositionLocalOf<LauncherBackdrop?> { nul
 private data class GlassPosition(val origin: Offset, val viewport: Size)
 
 @Composable
-internal fun Modifier.launcherGlass(radius: Dp): Modifier {
+internal fun Modifier.launcherGlass(radius: Dp, panel: GlassPanel): Modifier {
     val backdrop = LocalLauncherBackdrop.current
     val shape = remember(radius) { SmoothCornerShape(radius) }
+    if (backdrop?.liquidGlass == false) {
+        return clip(shape).background(Color.Black.copy(alpha = 0.10f))
+    }
+    val density = LocalDensity.current
+    val owner = remember { Any() }
+    DisposableEffect(backdrop, panel) {
+        onDispose { backdrop?.clearLens(panel, owner) }
+    }
     var position by remember { mutableStateOf<GlassPosition?>(null) }
     return this
         .onGloballyPositioned { coordinates ->
-            val root = coordinates.findRootCoordinates().size
-            position = GlassPosition(coordinates.positionInRoot(), Size(root.width.toFloat(), root.height.toFloat()))
+            if (backdrop?.isVideo == true) {
+                val bounds = coordinates.boundsInRoot()
+                val size = coordinates.size
+                val edge = bounds.size.minDimension
+                // The status bar can be clipped down to a focus strip when hidden.
+                val fullyVisible = bounds.width >= size.width - 1f && bounds.height >= size.height - 1f
+                if (edge >= 1f && fullyVisible) with(density) {
+                    backdrop.registerLens(
+                        panel,
+                        owner,
+                        GlassLens(
+                            bounds,
+                            radius.toPx().coerceIn(0f, edge / 2f),
+                            minOf(26.dp.toPx(), edge / 2f),
+                            minOf(6.dp.toPx(), edge * 0.12f),
+                        ),
+                    )
+                } else backdrop.clearLens(panel, owner)
+            } else {
+                val root = coordinates.findRootCoordinates().size
+                position = GlassPosition(coordinates.positionInRoot(), Size(root.width.toFloat(), root.height.toFloat()))
+            }
         }
         .clip(shape)
         .drawWithCache {
@@ -106,15 +137,11 @@ internal fun Modifier.launcherGlass(radius: Dp): Modifier {
 
             onDrawBehind {
                 val location = position
-                if (backdrop != null && location != null && location.viewport.minDimension > 0f && falloff > 0f) {
+                if (backdrop != null && !backdrop.isVideo && location != null && location.viewport.minDimension > 0f && falloff > 0f) {
                     val (origin, viewport) = location
                     val frame = backdrop.frame
                     val visibility = backdrop.frameVisibility?.invoke() ?: 1f
-                    val opacity = (1f - backdrop.overlayAlpha.value) * when {
-                        backdrop.isVideo -> if (frame == null) 0f else visibility * 0.50f
-                        frame != null -> visibility
-                        else -> 1f
-                    }
+                    val opacity = (1f - backdrop.overlayAlpha.value) * (if (frame != null) visibility else 1f)
                     if (opacity > 0.01f) {
                         val image = frame ?: backdrop.photo ?: run {
                             if (presetViewport != viewport) {
@@ -206,40 +233,3 @@ private fun bendGlassEdge(point: Float, length: Float, falloff: Float, displacem
     }
     return point + displacement * (bevel(point) - bevel(point - length))
 }
-
-@Composable
-internal fun SampleGlassVideo(
-    view: SurfaceView?,
-    backdrop: LauncherBackdrop?,
-    enabled: Boolean,
-) {
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(view, backdrop, enabled, lifecycle) {
-        if (!enabled || view == null || backdrop == null) return@LaunchedEffect
-        val handler = Handler(Looper.getMainLooper())
-        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            val sample = Bitmap.createBitmap(256, 144, Bitmap.Config.ARGB_8888)
-            try {
-                while (true) {
-                    if (view.holder.surface.isValid && copyFrame(view, sample, handler)) {
-                        backdrop.frame = withContext(Dispatchers.Default) {
-                            sample.copy(Bitmap.Config.ARGB_8888, false)?.asImageBitmap()
-                        }
-                    }
-                    delay(125)
-                }
-            } finally {
-                backdrop.frame = null
-            }
-        }
-    }
-}
-
-private suspend fun copyFrame(view: SurfaceView, bitmap: Bitmap, handler: Handler): Boolean =
-    suspendCancellableCoroutine { continuation ->
-        try {
-            PixelCopy.request(view, bitmap, { result -> continuation.resume(result == PixelCopy.SUCCESS) }, handler)
-        } catch (_: IllegalArgumentException) {
-            continuation.resume(false) // The surface can disappear between the validity check and the copy.
-        }
-    }

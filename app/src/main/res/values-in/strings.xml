@@ -75,6 +75,10 @@
     <string name="item_about">Tentang</string>
 
     <string name="section_layout">Tata letak</string>
+    <string name="glass_style">Gaya kaca</string>
+    <string name="glass_liquid">Kaca cair</string>
+    <string name="glass_transparent">Kaca transparan</string>
+    <string name="glass_liquid_hint">Efek kaca cair mungkin tampil lebih lambat di perangkat lama.</string>
     <string name="view_mode">Mode tampilan</string>
     <string name="mode_carousel">Karusel</string>
     <string name="mode_grid">Kotak</string>

@@ -10,6 +10,16 @@ class CompatibilityTest {
         assertFalse(config.weatherEnabled); assertTrue(config.labelOverrides.isEmpty()); assertEquals("", config.iconPackPkg)
         assertTrue(config.setupDone); assertEquals(2, config.layout)
         assertFalse(config.recommendedAppsEnabled); assertEquals("", config.recommendedAppsUrl)
+        assertEquals(GLASS_STYLE_AUTOMATIC, config.glassStyle)
+    }
+
+    @Test fun glassDefaultsMatchShaderSupportAndExplicitChoicesOverrideThem() {
+        val fresh = newInstallDefaults()
+        assertEquals(GLASS_STYLE_TRANSPARENT, resolveGlassStyle(fresh.glassStyle, 28))
+        assertEquals(GLASS_STYLE_TRANSPARENT, resolveGlassStyle(fresh.glassStyle, 32))
+        assertEquals(GLASS_STYLE_LIQUID, resolveGlassStyle(fresh.glassStyle, 33))
+        assertEquals(GLASS_STYLE_LIQUID, resolveGlassStyle(GLASS_STYLE_LIQUID, 32))
+        assertEquals(GLASS_STYLE_TRANSPARENT, resolveGlassStyle(GLASS_STYLE_TRANSPARENT, 35))
     }
     @Test fun portableSettingsRoundTripThroughTheTelegramDocumentCodec() {
         val config = LauncherConfig(
@@ -24,7 +34,7 @@ class CompatibilityTest {
             showStatusBar = false, vpnApp = "test.vpn", showVpnButton = false,
             statusBarGlass = false, dateFormat = 2, scrimMode = 2, showCategoryNames = false,
             showAppLabels = false, spacing = 3, iconScale = 2, cornerRadius = 1,
-            uiScale = 3, language = "fr", layout = LAYOUT_GRID,
+            uiScale = 3, language = "fr", layout = LAYOUT_GRID, glassStyle = GLASS_STYLE_TRANSPARENT,
             weatherEnabled = true, weatherLocationSource = WEATHER_SRC_ZIP, weatherGeoJsEnabled = true, weatherLat = 40.7,
             weatherLon = -74.0, weatherCityLabel = "New York, United States", weatherZip = "07030", weatherCountry = "US", weatherUnit = 1,
             weatherDisplay = WEATHER_DISPLAY_LOWHIGH, weatherClickAction = WEATHER_CLICK_APP,

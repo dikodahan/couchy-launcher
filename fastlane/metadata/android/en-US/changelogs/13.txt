@@ -1,0 +1,3 @@
+Choose Liquid glass or 90% Transparent glass for the dock and status bar.
+Automatic defaults use Liquid glass on Android 13 and newer and Transparent glass on older devices.
+Liquid glass on Android 13 and newer uses a GPU filter for built-in aerial wallpaper.

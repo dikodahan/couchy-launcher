@@ -75,6 +75,10 @@
     <string name="item_about">정보</string>
 
     <string name="section_layout">레이아웃</string>
+    <string name="glass_style">유리 스타일</string>
+    <string name="glass_liquid">리퀴드 글래스</string>
+    <string name="glass_transparent">투명 유리</string>
+    <string name="glass_liquid_hint">오래된 기기에서는 리퀴드 글래스 렌더링이 느릴 수 있습니다.</string>
     <string name="view_mode">보기 모드</string>
     <string name="mode_carousel">캐러셀</string>
     <string name="mode_grid">그리드</string>

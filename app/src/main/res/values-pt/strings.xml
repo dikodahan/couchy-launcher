@@ -75,6 +75,10 @@
     <string name="item_about">Sobre</string>
 
     <string name="section_layout">Layout</string>
+    <string name="glass_style">Estilo de vidro</string>
+    <string name="glass_liquid">Vidro líquido</string>
+    <string name="glass_transparent">Vidro transparente</string>
+    <string name="glass_liquid_hint">O efeito de vidro líquido pode ser mais lento em dispositivos mais antigos.</string>
     <string name="view_mode">Modo de visualização</string>
     <string name="mode_carousel">Carrossel</string>
     <string name="mode_grid">Grade</string>

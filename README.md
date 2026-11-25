@@ -219,6 +219,11 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 <details>
 <summary>Click to expand</summary>
 
+**v1.2.1**
+
+- Under **Settings → Display → Layout**, choose **Liquid glass** or **Transparent glass** for the dock and status bar. Android 13 and newer default to Liquid glass. Earlier versions default to a 90% transparent tint.
+- Liquid glass uses a GPU filter for built-in aerial wallpaper on Android 13 and newer. Transparent glass uses the standard playback surface with a simple tint and can help when playback stutters.
+
 **v1.2.0**
 
 - Use clear glass with subtle edge refraction for the dock and status bar.

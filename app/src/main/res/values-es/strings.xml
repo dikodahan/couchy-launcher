@@ -83,6 +83,10 @@
 
     <!-- Ajustes: pantalla -->
     <string name="section_layout">Diseño</string>
+    <string name="glass_style">Estilo de cristal</string>
+    <string name="glass_liquid">Cristal líquido</string>
+    <string name="glass_transparent">Cristal transparente</string>
+    <string name="glass_liquid_hint">El cristal líquido puede mostrarse con menos fluidez en dispositivos antiguos.</string>
     <string name="view_mode">Modo de vista</string>
     <string name="mode_carousel">Carrusel</string>
     <string name="mode_grid">Cuadrícula</string>

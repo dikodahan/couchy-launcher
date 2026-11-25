@@ -75,6 +75,10 @@
     <string name="item_about">Thông tin</string>
 
     <string name="section_layout">Bố cục</string>
+    <string name="glass_style">Kiểu kính</string>
+    <string name="glass_liquid">Kính lỏng</string>
+    <string name="glass_transparent">Kính trong suốt</string>
+    <string name="glass_liquid_hint">Hiệu ứng kính lỏng có thể hiển thị chậm hơn trên thiết bị cũ.</string>
     <string name="view_mode">Chế độ xem</string>
     <string name="mode_carousel">Băng chuyền</string>
     <string name="mode_grid">Lưới</string>

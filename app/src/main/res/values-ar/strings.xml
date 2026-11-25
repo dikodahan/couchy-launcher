@@ -75,6 +75,10 @@
     <string name="item_about">حول</string>
 
     <string name="section_layout">التخطيط</string>
+    <string name="glass_style">نمط الزجاج</string>
+    <string name="glass_liquid">الزجاج السائل</string>
+    <string name="glass_transparent">الزجاج الشفاف</string>
+    <string name="glass_liquid_hint">قد يستغرق عرض الزجاج السائل وقتًا أطول على الأجهزة القديمة.</string>
     <string name="view_mode">وضع العرض</string>
     <string name="mode_carousel">دائري</string>
     <string name="mode_grid">شبكي</string>

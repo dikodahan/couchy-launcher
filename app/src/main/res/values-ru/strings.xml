@@ -75,6 +75,10 @@
     <string name="item_about">О программе</string>
 
     <string name="section_layout">Раскладка</string>
+    <string name="glass_style">Стиль стекла</string>
+    <string name="glass_liquid">Жидкое стекло</string>
+    <string name="glass_transparent">Прозрачное стекло</string>
+    <string name="glass_liquid_hint">Эффект жидкого стекла может работать медленнее на старых устройствах.</string>
     <string name="view_mode">Режим просмотра</string>
     <string name="mode_carousel">Карусель</string>
     <string name="mode_grid">Сетка</string>
