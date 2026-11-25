@@ -132,6 +132,7 @@ internal fun SettingsSheet(
     onWallpaperChanged: () -> Unit,
     onRestartAerials: () -> Unit,
     onRerunWizard: () -> Unit,
+    onHomeSetupComplete: () -> Unit,
     updatePrompt: AppUpdatePrompt?,
     startAtWeather: Boolean = false,
     weatherStatus: Int? = null,
@@ -416,6 +417,7 @@ internal fun SettingsSheet(
                         store = store,
                         onBack = { screen = SettingsScreen.Main },
                         onRerunWizard = onRerunWizard,
+                        onHomeSetupComplete = onHomeSetupComplete,
                     )
                 }
                 }
@@ -857,6 +859,7 @@ private fun LauncherSettingsSubscreen(
     store: ConfigStore,
     onBack: () -> Unit,
     onRerunWizard: () -> Unit,
+    onHomeSetupComplete: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -1006,7 +1009,7 @@ private fun LauncherSettingsSubscreen(
     }
 
     when (pane) {
-        LauncherPane.Home -> HomeLauncherScreen()
+        LauncherPane.Home -> HomeLauncherScreen(onHomeSetupComplete)
         LauncherPane.RecommendedApps -> RecommendedAppsSettings(config, store)
         LauncherPane.Language -> LanguageScreen(
             config = config, store = store, onBack = { pane = LauncherPane.Menu },

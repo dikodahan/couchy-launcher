@@ -1,6 +1,5 @@
 package com.conreo.couchytv.ui
 
-import android.app.Activity
 import android.provider.Settings
 import java.io.IOException
 import java.net.ConnectException
@@ -46,10 +45,24 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun HomeLauncherScreen() {
+internal fun HomeLauncherScreen(onHomeSetupComplete: () -> Unit) {
+    var showHomeSetup by rememberSaveable { mutableStateOf(false) }
     SettingsPage {
         SettingsTitle(stringResource(R.string.home_launcher_title))
-        HomeLauncherControls()
+        HomeLauncherControls(onFirstHomeSetup = { showHomeSetup = true })
+    }
+    if (showHomeSetup) {
+        val close = { showHomeSetup = false }
+        Dialog(
+            onDismissRequest = close,
+            properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
+        ) {
+            FillDialogWindow()
+            HomeSetupStep(onBack = close) { pressHome ->
+                close()
+                if (pressHome) onHomeSetupComplete()
+            }
+        }
     }
 }
 
@@ -60,6 +73,7 @@ internal fun HomeLauncherControls(
     wizardSaving: Boolean = false,
     onWizardSettings: ((String) -> Unit)? = null,
     onWizardDone: ((pressHome: Boolean) -> Unit)? = null,
+    onFirstHomeSetup: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val manager = remember { HomeLauncherManager.get(context) }
@@ -70,14 +84,12 @@ internal fun HomeLauncherControls(
     var message by remember { mutableStateOf<String?>(null) }
     var adbAvailable by remember { mutableStateOf<Boolean?>(null) }
     var pendingPause by remember { mutableStateOf<HomeChoice?>(null) }
-    var showHomeCheck by rememberSaveable { mutableStateOf(false) }
     var confirmRecovery by remember { mutableStateOf(false) }
     BackHandler(enabled = wizardBack != null) {
         if (!busy && !wizardSaving) wizardBack?.invoke()
     }
     fun couchyIsHome() {
-        if (onWizardDone != null) onWizardDone(true)
-        else showHomeCheck = true
+        onWizardDone?.invoke(true)
     }
     val logDocument = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         if (uri != null) scope.launch {
@@ -108,18 +120,7 @@ internal fun HomeLauncherControls(
             }
         }
     }
-    val rolePicker = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        scope.launch {
-            refreshStatus()
-            HomeDiagnostics.record(context, "Android Home role result=${result.resultCode}; active=${status?.currentPackage}")
-            HomeDiagnostics.publishToDownloads(context)
-            if (status?.currentPackage == context.packageName) couchyIsHome()
-            else if (result.resultCode == Activity.RESULT_OK) {
-                message = context.getString(R.string.adb_enable_required)
-            }
-        }
-    }
-    fun change(choice: HomeChoice? = null, allowRoleFallback: Boolean = false, action: suspend () -> Unit) {
+    fun change(choice: HomeChoice? = null, action: suspend () -> Unit) {
         if (busy) return
         scope.launch {
             busy = true
@@ -137,16 +138,16 @@ internal fun HomeLauncherControls(
             } catch (override: StockHomeStillActive) {
                 refreshStatus()
                 HomeDiagnostics.record(context, "Stock Home still active: ${override.activeHome.flattenToShortString()}")
-                pendingPause = choice
-                message = context.getString(R.string.home_stock_still_active)
+                if (onFirstHomeSetup != null) {
+                    message = null
+                    onFirstHomeSetup()
+                } else {
+                    pendingPause = choice
+                    message = context.getString(R.string.home_stock_still_active)
+                }
             } catch (unavailable: ConnectException) {
                 HomeDiagnostics.record(context, "Local ADB connection failed", unavailable)
-                val role = if (allowRoleFallback) manager.couchyRoleIntent() else null
-                if (role != null && runCatching { rolePicker.launch(role) }.isSuccess) {
-                    message = null
-                } else {
-                    message = context.getString(R.string.adb_enable_required)
-                }
+                message = context.getString(R.string.adb_enable_required)
                 refreshStatus()
             } catch (timedOut: TimeoutCancellationException) {
                 HomeDiagnostics.record(context, "Home action timed out", timedOut)
@@ -243,8 +244,12 @@ internal fun HomeLauncherControls(
             SettingsItem(
                 modifier = if (first != null) Modifier.focusRequester(first) else Modifier,
                 onClick = {
-                    if (target != null) change(target, allowRoleFallback = !couchyIsCurrent) {
-                        manager.switchTo(target, pauseStock = false)
+                    if (target != null) {
+                        if (!couchyIsCurrent && status?.couchyConfigured == false) onFirstHomeSetup?.invoke()
+                        else change(target) {
+                            if (couchyIsCurrent) manager.switchTo(target, pauseStock = false)
+                            else manager.switchToConfiguredCouchy(target)
+                        }
                     }
                 },
                 enabled = !busy && target != null,
@@ -299,7 +304,6 @@ internal fun HomeLauncherControls(
             },
         )
     }
-    if (showHomeCheck) PressHomeDialog { showHomeCheck = false }
     if (confirmRecovery) HomeChangeConfirmation(
         title = stringResource(R.string.home_restore_stock), body = stringResource(R.string.home_restore_stock_sub),
         onCancel = { confirmRecovery = false }, onConfirm = {

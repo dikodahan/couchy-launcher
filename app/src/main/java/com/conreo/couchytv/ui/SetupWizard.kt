@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -74,23 +75,6 @@ internal fun SetupWizard(
     var vpnPackage by rememberSaveable { mutableStateOf(config.vpnApp.takeIf { config.showVpnButton }) }
     var pendingLanguage by rememberSaveable { mutableStateOf<String?>(null) }
     var choosingLanguage by rememberSaveable { mutableStateOf(false) }
-    var showingAndroidSettings by rememberSaveable { mutableStateOf(false) }
-    val settingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        showingAndroidSettings = false
-    }
-    fun openWizardSettings(action: String) {
-        if (showingAndroidSettings) return
-        showingAndroidSettings = true
-        scope.launch {
-            // Let Compose fit the wizard beside the native panel before it opens.
-            withFrameNanos {}
-            withFrameNanos {}
-            if (runCatching { settingsLauncher.launch(Intent(action)) }.isFailure &&
-                runCatching { settingsLauncher.launch(Intent(Settings.ACTION_SETTINGS)) }.isFailure
-            ) showingAndroidSettings = false
-        }
-    }
-    val scroll = key(step) { rememberScrollState() }
     BackHandler(enabled = step == 1 || step == 2) { step-- }
 
     // Wait for the recreated activity to attach the new resources and direction
@@ -116,6 +100,111 @@ internal fun SetupWizard(
         }
     }
 
+    WizardPage(step) { openWizardSettings ->
+        when (step) {
+            0 -> {
+                Title(stringResource(R.string.wizard_language_title))
+                val languageFocus = initialFocus()
+                SettingsItem(
+                    onClick = { choosingLanguage = true },
+                    enabled = pendingLanguage == null,
+                    modifier = Modifier.fillMaxWidth().focusRequester(languageFocus),
+                    headlineContent = { Text(languageName(config.language)) },
+                    leadingContent = { LanguageFlag(config.language) },
+                    trailingContent = { Icon(AppIcons.Down, contentDescription = null) },
+                )
+                SettingsButton(
+                    onClick = { selectLanguage(config.language) },
+                    enabled = pendingLanguage == null,
+                    modifier = Modifier.padding(top = 8.dp),
+                ) { Text(stringResource(R.string.next)) }
+            }
+            1 -> {
+                Title(stringResource(R.string.wizard_vpn_title))
+                Body(stringResource(R.string.wizard_vpn_body))
+                val vpns = remember(context) { vpnApps(context) }
+                if (vpns.isEmpty()) {
+                    Body(stringResource(R.string.wizard_vpn_none))
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        vpns.forEach { (pkg, label) ->
+                            SettingsButton(onClick = {
+                                vpnPackage = pkg
+                                step = 2
+                            }) { Text(label) }
+                        }
+                    }
+                }
+                NavRow(backAction = { step = 0 }, nextLabel = stringResource(R.string.wizard_vpn_skip)) {
+                    vpnPackage = null
+                    step = 2
+                }
+            }
+            2 -> WizardWeatherStep(
+                config = config,
+                useInitialIpLocation = useInitialIpLocation,
+                onBack = { step = 1 },
+                onSave = onConfigureWeather,
+                onNext = { step = 3 },
+            )
+            else -> HomeSetupContent(
+                onBack = { step = 2 },
+                saving = saving,
+                openSettings = openWizardSettings,
+                onDone = { pressHome -> onDone(pressHome, vpnPackage) },
+            )
+        }
+    }
+    if (choosingLanguage) LanguageDropdown(config.language, ::selectLanguage) { choosingLanguage = false }
+}
+
+@Composable
+internal fun HomeSetupStep(onBack: () -> Unit, onDone: (Boolean) -> Unit) {
+    WizardPage(step = 3) { openSettings ->
+        HomeSetupContent(onBack, saving = false, openSettings = openSettings, onDone = onDone)
+    }
+}
+
+@Composable
+private fun HomeSetupContent(
+    onBack: () -> Unit,
+    saving: Boolean,
+    openSettings: (String) -> Unit,
+    onDone: (Boolean) -> Unit,
+) {
+    Title(stringResource(R.string.wizard_home_title))
+    HomeLauncherControls(
+        wizardBack = onBack,
+        wizardSaving = saving,
+        onWizardSettings = openSettings,
+        onWizardDone = onDone,
+    )
+}
+
+@Composable
+private fun WizardPage(
+    step: Int,
+    content: @Composable ColumnScope.((String) -> Unit) -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showingAndroidSettings by rememberSaveable { mutableStateOf(false) }
+    val settingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        showingAndroidSettings = false
+    }
+    fun openWizardSettings(action: String) {
+        if (showingAndroidSettings) return
+        showingAndroidSettings = true
+        scope.launch {
+            // Let Compose fit the wizard beside the native panel before it opens.
+            withFrameNanos {}
+            withFrameNanos {}
+            if (runCatching { settingsLauncher.launch(Intent(action)) }.isFailure &&
+                runCatching { settingsLauncher.launch(Intent(Settings.ACTION_SETTINGS)) }.isFailure
+            ) showingAndroidSettings = false
+        }
+    }
+    val scroll = key(step) { rememberScrollState() }
     val besideSettings = step == 3 && showingAndroidSettings
     val systemIsRtl =
         context.applicationContext.resources.configuration.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL
@@ -150,65 +239,9 @@ internal fun SetupWizard(
                     color = Color.White,
                 )
             }
-            when (step) {
-                0 -> {
-                    Title(stringResource(R.string.wizard_language_title))
-                    val languageFocus = initialFocus()
-                    SettingsItem(
-                        onClick = { choosingLanguage = true },
-                        enabled = pendingLanguage == null,
-                        modifier = Modifier.fillMaxWidth().focusRequester(languageFocus),
-                        headlineContent = { Text(languageName(config.language)) },
-                        leadingContent = { LanguageFlag(config.language) },
-                        trailingContent = { Icon(AppIcons.Down, contentDescription = null) },
-                    )
-                    SettingsButton(
-                        onClick = { selectLanguage(config.language) },
-                        enabled = pendingLanguage == null,
-                        modifier = Modifier.padding(top = 8.dp),
-                    ) { Text(stringResource(R.string.next)) }
-                }
-                1 -> {
-                    Title(stringResource(R.string.wizard_vpn_title))
-                    Body(stringResource(R.string.wizard_vpn_body))
-                    val vpns = remember(context) { vpnApps(context) }
-                    if (vpns.isEmpty()) {
-                        Body(stringResource(R.string.wizard_vpn_none))
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            vpns.forEach { (pkg, label) ->
-                                SettingsButton(onClick = {
-                                    vpnPackage = pkg
-                                    step = 2
-                                }) { Text(label) }
-                            }
-                        }
-                    }
-                    NavRow(backAction = { step = 0 }, nextLabel = stringResource(R.string.wizard_vpn_skip)) {
-                        vpnPackage = null
-                        step = 2
-                    }
-                }
-                2 -> WizardWeatherStep(
-                    config = config,
-                    useInitialIpLocation = useInitialIpLocation,
-                    onBack = { step = 1 },
-                    onSave = onConfigureWeather,
-                    onNext = { step = 3 },
-                )
-                else -> {
-                    Title(stringResource(R.string.wizard_home_title))
-                    HomeLauncherControls(
-                        wizardBack = { step = 2 },
-                        wizardSaving = saving,
-                        onWizardSettings = ::openWizardSettings,
-                        onWizardDone = { pressHome -> onDone(pressHome, vpnPackage) },
-                    )
-                }
-            }
+            content(::openWizardSettings)
         }
     }
-    if (choosingLanguage) LanguageDropdown(config.language, ::selectLanguage) { choosingLanguage = false }
 }
 
 @Composable

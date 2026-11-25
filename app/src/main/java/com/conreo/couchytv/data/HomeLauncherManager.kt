@@ -1,11 +1,9 @@
 package com.conreo.couchytv.data
 
-import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import com.conreo.couchytv.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -21,6 +19,7 @@ internal data class HomeStatus(
     val choices: List<HomeChoice>,
     val pausedPackages: Set<String>,
     val stockHome: HomeChoice?,
+    val couchyConfigured: Boolean,
 )
 
 internal class StockHomeStillActive(val activeHome: ComponentName) : IllegalStateException()
@@ -97,21 +96,29 @@ internal class HomeLauncherManager(
             ?: systemChoices.firstOrNull()
         HomeStatus(current?.packageName,
             current?.let { c -> runCatching { pm.getApplicationLabel(pm.getApplicationInfo(c.packageName, 0)).toString() }.getOrNull() }.orEmpty(),
-            choices, readJournal().keys, stockHome)
+            choices, readJournal().keys, stockHome,
+            current?.packageName == app.packageName || prefs.getBoolean("couchy_configured", false))
     }
 
     fun currentHome(): ComponentName? = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
         ?.activityInfo?.let { if (it.packageName == "android") null else ComponentName(it.packageName, it.name) }
 
-    fun couchyRoleIntent(): Intent? {
-        if (Build.VERSION.SDK_INT < 29) return null
-        val roles = app.getSystemService(RoleManager::class.java) ?: return null
-        if (!roles.isRoleAvailable(RoleManager.ROLE_HOME) || roles.isRoleHeld(RoleManager.ROLE_HOME)) return null
-        return roles.createRequestRoleIntent(RoleManager.ROLE_HOME)
+    /** Retry a known firmware override using only the stock packages previously approved on this TV. */
+    suspend fun switchToConfiguredCouchy(choice: HomeChoice) {
+        require(choice.component.packageName == app.packageName)
+        try {
+            switchTo(choice, pauseStock = false)
+        } catch (override: StockHomeStillActive) {
+            if (override.activeHome.packageName !in approvedStockPauses()) throw override
+            switchTo(choice, pauseStock = true, previouslyApprovedOnly = true)
+        }
     }
 
     /** Restores stock packages before changing away from Couchy. Never disables an arbitrary app. */
-    suspend fun switchTo(choice: HomeChoice, pauseStock: Boolean) = mutex.withLock {
+    suspend fun switchTo(choice: HomeChoice, pauseStock: Boolean) =
+        switchTo(choice, pauseStock, previouslyApprovedOnly = false)
+
+    private suspend fun switchTo(choice: HomeChoice, pauseStock: Boolean, previouslyApprovedOnly: Boolean) = mutex.withLock {
         withContext(Dispatchers.IO) {
             val status = status()
             val installed = status.choices.firstOrNull { it.component == choice.component }
@@ -126,6 +133,7 @@ internal class HomeLauncherManager(
             val user = foregroundAppUser()
             if (readJournal().isNotEmpty()) check(journalUser() == user) { app.getString(R.string.home_error_user) }
             val originalJournal = readJournal()
+            if (previous?.packageName == app.packageName) rememberConfiguredCouchy(originalJournal.keys)
             val targetWasDisabled = !installed.enabled
             try {
                 // A previous interrupted operation is always recoverable before another switch.
@@ -159,7 +167,8 @@ internal class HomeLauncherManager(
                     val candidates = if (activeStock == "com.google.android.tvlauncher" ||
                         (activeStock == null && !isEnabled("com.google.android.apps.tv.launcherx"))
                     ) setOf("com.google.android.tvlauncher") else stockPackages - "com.google.android.tvlauncher"
-                    for (pkg in candidates) {
+                    val permitted = if (previouslyApprovedOnly) candidates intersect approvedStockPauses() else candidates
+                    for (pkg in permitted) {
                         if (!isSystemPackage(pkg) || !isEnabled(pkg)) continue
                         val state = pm.getApplicationEnabledSetting(pkg)
                         // Persist before mutating package state, so process death leaves a recovery path.
@@ -168,6 +177,7 @@ internal class HomeLauncherManager(
                     }
                     verifyHome(target, user)
                 }
+                if (ownHome) rememberConfiguredCouchy(readJournal().keys)
             } catch (failure: Exception) {
                 // Skip rollback only when nothing was paused and the same Home is still active.
                 if (failure is StockHomeStillActive && originalJournal.isEmpty() &&
@@ -246,6 +256,16 @@ internal class HomeLauncherManager(
             writeJournal(readJournal() - pkg, user)
         }
     }
+    private fun approvedStockPauses(): Set<String> =
+        prefs.getStringSet("approved_stock_pauses", emptySet()).orEmpty().intersect(stockPackages)
+
+    private fun rememberConfiguredCouchy(paused: Set<String>) {
+        prefs.edit()
+            .putBoolean("couchy_configured", true)
+            .putStringSet("approved_stock_pauses", approvedStockPauses() + paused)
+            .apply()
+    }
+
     private fun isInstalled(pkg: String) = runCatching { pm.getApplicationInfo(pkg, PackageManager.MATCH_DISABLED_COMPONENTS) }.isSuccess
     private fun isSystemPackage(pkg: String) = runCatching {
         val flags = pm.getApplicationInfo(pkg, PackageManager.MATCH_DISABLED_COMPONENTS).flags

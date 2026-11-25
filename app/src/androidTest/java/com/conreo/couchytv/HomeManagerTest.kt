@@ -31,7 +31,7 @@ class HomeManagerTest {
         assertFalse(commands.any { it.contains("disable-user") })
         assertTrue(manager.status().pausedPackages.isEmpty())
     }
-    @Test fun verifiedStockOverridePromptsBeforeAnyPause() = runBlocking {
+    @Test fun stockOverrideReusesOnlyARecordedApproval() = runBlocking {
         val stock = context.packageManager.resolveActivity(
             android.content.Intent(android.content.Intent.ACTION_MAIN)
                 .addCategory(android.content.Intent.CATEGORY_HOME),
@@ -53,6 +53,10 @@ class HomeManagerTest {
                 command.startsWith("pm list packages -U") ->
                     AdbShellResult(0, "package:${context.packageName} uid:${context.applicationInfo.uid}")
                 command.contains("disable-user") -> { paused = true; AdbShellResult(0, "") }
+                command.startsWith("pm default-state") || command.startsWith("pm enable") -> {
+                    paused = false
+                    AdbShellResult(0, "")
+                }
                 command.contains("resolve-activity") -> {
                     val home = if (paused || command.contains(" -p ")) couchyComponent else stockComponent
                     AdbShellResult(0, home.flattenToString())
@@ -62,12 +66,27 @@ class HomeManagerTest {
         }
         val couchy = manager.status().choices.first { it.component == couchyComponent }
         try {
-            assertTrue(runCatching { manager.switchTo(couchy, false) }.exceptionOrNull() is StockHomeStillActive)
+            assertFalse(manager.status().couchyConfigured)
+            assertTrue(runCatching { manager.switchToConfiguredCouchy(couchy) }.exceptionOrNull() is StockHomeStillActive)
             assertFalse(commands.any { it.contains("disable-user") })
             assertTrue(manager.status().pausedPackages.isEmpty())
             manager.switchTo(couchy, true)
             assertTrue(paused)
             assertEquals(setOf(stock.packageName), manager.status().pausedPackages)
+            assertTrue(manager.status().couchyConfigured)
+
+            val stockChoice = manager.status().choices.first { it.component == stockComponent }
+            manager.switchTo(stockChoice, pauseStock = false)
+            assertFalse(paused)
+            assertTrue(manager.status().pausedPackages.isEmpty())
+            assertTrue(manager.status().couchyConfigured)
+
+            commands.clear()
+            manager.switchToConfiguredCouchy(couchy)
+            assertTrue(paused)
+            assertEquals(setOf(stock.packageName), manager.status().pausedPackages)
+            assertEquals(listOf("pm disable-user --user 0 '${stock.packageName}'"),
+                commands.filter { it.contains("disable-user") })
         } finally {
             context.getSharedPreferences(prefs, 0).edit().clear().commit()
         }

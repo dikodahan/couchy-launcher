@@ -219,6 +219,11 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 <details>
 <summary>Click to expand</summary>
 
+**v1.2.5**
+
+- Switch back to Couchy directly from **Settings → Launcher settings → Home launcher** after a successful setup on that TV. Couchy reuses the stock-launcher approval recorded for that device when needed.
+- If you kept the stock launcher during setup, the switch opens only the wizard’s Home step, including its USB debugging checks.
+
 **v1.2.4**
 
 - New installs start with Streaming, Games, Music, Apps, and Settings, each with its own icon. Built-in section names follow Couchy’s selected language.

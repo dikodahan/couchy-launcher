@@ -1215,6 +1215,10 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                         showSettings = false
                         scope.launch { store.update { it.copy(setupDone = false) } }
                     },
+                    onHomeSetupComplete = {
+                        showSettings = false
+                        pressHomeAtTick = homeIntentTick
+                    },
                     updatePrompt = updatePrompt,
                     startAtWeather = settingsStartAtWeather,
                     weatherStatus = weatherStatus,
