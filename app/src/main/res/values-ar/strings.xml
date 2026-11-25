@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">تقريبي (عنوان IP)</string>
     <string name="weather_src_latlong">إحداثيات يدوية</string>
     <string name="weather_src_zip">الرمز البريدي</string>
-    <string name="weather_geoip_notice">يرسل عنوان IP الخاص بك إلى GeoJS (get.geojs.io) لتقدير الموقع — بدون حساب أو أي بيانات أخرى</string>
+    <string name="weather_geoip_notice">يُستخدم عنوان IP الخاص بك لتقدير موقعك.</string>
     <string name="weather_lat">خط العرض</string>
     <string name="weather_lon">خط الطول</string>
     <string name="weather_zip">الرمز البريدي</string>
@@ -178,6 +178,7 @@
     <string name="about_license">مرخص بموجب رخصة GNU General Public License v3.0 (GPLv3). أنت حر في استخدام ودراسة ومشاركة وتعديل Couchy Launcher.</string>
     <string name="about_thirdparty">الفيديوهات الجوية: مجموعات Apple و Amazon والمجتمع، يتم بثها من مالكيها.</string>
     <string name="rerun_wizard">إعادة تشغيل معالج الإعداد</string>
+    <string name="rerun_wizard_confirm">هل تريد تشغيل معالج الإعداد مرة أخرى؟</string>
     <string name="rerun_wizard_sub">إعداد المشغّل الافتراضي ونصائح البداية</string>
 
     <string name="wizard_welcome_title">مرحبًا بك في Couchy Launcher</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">أدخل إحداثيات أو رمزًا بريديًا أو رمز دولة من حرفين.</string>
     <string name="weather_location_failed">تعذر تحديد الموقع. تحقق من الإعدادات أو جرّب إدخال الإحداثيات يدويًا.</string>
     <string name="weather_forecast_failed">تعذر تحميل التوقعات. تحقق من اتصال التلفزيون بالإنترنت وحاول مجددًا.</string>
-    <string name="weather_ip_enable">استخدام GeoJS لتحديد الموقع عبر IP</string>
+    <string name="weather_ip_enable">استخدام عنوان IP لتحديد الموقع</string>
     <string name="weather_ip_rate_limited">تم بلوغ حد طلبات تحديد الموقع عبر IP. سيحاول Couchy عند التشغيل التالي. يمكنك البحث حسب المدينة الآن.</string>
     <string name="weather_ip_city">موقع التوقعات: %1$s</string>
     <string name="weather_using_saved_ip_city">يتم استخدام آخر موقع محفوظ عبر IP. لن يتم البحث مجددًا في هذه الجلسة.</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">تعذّر إكمال هذا الإجراء.</string>
     <string name="recommended_storage_required">اسمح بالوصول إلى مساحة التخزين لحفظ ملفات APK في التنزيلات.</string>
     <string name="recommended_settings">إضافة تطبيقات موصى بها</string>
+    <string name="recommended_settings_sub">اربط كتالوجًا لعرض قائمتك الخاصة بالتطبيقات الموصى بها.</string>
     <string name="recommended_catalog_url">رابط ملف JSON للقائمة</string>
     <string name="recommended_catalog_invalid">أدخل رابط HTTPS صالحًا لملف JSON متوافق للتطبيقات الموصى بها.</string>
     <string name="apps_reorder_mode">وضع إعادة ترتيب التطبيقات</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">لغات لوحة المفاتيح</string>
     <string name="shortcut_screensaver">اختيار شاشة التوقف</string>
     <string name="shortcut_power_timeout">إيقاف التشغيل تلقائيًا</string>
+    <string name="power_timeout_never">أبدًا</string>
     <string name="wizard_language_title">ما اللغة التي تريد أن يستخدمها Couchy؟</string>
+    <string name="wizard_developer_options">تفعيل خيارات المطوّر</string>
+    <string name="wizard_developer_steps">في «لمحة»، اختر إصدار نظام Android TV واضغط موافق سبع مرات، ثم اضغط رجوع.</string>
+    <string name="wizard_enable_adb">تفعيل تصحيح أخطاء ADB</string>
+    <string name="wizard_adb_steps">في خيارات المطوّر، فعّل تصحيح الأخطاء عبر الشبكة أو ADB، ثم اضغط رجوع.</string>
+    <string name="recommended_catalog_prompt">رابط الإعدادات</string>
+    <string name="recommended_catalog_description">أدخل رابط HTTPS لملف JSON الخاص بالتطبيقات الموصى بها.</string>
+    <string name="recommended_adb_commands">أوامر ADB</string>
+    <string name="recommended_adb_run">تشغيل الأمر</string>
+    <string name="recommended_adb_review">راجع الأمر قبل تشغيله على هذا التلفزيون بصلاحيات سطر أوامر ADB.</string>
+    <string name="recommended_adb_completed">اكتمل تنفيذ الأمر.</string>
+    <string name="recommended_adb_exit_code">انتهى الأمر بالرمز %1$d.</string>
+    <string name="wizard_weather_confirm">تأكيد الموقع</string>
+    <string name="wizard_weather_locating">جارٍ البحث عن موقعك التقريبي…</string>
+    <string name="wizard_weather_ip_missing">تعذّر تحديد موقعك من عنوان IP. اختر البحث حسب المدينة.</string>
 </resources>

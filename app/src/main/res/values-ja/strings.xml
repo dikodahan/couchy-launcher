@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">おおよその位置(IPアドレス)</string>
     <string name="weather_src_latlong">手動で座標を指定</string>
     <string name="weather_src_zip">郵便番号</string>
-    <string name="weather_geoip_notice">位置を推定するためIPアドレスをGeoJS (get.geojs.io)に送信します — アカウントや他のデータは送信しません</string>
+    <string name="weather_geoip_notice">IPアドレスを使っておおよその位置を推定します。</string>
     <string name="weather_lat">緯度</string>
     <string name="weather_lon">経度</string>
     <string name="weather_zip">郵便番号</string>
@@ -178,6 +178,7 @@
     <string name="about_license">GNU General Public License v3.0（GPLv3）の下でライセンスされています。Couchy Launcherを自由に使用、研究、共有、改変できます。</string>
     <string name="about_thirdparty">空撮動画：Apple、Amazon、コミュニティコレクション、所有者からストリーミング。</string>
     <string name="rerun_wizard">セットアップウィザードを再実行</string>
+    <string name="rerun_wizard_confirm">セットアップウィザードをもう一度実行しますか？</string>
     <string name="rerun_wizard_sub">デフォルトランチャーの設定と初回ヒント</string>
 
     <string name="wizard_welcome_title">Couchy Launcherへようこそ</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">有効な座標、郵便番号、または2文字の国コードを入力してください。</string>
     <string name="weather_location_failed">地点を特定できませんでした。設定を確認するか、座標を手入力してください。</string>
     <string name="weather_forecast_failed">予報を読み込めませんでした。テレビのインターネット接続を確認して再試行してください。</string>
-    <string name="weather_ip_enable">IPによる位置の推定にGeoJSを使用</string>
+    <string name="weather_ip_enable">IPアドレスで位置を推定</string>
     <string name="weather_ip_rate_limited">IPによる位置検索が制限されています。Couchyは次回起動時に再試行します。すぐに設定するには都市名で検索してください。</string>
     <string name="weather_ip_city">予報地点：%1$s</string>
     <string name="weather_using_saved_ip_city">前回保存したIPによる位置情報を使用します。このセッション中は再検索しません。</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">この操作を完了できませんでした。</string>
     <string name="recommended_storage_required">APK をダウンロードフォルダに保存するには、ストレージへのアクセスを許可してください。</string>
     <string name="recommended_settings">おすすめアプリを追加</string>
+    <string name="recommended_settings_sub">カタログをリンクして、おすすめアプリの独自のリストを表示します。</string>
     <string name="recommended_catalog_url">カタログの JSON URL</string>
     <string name="recommended_catalog_invalid">対応するおすすめアプリの JSON ファイルへの有効な HTTPS リンクを入力してください。</string>
     <string name="apps_reorder_mode">アプリの並べ替えモード</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">キーボードの言語</string>
     <string name="shortcut_screensaver">スクリーンセーバーを選択</string>
     <string name="shortcut_power_timeout">自動電源オフ</string>
+    <string name="power_timeout_never">なし</string>
     <string name="wizard_language_title">Couchy で使う言語を選んでください</string>
+    <string name="wizard_developer_options">開発者向けオプションを有効にする</string>
+    <string name="wizard_developer_steps">端末情報で Android TV OS のビルドを選び、決定を7回押します。戻るボタンで戻ります。</string>
+    <string name="wizard_enable_adb">ADB デバッグを有効にする</string>
+    <string name="wizard_adb_steps">開発者向けオプションでネットワークデバッグまたは ADB デバッグを有効にし、戻るボタンを押します。</string>
+    <string name="recommended_catalog_prompt">設定 URL</string>
+    <string name="recommended_catalog_description">おすすめアプリの JSON ファイルへの HTTPS リンクを入力してください。</string>
+    <string name="recommended_adb_commands">ADB コマンド</string>
+    <string name="recommended_adb_run">コマンドを実行</string>
+    <string name="recommended_adb_review">このテレビで ADB シェル権限を使って実行する前に、コマンドを確認してください。</string>
+    <string name="recommended_adb_completed">コマンドが完了しました。</string>
+    <string name="recommended_adb_exit_code">コマンドはコード %1$d で終了しました。</string>
+    <string name="wizard_weather_confirm">位置を確定</string>
+    <string name="wizard_weather_locating">おおよその位置を検索中…</string>
+    <string name="wizard_weather_ip_missing">IPアドレスから位置を特定できませんでした。都市名で検索してください。</string>
 </resources>

@@ -19,6 +19,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -33,16 +37,87 @@ internal data class RecommendedApp(
     val key get() = name.lowercase(Locale.ROOT)
 }
 
-internal fun parseRecommendedApps(content: String): List<RecommendedApp> =
-    catalogJson.decodeFromString<List<RecommendedApp>>(content).also { apps ->
-        require(apps.size <= 200 && apps.distinctBy(RecommendedApp::key).size == apps.size)
-        require(apps.all { entry ->
-            entry.name.length in 1..80 && entry.name == entry.name.trim() &&
-                entry.category.isNotBlank() && entry.category.length <= 80 &&
-                entry.name.none(Char::isISOControl) && entry.category.none(Char::isISOControl) &&
-                isRecommendedAppsUrl(entry.downloadUrl) && (entry.iconUrl == null || isRecommendedAppsUrl(entry.iconUrl))
-        })
+internal data class RecommendedCommand(val name: Map<String, String>, val commands: List<String>) {
+    val key get() = name.getValue("en").lowercase(Locale.ROOT)
+
+    fun displayName(locale: Locale): String {
+        var tag = locale.stripExtensions().toLanguageTag().lowercase(Locale.ROOT)
+        while (tag.isNotEmpty()) {
+            name[tag]?.let { return it }
+            tag = tag.substringBeforeLast('-', "")
+        }
+        return name.getValue("en")
     }
+}
+
+internal data class RecommendedCatalog(
+    val apps: List<RecommendedApp> = emptyList(),
+    val adbCommands: List<RecommendedCommand> = emptyList(),
+)
+
+internal fun parseRecommendedCatalog(content: String): RecommendedCatalog {
+    val catalog = when (val document = catalogJson.parseToJsonElement(content)) {
+        is JsonArray -> RecommendedCatalog(apps = catalogJson.decodeFromJsonElement(document))
+        is JsonObject -> {
+            require("apps" in document || "adbCommands" in document)
+            RecommendedCatalog(
+                apps = document["apps"]?.let { catalogJson.decodeFromJsonElement<List<RecommendedApp>>(it) }.orEmpty(),
+                adbCommands = document["adbCommands"]?.let {
+                    val entries = catalogJson.decodeFromJsonElement<List<JsonObject>>(it)
+                    require(entries.size <= 200)
+                    entries.map(::parseRecommendedCommand)
+                }.orEmpty(),
+            )
+        }
+        else -> throw IllegalArgumentException("Expected a catalog array or object")
+    }
+    val apps = catalog.apps
+    require(apps.size <= 200 && apps.distinctBy(RecommendedApp::key).size == apps.size)
+    require(apps.all { entry ->
+        validName(entry.name) && entry.category.isNotBlank() && entry.category.length <= 80 &&
+            entry.category.none(Char::isISOControl) && isRecommendedAppsUrl(entry.downloadUrl) &&
+            (entry.iconUrl == null || isRecommendedAppsUrl(entry.iconUrl))
+    })
+    require(catalog.adbCommands.distinctBy(RecommendedCommand::key).size == catalog.adbCommands.size)
+    return catalog
+}
+
+private fun parseRecommendedCommand(entry: JsonObject): RecommendedCommand {
+    val labels = catalogJson.decodeFromJsonElement<Map<String, String>>(requireNotNull(entry["name"]))
+    require("en" in labels && labels.size <= 40)
+    val names = labels.mapKeys { (tag, _) ->
+        require(languageTag.matches(tag))
+        Locale.forLanguageTag(tag).toLanguageTag().lowercase(Locale.ROOT).also { require(it != "und") }
+    }
+    require(names.size == labels.size && names.values.all(::validName))
+
+    val stepCount = entry.keys.count(numberedCommand::matches)
+    val fields = if ("command" in entry) {
+        require(stepCount == 0)
+        listOf("command")
+    } else {
+        require(stepCount in 1..LocalAdb.MAX_SEQUENCE_COMMANDS)
+        (1..stepCount).map { "command$it" }
+    }
+    val commands = fields.map { field ->
+        val value = requireNotNull(entry[field])
+        require(value is JsonPrimitive && value.isString)
+        val command = value.content
+        require(command.isNotBlank() && command.toByteArray(Charsets.UTF_8).size <= LocalAdb.MAX_COMMAND_BYTES)
+        require(!adbPrefix.containsMatchIn(command.trimStart()))
+        require(command.none {
+            (it.isISOControl() && it != '\n' && it != '\t') || Character.getType(it) == Character.FORMAT.toInt()
+        })
+        command
+    }
+    return RecommendedCommand(names, commands)
+}
+
+private val numberedCommand = Regex("command[0-9]+")
+private val languageTag = Regex("[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*")
+private val adbPrefix = Regex("^adb(?:\\s|$)", RegexOption.IGNORE_CASE)
+private fun validName(name: String) =
+    name.length in 1..80 && name == name.trim() && name.none(Char::isISOControl)
 
 internal fun isRecommendedAppsUrl(value: String): Boolean =
     value.length in 1..2048 && value.none(Char::isWhitespace) && value.toHttpUrlOrNull()?.let {
@@ -66,17 +141,17 @@ internal class RecommendedApps(context: Context, private val catalogUrl: String)
     private val preferences = app.getSharedPreferences("recommended_downloads", Context.MODE_PRIVATE)
     private val cachedCatalog = AtomicFile(File(app.cacheDir, "recommended-$catalogKey.json"))
 
-    suspend fun cached(): List<RecommendedApp>? = withContext(Dispatchers.IO) {
+    suspend fun cached(): RecommendedCatalog? = withContext(Dispatchers.IO) {
         if (!isRecommendedAppsUrl(catalogUrl)) return@withContext null
         synchronized(catalogLock) {
-            runCatching { parseRecommendedApps(cachedCatalog.readFully().decodeToString()) }.getOrNull()
+            runCatching { parseRecommendedCatalog(cachedCatalog.readFully().decodeToString()) }.getOrNull()
         }
     }
 
-    suspend fun refresh(): List<RecommendedApp> = withContext(Dispatchers.IO) {
+    suspend fun refresh(): RecommendedCatalog = withContext(Dispatchers.IO) {
         require(isRecommendedAppsUrl(catalogUrl))
         val data = fetch(catalogUrl, 256L * 1024)
-        val entries = parseRecommendedApps(data.decodeToString())
+        val entries = parseRecommendedCatalog(data.decodeToString())
         synchronized(catalogLock) {
             val stream = cachedCatalog.startWrite()
             try {

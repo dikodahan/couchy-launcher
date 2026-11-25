@@ -57,11 +57,6 @@ internal fun AndroidShortcutsScreen() {
             headlineContent = { Text(stringResource(R.string.shortcut_power_timeout)) },
             leadingContent = { Icon(AppIcons.Bolt, contentDescription = null) },
         )
-        SettingsItem(
-            onClick = { Actions.openSystemSettings(context) },
-            headlineContent = { Text(stringResource(R.string.item_android_settings)) },
-            leadingContent = { Icon(AppIcons.Gear, contentDescription = null) },
-        )
     }
     if (choosingTimeout) AndroidPowerTimeoutDialog(onDismiss = { choosingTimeout = false })
 }

@@ -80,7 +80,7 @@ internal fun AndroidPowerTimeoutDialog(onDismiss: () -> Unit) {
                 }
                 timeoutMinutes.forEachIndexed { index, minutes ->
                     val label = when {
-                        minutes < 0 -> stringResource(R.string.off)
+                        minutes < 0 -> stringResource(R.string.power_timeout_never)
                         minutes < 60 -> units.format(Measure(minutes, MeasureUnit.MINUTE))
                         else -> units.format(Measure(minutes / 60, MeasureUnit.HOUR))
                     }

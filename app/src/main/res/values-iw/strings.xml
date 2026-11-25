@@ -179,7 +179,7 @@
     <string name="weather_src_geoip">מיקום משוער (לפי כתובת IP)</string>
     <string name="weather_src_latlong">הזנת קואורדינטות</string>
     <string name="weather_src_zip">מיקוד</string>
-    <string name="weather_geoip_notice">כתובת ה־IP נשלחת ל־GeoJS (get.geojs.io) כדי לאמוד את המיקום, ללא חשבון או נתונים נוספים</string>
+    <string name="weather_geoip_notice">כתובת ה־IP שלכם משמשת להערכת מיקומכם.</string>
     <string name="weather_lat">קו רוחב</string>
     <string name="weather_lon">קו אורך</string>
     <string name="weather_zip">מיקוד</string>
@@ -217,6 +217,7 @@
     <string name="about_source">קוד מקור</string>
     <string name="about_thirdparty">סרטוני הנוף מהאוויר מאוספי Apple,‏ Amazon והקהילה.</string>
     <string name="rerun_wizard">הפעלה מחדש של אשף ההגדרה</string>
+    <string name="rerun_wizard_confirm">להפעיל שוב את אשף ההגדרה?</string>
     <string name="rerun_wizard_sub">בחירת מסך בית וטיפים לשימוש ראשון</string>
     <string name="wizard_welcome_title">ברוכים הבאים ל־Couchy Launcher</string>
     <string name="wizard_welcome_body">משגר קל ומהיר במסך אחד, עם אפליקציות מסודרות במדורים, רקע לבחירתכם ושורת מצב עם שעון, רשת ו־VPN.</string>
@@ -285,7 +286,7 @@
     <string name="weather_city_search_again">חיפוש חוזר</string>
     <string name="weather_using_saved_ip_city">משתמשים במיקום האחרון שנשמר לפי כתובת IP. לא יתבצע חיפוש נוסף לפי כתובת IP בהפעלה זו.</string>
     <string name="weather_ip_city">מיקום התחזית: %1$s</string>
-    <string name="weather_ip_enable">שימוש ב־GeoJS לאיתור מיקום לפי IP</string>
+    <string name="weather_ip_enable">שימוש בכתובת ה־IP לאיתור המיקום</string>
     <string name="weather_forecast_hourly">6 השעות הקרובות</string>
     <string name="weather_forecast_daily">7 הימים הקרובים</string>
     <string name="weather_forecast_no_data">התחזית אינה זמינה</string>
@@ -348,6 +349,7 @@
     <string name="recommended_action_failed">לא ניתן להשלים את הפעולה.</string>
     <string name="recommended_storage_required">יש לאפשר גישה לאחסון כדי לשמור קובצי APK בתיקיית ההורדות.</string>
     <string name="recommended_settings">הוספת אפליקציות מומלצות</string>
+    <string name="recommended_settings_sub">אפשר לקשר קטלוג כדי להציג רשימה מותאמת של אפליקציות מומלצות.</string>
     <string name="recommended_catalog_url">כתובת קובץ ה־JSON של הקטלוג</string>
     <string name="recommended_catalog_invalid">יש להזין קישור HTTPS תקין לקובץ JSON תואם של אפליקציות מומלצות.</string>
     <string name="apps_reorder_mode">מצב סידור אפליקציות</string>
@@ -366,5 +368,20 @@
     <string name="shortcut_keyboard_languages">שפות המקלדת</string>
     <string name="shortcut_screensaver">בחירת שומר מסך</string>
     <string name="shortcut_power_timeout">כיבוי אוטומטי</string>
+    <string name="power_timeout_never">אף פעם</string>
     <string name="wizard_language_title">באיזו שפה תרצו להשתמש ב־Couchy?</string>
+    <string name="wizard_developer_options">הפעלת אפשרויות למפתחים</string>
+    <string name="wizard_developer_steps">במסך ״מידע על המכשיר״, בחרו בגרסת ה־Build של Android TV ולחצו על אישור שבע פעמים. לחצו על כפתור החזרה.</string>
+    <string name="wizard_enable_adb">הפעלת ניפוי באגים ב־ADB</string>
+    <string name="wizard_adb_steps">באפשרויות למפתחים, הפעילו ניפוי באגים ברשת או ב־ADB ולחצו על כפתור החזרה.</string>
+    <string name="recommended_catalog_prompt">כתובת קובץ התצורה (URL)</string>
+    <string name="recommended_catalog_description">יש להזין את קישור ה־HTTPS לקובץ ה־JSON של האפליקציות המומלצות.</string>
+    <string name="recommended_adb_commands">פקודות ADB</string>
+    <string name="recommended_adb_run">הרצת פקודה</string>
+    <string name="recommended_adb_review">בדקו את הפקודה לפני הפעלתה בטלוויזיה זו עם הרשאות מעטפת ADB.</string>
+    <string name="recommended_adb_completed">הפקודה הושלמה.</string>
+    <string name="recommended_adb_exit_code">הפקודה הסתיימה עם הקוד %1$d.</string>
+    <string name="wizard_weather_confirm">אישור המיקום</string>
+    <string name="wizard_weather_locating">מאתרים את המיקום המשוער שלכם…</string>
+    <string name="wizard_weather_ip_missing">לא ניתן לאתר את מיקומכם לפי כתובת ה־IP. בחרו ״חיפוש לפי עיר״.</string>
 </resources>

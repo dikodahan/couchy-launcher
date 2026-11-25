@@ -70,6 +70,7 @@ data class WeatherData(
 
 private val json = Json { ignoreUnknownKeys = true }
 private const val GEOJS_ENDPOINT = "https://get.geojs.io/v1/ip/geo.json"
+private val fahrenheitCountries = setOf("US", "PW", "MH", "FM", "AS", "GU", "MP", "PR", "UM", "VI")
 
 @Serializable
 private data class ForecastResponse(
@@ -110,13 +111,24 @@ private data class GeoJsResponse(
     val city: String? = null,
     val region: String? = null,
     val country: String? = null,
+    @SerialName("country_code") val countryCode: String? = null,
 )
 
 @Serializable
-internal data class WeatherIpLocation(val latitude: Double, val longitude: Double, val label: String = "") {
+internal data class WeatherLocation(val latitude: Double, val longitude: Double, val label: String = "") {
     fun isValid(): Boolean = latitude.isFinite() && latitude in -90.0..90.0 &&
         longitude.isFinite() && longitude in -180.0..180.0 &&
         label.length <= 256 && label.none { it.isISOControl() }
+}
+
+internal fun LauncherConfig.withWeatherLocation(location: WeatherLocation): LauncherConfig {
+    require(location.isValid())
+    return copy(
+        weatherLocationSource = WEATHER_SRC_LATLONG,
+        weatherLat = location.latitude,
+        weatherLon = location.longitude,
+        weatherCityLabel = location.label,
+    )
 }
 
 @Serializable
@@ -210,13 +222,23 @@ internal class WeatherClient(
     private var lastGood: WeatherData? = null
     private var ipAttempt: IpLocationAttempt? = null
 
-    private data class IpLocationAttempt(val location: WeatherIpLocation?, val failure: WeatherFailure? = null)
+    private data class IpLocationAttempt(
+        val location: WeatherLocation?,
+        val failure: WeatherFailure?,
+        val countryCode: String?,
+    )
 
-    /** Memoize failures too, so polling, retries and unit changes never repeat an IP lookup. */
-    private fun locateIpOnce(
-        load: () -> WeatherIpLocation?,
-        save: (WeatherIpLocation) -> Unit,
-    ): IpLocationAttempt = ipAttempt ?: run {
+    private var providerIpAttempt: IpLocationAttempt? = null
+
+    /** A preview uses the same per-launch lookup as the forecast without saving an unconfirmed choice. */
+    @Synchronized
+    fun previewIpLocation(): WeatherLocation? = lookupIpOnce().location
+
+    @Synchronized
+    fun initialWeatherUnit(): Int =
+        if (lookupIpOnce().countryCode?.trim()?.uppercase(Locale.ROOT) in fahrenheitCountries) 1 else 0
+
+    private fun lookupIpOnce(): IpLocationAttempt = providerIpAttempt ?: run {
         val response = get(GEOJS_ENDPOINT)
         val decoded = response.body?.let { runCatching { json.decodeFromString<GeoJsResponse>(it) }.getOrNull() }
         val latitude = decoded?.latitude?.doubleOrNull
@@ -225,16 +247,26 @@ internal class WeatherClient(
             val label = listOfNotNull(decoded.city, decoded.region, decoded.country)
                 .map(String::trim).filter(String::isNotEmpty).distinct().joinToString(", ")
                 .take(256).filterNot { it.isISOControl() }
-            WeatherIpLocation(latitude, longitude, label).takeIf(WeatherIpLocation::isValid)
+            WeatherLocation(latitude, longitude, label).takeIf(WeatherLocation::isValid)
         } else null
+        val failure = when {
+            fresh != null -> null
+            response.status == 429 -> WeatherFailure.IpRateLimited
+            else -> WeatherFailure.LocationUnavailable
+        }
+        IpLocationAttempt(fresh, failure, decoded?.countryCode)
+    }.also { providerIpAttempt = it }
+
+    private fun locateIpOnce(
+        load: () -> WeatherLocation?,
+        save: (WeatherLocation) -> Unit,
+    ): IpLocationAttempt = ipAttempt ?: run {
+        val attempt = lookupIpOnce()
+        val fresh = attempt.location
         if (fresh != null) {
             runCatching { save(fresh) }
-            IpLocationAttempt(fresh)
-        } else {
-            val failure = if (response.status == 429)
-                WeatherFailure.IpRateLimited else WeatherFailure.LocationUnavailable
-            IpLocationAttempt(runCatching(load).getOrNull()?.takeIf(WeatherIpLocation::isValid), failure)
-        }
+            attempt
+        } else attempt.copy(location = runCatching(load).getOrNull()?.takeIf(WeatherLocation::isValid))
     }.also { ipAttempt = it }
 
     private fun resolveLocation(request: WeatherRequest): Pair<Double, Double>? {
@@ -263,8 +295,8 @@ internal class WeatherClient(
     @Synchronized
     fun fetch(
         request: WeatherRequest,
-        loadIpLocation: () -> WeatherIpLocation? = { null },
-        saveIpLocation: (WeatherIpLocation) -> Unit = {},
+        loadIpLocation: () -> WeatherLocation? = { null },
+        saveIpLocation: (WeatherLocation) -> Unit = {},
     ): WeatherResult {
         val ip = if (request.source == WEATHER_SRC_GEOIP) locateIpOnce(loadIpLocation, saveIpLocation) else null
         val usedSavedIp = ip?.failure != null && ip.location != null
@@ -344,6 +376,7 @@ internal data class WeatherCity(
         .filter { it.isNotBlank() && !it.equals(name, ignoreCase = true) }
         .distinct().joinToString(", ")
     val label: String get() = listOf(name, description).filter(String::isNotBlank).joinToString(", ")
+    fun toLocation() = WeatherLocation(latitude, longitude, label)
 }
 
 @Serializable
@@ -377,6 +410,9 @@ internal fun searchWeatherCities(
 
 internal object WeatherRepository {
     private val client = WeatherClient()
+    fun initialWeatherUnit(): Int = client.initialWeatherUnit()
+    fun previewIpLocation(): WeatherLocation? = client.previewIpLocation()
+
     fun fetch(context: Context, request: WeatherRequest): WeatherResult {
         val storage = AtomicFile(File(context.noBackupFilesDir, "weather-ip-location.json"))
         return client.fetch(
@@ -384,7 +420,7 @@ internal object WeatherRepository {
             loadIpLocation = {
                 val file = storage.baseFile
                 if (!file.isFile || file.length() > 4096) null
-                else json.decodeFromString<WeatherIpLocation>(storage.readFully().decodeToString())
+                else json.decodeFromString<WeatherLocation>(storage.readFully().decodeToString())
             },
             saveIpLocation = { location ->
                 val bytes = json.encodeToString(location).encodeToByteArray()

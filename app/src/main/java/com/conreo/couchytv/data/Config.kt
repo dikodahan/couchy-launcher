@@ -2,6 +2,7 @@ package com.conreo.couchytv.data
 
 import android.content.Context
 import android.os.Environment
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -91,9 +92,7 @@ data class LauncherConfig(
     val layout: Int = 2, // Dock
     // ----- weather -----
     val weatherEnabled: Boolean = false,
-    // Defaults to manual coordinates, NOT GeoIP: flipping "Show weather" on
-    // must never by itself phone a third party with the device's IP — that
-    // only happens once the user deliberately picks GeoIP as the source.
+    // Forecasts use IP-based location only when the user opts into that source.
     /** 0 = GeoIP, 1 = manual lat/long, 2 = zip/postal code */
     val weatherLocationSource: Int = 1,
     val weatherGeoJsEnabled: Boolean = false,
@@ -118,6 +117,15 @@ data class LauncherConfig(
     val labelOverrides: Map<String, String> = emptyMap(),
     /** package of the selected icon-pack app; empty = none */
     val iconPackPkg: String = "",
+)
+
+// Keep serialization defaults stable so saved settings and legacy backups decode as before.
+internal fun newInstallDefaults() = LauncherConfig(
+    useBuiltinAerials = true,
+    h24 = false,
+    showVpnButton = false,
+    dateFormat = 2,
+    weatherForecastIconStyle = WEATHER_ICONS_ANIMATED,
 )
 
 internal fun LauncherConfig.reconcileInstalledApps(installed: Set<String>): LauncherConfig {
@@ -169,22 +177,56 @@ val LANGUAGES = LANGUAGE_REGIONS.keys.toList()
 
 private val Context.dataStore by preferencesDataStore(name = "launcher")
 private val KEY_CONFIG = stringPreferencesKey("config")
+private val KEY_INITIAL_WEATHER_UNIT_PENDING = booleanPreferencesKey("initial_weather_unit_pending")
+private val KEY_INITIAL_WEATHER_LOCATION_PENDING = booleanPreferencesKey("initial_weather_location_pending")
 private val KEY_RESTORE_REVISION = longPreferencesKey("restore_revision")
 
-internal data class StoredConfig(val config: LauncherConfig, val restoreRevision: Long)
+internal data class StoredConfig(
+    val config: LauncherConfig,
+    val restoreRevision: Long,
+    val useInitialIpLocation: Boolean,
+)
 private val json = Json { ignoreUnknownKeys = true }
 
 class ConfigStore(private val context: Context) {
 
     internal val storedConfig: Flow<StoredConfig> = context.dataStore.data.map { prefs ->
-        StoredConfig(decodeConfig(prefs[KEY_CONFIG]), prefs[KEY_RESTORE_REVISION] ?: 0L)
+        StoredConfig(
+            decodeConfig(prefs[KEY_CONFIG]),
+            prefs[KEY_RESTORE_REVISION] ?: 0L,
+            prefs[KEY_INITIAL_WEATHER_LOCATION_PENDING] == true,
+        )
     }
 
     val flow: Flow<LauncherConfig> = storedConfig.map { it.config }
 
     private fun decodeConfig(saved: String?): LauncherConfig = saved?.let {
         runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
-    } ?: LauncherConfig(categories = defaultCategories(context))
+    } ?: newInstallDefaults().copy(categories = defaultCategories(context))
+
+    /** Record initial defaults without waiting for the network or changing an existing installation. */
+    internal suspend fun prepareFirstLaunch(): Boolean {
+        val existing = context.dataStore.data.first()
+        if (existing[KEY_CONFIG] != null) return existing[KEY_INITIAL_WEATHER_UNIT_PENDING] == true
+        val prepared = context.dataStore.edit { prefs ->
+            if (prefs[KEY_CONFIG] == null) {
+                prefs[KEY_CONFIG] = json.encodeToString(decodeConfig(null))
+                prefs[KEY_INITIAL_WEATHER_UNIT_PENDING] = true
+                prefs[KEY_INITIAL_WEATHER_LOCATION_PENDING] = true
+            }
+        }
+        return prepared[KEY_INITIAL_WEATHER_UNIT_PENDING] == true
+    }
+
+    internal suspend fun finishInitialWeatherUnit() {
+        val unit = withContext(Dispatchers.IO) { WeatherRepository.initialWeatherUnit() }
+        context.dataStore.edit { prefs ->
+            if (prefs.remove(KEY_INITIAL_WEATHER_UNIT_PENDING) == true) {
+                val current = decodeConfig(prefs[KEY_CONFIG])
+                prefs[KEY_CONFIG] = json.encodeToString(current.copy(weatherUnit = unit))
+            }
+        }
+    }
 
     private fun defaultCategories(ctx: Context) = listOf(
         CategoryCfg("streaming", ctx.getString(R.string.cat_streaming)),
@@ -195,7 +237,20 @@ class ConfigStore(private val context: Context) {
 
     suspend fun update(transform: (LauncherConfig) -> LauncherConfig) {
         context.dataStore.edit { prefs ->
-            prefs[KEY_CONFIG] = json.encodeToString(transform(decodeConfig(prefs[KEY_CONFIG])))
+            val current = decodeConfig(prefs[KEY_CONFIG])
+            val updated = transform(current)
+            if (updated.weatherUnit != current.weatherUnit) prefs.remove(KEY_INITIAL_WEATHER_UNIT_PENDING)
+            prefs[KEY_CONFIG] = json.encodeToString(updated)
+        }
+    }
+
+    internal suspend fun saveSetupWeather(location: WeatherLocation?) {
+        context.dataStore.edit { prefs ->
+            val current = decodeConfig(prefs[KEY_CONFIG])
+            val updated = if (location == null) current.copy(weatherEnabled = false)
+                else current.withWeatherLocation(location).copy(weatherEnabled = true)
+            prefs[KEY_CONFIG] = json.encodeToString(updated)
+            prefs.remove(KEY_INITIAL_WEATHER_LOCATION_PENDING)
         }
     }
 
@@ -206,6 +261,8 @@ class ConfigStore(private val context: Context) {
         context.dataStore.edit { prefs ->
             val current = decodeConfig(prefs[KEY_CONFIG])
             prefs[KEY_CONFIG] = json.encodeToString(loaded.copy(knownApps = current.knownApps, setupDone = true))
+            prefs.remove(KEY_INITIAL_WEATHER_UNIT_PENDING)
+            prefs.remove(KEY_INITIAL_WEATHER_LOCATION_PENDING)
             // A restore must refresh runtime state even when the settings are identical.
             prefs[KEY_RESTORE_REVISION] = (prefs[KEY_RESTORE_REVISION] ?: 0L) + 1L
         }

@@ -2,10 +2,13 @@ package com.conreo.couchytv.ui
 
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +33,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
@@ -49,25 +54,43 @@ import com.conreo.couchytv.R
 import com.conreo.couchytv.data.LANGUAGES
 import com.conreo.couchytv.data.LANGUAGE_REGIONS
 import com.conreo.couchytv.data.LauncherConfig
+import com.conreo.couchytv.data.WeatherLocation
 import java.io.IOException
 import java.util.Locale
 import kotlinx.coroutines.launch
 
 @Composable
-fun SetupWizard(
+internal fun SetupWizard(
     config: LauncherConfig,
     saving: Boolean,
     languageApplied: Boolean,
+    useInitialIpLocation: Boolean,
     onChooseLanguage: suspend (String) -> Unit,
-    onDone: (pressHome: Boolean, vpnPackage: String?, useIpWeather: Boolean?) -> Unit,
+    onConfigureWeather: suspend (WeatherLocation?) -> Unit,
+    onDone: (pressHome: Boolean, vpnPackage: String?) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var step by rememberSaveable { mutableIntStateOf(0) }
     var vpnPackage by rememberSaveable { mutableStateOf(config.vpnApp.takeIf { config.showVpnButton }) }
-    var useIpWeather by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var pendingLanguage by rememberSaveable { mutableStateOf<String?>(null) }
     var choosingLanguage by rememberSaveable { mutableStateOf(false) }
+    var showingAndroidSettings by rememberSaveable { mutableStateOf(false) }
+    val settingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        showingAndroidSettings = false
+    }
+    fun openWizardSettings(action: String) {
+        if (showingAndroidSettings) return
+        showingAndroidSettings = true
+        scope.launch {
+            // Let Compose fit the wizard beside the native panel before it opens.
+            withFrameNanos {}
+            withFrameNanos {}
+            if (runCatching { settingsLauncher.launch(Intent(action)) }.isFailure &&
+                runCatching { settingsLauncher.launch(Intent(Settings.ACTION_SETTINGS)) }.isFailure
+            ) showingAndroidSettings = false
+        }
+    }
     val scroll = key(step) { rememberScrollState() }
     BackHandler(enabled = step == 1 || step == 2) { step-- }
 
@@ -94,16 +117,25 @@ fun SetupWizard(
         }
     }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(WALLPAPERS[0].brush()),
-        contentAlignment = Alignment.Center,
+    val besideSettings = step == 3 && showingAndroidSettings
+    val systemIsRtl =
+        context.applicationContext.resources.configuration.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL
+    val alignment = when {
+        !besideSettings -> Alignment.Center
+        systemIsRtl -> AbsoluteAlignment.CenterRight
+        else -> AbsoluteAlignment.CenterLeft
+    }
+    BoxWithConstraints(
+        Modifier.fillMaxSize().background(WALLPAPERS[0].brush()),
+        contentAlignment = alignment,
     ) {
+        // The native single-pane Settings window occupies the trailing three eighths.
+        val paneWidth = if (besideSettings) maxWidth * (5f / 8f) else 680.dp
+        val horizontalPadding = if (besideSettings) (paneWidth * 0.07f).coerceIn(18.dp, 56.dp) else 36.dp
         Column(
             Modifier
-                .width(680.dp)
-                .padding(horizontal = 36.dp, vertical = 24.dp)
+                .width(paneWidth)
+                .padding(horizontal = horizontalPadding, vertical = 16.dp)
                 .verticalScroll(scroll)
                 .padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -158,34 +190,20 @@ fun SetupWizard(
                         step = 2
                     }
                 }
-                2 -> {
-                    Title(stringResource(R.string.item_weather))
-                    Body(stringResource(R.string.weather_hint))
-                    Body(stringResource(R.string.weather_geoip_notice))
-                    Button(onClick = {
-                        useIpWeather = true
-                        step = 3
-                    }) { Text(stringResource(R.string.weather_ip_enable)) }
-                    if (config.weatherEnabled) {
-                        Button(onClick = {
-                            useIpWeather = false
-                            step = 3
-                        }) { Text(stringResource(R.string.off)) }
-                    }
-                    NavRow(
-                        backAction = { step = 1 },
-                        nextLabel = stringResource(if (config.weatherEnabled) R.string.next else R.string.off),
-                    ) {
-                        useIpWeather = null
-                        step = 3
-                    }
-                }
+                2 -> WizardWeatherStep(
+                    config = config,
+                    useInitialIpLocation = useInitialIpLocation,
+                    onBack = { step = 1 },
+                    onSave = onConfigureWeather,
+                    onNext = { step = 3 },
+                )
                 else -> {
                     Title(stringResource(R.string.wizard_home_title))
                     HomeLauncherControls(
                         wizardBack = { step = 2 },
                         wizardSaving = saving,
-                        onWizardDone = { pressHome -> onDone(pressHome, vpnPackage, useIpWeather) },
+                        onWizardSettings = ::openWizardSettings,
+                        onWizardDone = { pressHome -> onDone(pressHome, vpnPackage) },
                     )
                 }
             }

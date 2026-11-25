@@ -5,7 +5,7 @@ No ads. No tracking. No accounts. Just your apps.
 Features
 
 • Carousel, Grid, or Dock layout  
-• Video wallpapers from Apple/Amazon aerials (opt-in)  
+• Video wallpapers from Apple/Amazon aerials
 • VPN status icon with quick-launch  
 • Clock, date, network, and VPN in the status bar  
 • Organize apps into custom sections  

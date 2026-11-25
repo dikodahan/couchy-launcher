@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">Aproximada (endereço IP)</string>
     <string name="weather_src_latlong">Coordenadas manuais</string>
     <string name="weather_src_zip">Código postal</string>
-    <string name="weather_geoip_notice">Envia o seu endereço IP para GeoJS (get.geojs.io) para estimar uma localização — sem conta, sem outros dados</string>
+    <string name="weather_geoip_notice">Seu endereço IP é usado para estimar sua localização.</string>
     <string name="weather_lat">Latitude</string>
     <string name="weather_lon">Longitude</string>
     <string name="weather_zip">Código postal</string>
@@ -178,6 +178,7 @@
     <string name="about_license">Licenciado sob a GNU General Public License v3.0 (GPLv3). Você é livre para usar, estudar, compartilhar e modificar o Couchy Launcher.</string>
     <string name="about_thirdparty">Vídeos aéreos: coleções Apple, Amazon e da comunidade, transmitidos de seus proprietários.</string>
     <string name="rerun_wizard">Executar assistente novamente</string>
+    <string name="rerun_wizard_confirm">Executar o assistente de configuração novamente?</string>
     <string name="rerun_wizard_sub">Configuração do launcher padrão e dicas iniciais</string>
 
     <string name="wizard_welcome_title">Bem-vindo ao Couchy Launcher</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">Digite coordenadas, um CEP ou um código de país de duas letras válidos.</string>
     <string name="weather_location_failed">Não foi possível encontrar o local. Verifique os ajustes ou informe as coordenadas manualmente.</string>
     <string name="weather_forecast_failed">Não foi possível carregar a previsão. Verifique a conexão da TV e tente novamente.</string>
-    <string name="weather_ip_enable">Usar GeoJS para localizar pelo IP</string>
+    <string name="weather_ip_enable">Usar seu IP para localização</string>
     <string name="weather_ip_rate_limited">O limite de consultas por IP foi atingido. Couchy tentará novamente na próxima abertura. Busque por cidade para definir um local agora.</string>
     <string name="weather_ip_city">Local da previsão: %1$s</string>
     <string name="weather_using_saved_ip_city">Usando o último local por IP salvo. Não haverá outra consulta por IP nesta sessão.</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">Não foi possível concluir esta ação.</string>
     <string name="recommended_storage_required">Permita o acesso ao armazenamento para salvar APKs na pasta Downloads.</string>
     <string name="recommended_settings">Adicionar apps recomendados</string>
+    <string name="recommended_settings_sub">Vincule um catálogo para exibir sua própria lista de apps recomendados.</string>
     <string name="recommended_catalog_url">URL do catálogo JSON</string>
     <string name="recommended_catalog_invalid">Insira um link HTTPS válido para um arquivo JSON compatível de apps recomendados.</string>
     <string name="apps_reorder_mode">Modo de reordenar apps</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">Idiomas do teclado</string>
     <string name="shortcut_screensaver">Escolher protetor de tela</string>
     <string name="shortcut_power_timeout">Desligar automaticamente</string>
+    <string name="power_timeout_never">Nunca</string>
     <string name="wizard_language_title">Em qual idioma você quer usar o Couchy?</string>
+    <string name="wizard_developer_options">Ativar as opções do desenvolvedor</string>
+    <string name="wizard_developer_steps">Em Sobre, selecione a versão do sistema Android TV e pressione OK sete vezes. Pressione Voltar.</string>
+    <string name="wizard_enable_adb">Ativar a depuração ADB</string>
+    <string name="wizard_adb_steps">Nas opções do desenvolvedor, ative a depuração pela rede ou por ADB e pressione Voltar.</string>
+    <string name="recommended_catalog_prompt">URL de configuração</string>
+    <string name="recommended_catalog_description">Insira o link HTTPS para o seu arquivo JSON de apps recomendados.</string>
+    <string name="recommended_adb_commands">Comandos ADB</string>
+    <string name="recommended_adb_run">Executar comando</string>
+    <string name="recommended_adb_review">Revise o comando antes de executá-lo nesta TV com as permissões do shell do ADB.</string>
+    <string name="recommended_adb_completed">Comando concluído.</string>
+    <string name="recommended_adb_exit_code">O comando terminou com o código %1$d.</string>
+    <string name="wizard_weather_confirm">Confirmar localização</string>
+    <string name="wizard_weather_locating">Buscando sua localização aproximada…</string>
+    <string name="wizard_weather_ip_missing">Não foi possível localizar você pelo IP. Escolha Buscar por cidade.</string>
 </resources>

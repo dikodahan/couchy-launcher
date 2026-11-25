@@ -134,8 +134,7 @@ object Actions {
     }
 
     fun openDebuggingSettings(context: Context) {
-        runCatching { context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)) }
-            .onFailure { openSystemSettings(context) }
+        if (!tryOpenSettings(context, Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))) openSystemSettings(context)
     }
 
     fun openSystemSettings(context: Context) {

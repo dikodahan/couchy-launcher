@@ -117,6 +117,36 @@ class LocalAdbTest {
         assertEquals(1, key.signatures)
     }
 
+
+    @Test fun sequenceUsesOneConnectionInOrderAndStopsAtFirstFailure() = runBlocking {
+        fakeServer(handler = { socket ->
+            val input = socket.getInputStream()
+            val output = socket.getOutputStream()
+            assertEquals(AdbWire.CNXN, AdbWire.read(input, false).command)
+            authorize(output)
+            for ((index, status) in listOf(0, 7).withIndex()) {
+                val open = AdbWire.read(input, false)
+                val id = index + 1
+                val remoteId = 90 + id
+                assertEquals(AdbWire.OPEN, open.command)
+                assertEquals(id, open.arg0)
+                val service = open.payload.decodeToString()
+                assertTrue(service.contains("\ngetprop step$id\n"))
+                val marker = Regex("__COUCHY_EXIT_[a-f0-9]+:").find(service)!!.value
+                AdbWire.write(output, AdbPacket(AdbWire.OKAY, remoteId, id))
+                AdbWire.write(output, AdbPacket(AdbWire.WRTE, remoteId, id, "$id\n$marker$status\n".toByteArray()))
+                assertEquals(AdbWire.OKAY, AdbWire.read(input, false).command)
+                AdbWire.write(output, AdbPacket(AdbWire.CLSE, remoteId, id))
+                assertEquals(AdbWire.CLSE, AdbWire.read(input, false).command)
+                if (index == 0) AdbWire.write(output, AdbPacket(AdbWire.CLSE, remoteId, id))
+            }
+            assertEquals(-1, input.read())
+        }) { port ->
+            val results = LocalAdb(TestKey(), port).shellSequence((1..3).map { "getprop step$it" })
+            assertEquals(listOf(AdbShellResult(0, "1"), AdbShellResult(7, "2")), results)
+        }
+    }
+
     @Test fun missingExitMarkerCannotReportSuccess() = runBlocking {
         val key = TestKey()
         fakeServer(handler = { socket ->

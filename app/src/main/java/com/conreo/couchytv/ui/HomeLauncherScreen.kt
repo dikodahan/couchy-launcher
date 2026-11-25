@@ -1,6 +1,7 @@
 package com.conreo.couchytv.ui
 
 import android.app.Activity
+import android.provider.Settings
 import java.io.IOException
 import java.net.ConnectException
 import androidx.activity.compose.BackHandler
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -17,13 +19,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -38,6 +43,7 @@ import com.conreo.couchytv.data.LocalAdb
 import com.conreo.couchytv.data.StockHomeStillActive
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -60,6 +66,7 @@ internal fun HomeLauncherScreen() {
 internal fun HomeLauncherControls(
     wizardBack: (() -> Unit)? = null,
     wizardSaving: Boolean = false,
+    onWizardSettings: ((String) -> Unit)? = null,
     onWizardDone: ((pressHome: Boolean) -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -97,10 +104,17 @@ internal fun HomeLauncherControls(
     }
     suspend fun refreshStatus() {
         status = manager.status()
-        if (onWizardDone == null) adbAvailable = LocalAdb.isNetworkDebuggingAvailable()
+        adbAvailable = LocalAdb.isNetworkDebuggingAvailable()
     }
-    LaunchedEffect(manager, lifecycle) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { refreshStatus() }
+    val inWizard = onWizardDone != null
+    LaunchedEffect(manager, lifecycle, inWizard) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            refreshStatus()
+            while (inWizard) {
+                delay(1_500)
+                adbAvailable = LocalAdb.isNetworkDebuggingAvailable()
+            }
+        }
     }
     val rolePicker = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         scope.launch {
@@ -109,7 +123,7 @@ internal fun HomeLauncherControls(
             HomeDiagnostics.publishToDownloads(context)
             if (status?.currentPackage == context.packageName) couchyIsHome()
             else if (result.resultCode == Activity.RESULT_OK) {
-                message = context.getString(if (onWizardDone != null) R.string.home_wizard_debug_needed else R.string.adb_enable_required)
+                message = context.getString(R.string.adb_enable_required)
             }
         }
     }
@@ -167,34 +181,60 @@ internal fun HomeLauncherControls(
     }
     val bidi = android.text.BidiFormatter.getInstance(context.resources.configuration.locales[0])
     val currentLabel = status?.currentLabel?.ifBlank { null } ?: stringResource(R.string.home_not_selected)
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(if (inWizard) 8.dp else 4.dp)) {
         Text(stringResource(R.string.home_current, bidi.unicodeWrap(currentLabel)), style = MaterialTheme.typography.bodyMedium, color = Color.White,
             modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp))
         val couchy = status?.choices?.firstOrNull { it.component.packageName == context.packageName }
         if (onWizardDone != null) {
-            val keepFocus = initialFocus()
+            val wizardReady = !busy && !wizardSaving && adbAvailable == true && couchy != null
+            val focus = key(adbAvailable == false) { initialFocus() }
+            if (adbAvailable == false) {
+                SettingsItem(
+                    onClick = { onWizardSettings?.invoke(Settings.ACTION_DEVICE_INFO_SETTINGS) },
+                    modifier = Modifier.focusRequester(focus),
+                    headlineContent = { Text(stringResource(R.string.wizard_developer_options)) },
+                    supportingContent = { Text(stringResource(R.string.wizard_developer_steps)) },
+                    leadingContent = { Icon(AppIcons.Info, contentDescription = null) },
+                )
+                SettingsItem(
+                    onClick = { onWizardSettings?.invoke(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS) },
+                    headlineContent = { Text(stringResource(R.string.wizard_enable_adb)) },
+                    supportingContent = { Text(stringResource(R.string.wizard_adb_steps)) },
+                    leadingContent = { Icon(AppIcons.Gear, contentDescription = null) },
+                )
+            } else if (adbAvailable == true) {
+                Text(
+                    stringResource(R.string.home_adb_enabled),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.85f),
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                )
+            }
+            SettingsItem(
+                onClick = {
+                    if (status?.currentPackage == context.packageName) couchyIsHome()
+                    else if (couchy != null) change(choice = couchy) {
+                        manager.switchTo(couchy, pauseStock = false)
+                    }
+                },
+                enabled = wizardReady,
+                modifier = Modifier.focusProperties { canFocus = wizardReady },
+                headlineContent = { Text(stringResource(R.string.home_use_couchy)) },
+                leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
+            )
             Row(
-                Modifier.padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
             ) {
                 Button(
                     onClick = { onWizardDone(false) },
                     enabled = !busy && !wizardSaving,
-                    modifier = Modifier.focusRequester(keepFocus),
+                    modifier = if (adbAvailable != false) Modifier.focusRequester(focus) else Modifier,
                 ) { Text(stringResource(R.string.home_keep_current)) }
-                Button(
-                    onClick = {
-                        if (status?.currentPackage == context.packageName) couchyIsHome()
-                        else if (couchy != null) change(choice = couchy, allowRoleFallback = true) {
-                            manager.switchTo(couchy, pauseStock = false)
-                        }
-                    },
-                    enabled = !busy && !wizardSaving && couchy != null,
-                ) { Text(stringResource(R.string.home_use_couchy)) }
-            }
-            if (wizardBack != null) {
-                Button(onClick = wizardBack, enabled = !busy && !wizardSaving) {
-                    Text(stringResource(R.string.back))
+                if (wizardBack != null) {
+                    Button(onClick = wizardBack, enabled = !busy && !wizardSaving) {
+                        Text(stringResource(R.string.back))
+                    }
                 }
             }
         } else {
@@ -273,18 +313,23 @@ internal fun HomeLauncherControls(
 }
 
 @Composable
-internal fun PressHomeDialog(onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
+internal fun PressHomeDialog(waitForHome: Boolean = false, onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(dismissOnBackPress = !waitForHome, dismissOnClickOutside = !waitForHome),
+    ) {
         Surface(
             shape = RoundedCornerShape(20.dp),
             colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(Modifier.widthIn(max = 440.dp).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(stringResource(R.string.home_press_home_title), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.home_press_home_body), style = MaterialTheme.typography.bodyMedium)
-                val focus = initialFocus()
-                Button(onClick = onDismiss, modifier = Modifier.focusRequester(focus)) {
-                    Text(stringResource(R.string.done))
+                if (!waitForHome) {
+                    Text(stringResource(R.string.home_press_home_body), style = MaterialTheme.typography.bodyMedium)
+                    val focus = initialFocus()
+                    Button(onClick = onDismiss, modifier = Modifier.focusRequester(focus)) {
+                        Text(stringResource(R.string.done))
+                    }
                 }
             }
         }

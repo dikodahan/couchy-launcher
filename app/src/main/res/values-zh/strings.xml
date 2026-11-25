@@ -192,7 +192,7 @@
     <string name="weather_src_geoip">大致位置（IP 地址）</string>
     <string name="weather_src_latlong">手动坐标</string>
     <string name="weather_src_zip">邮政编码</string>
-    <string name="weather_geoip_notice">会将你的 IP 地址发送给 GeoJS (get.geojs.io) 以估算位置 — 不涉及账号，也不发送其他数据</string>
+    <string name="weather_geoip_notice">使用你的 IP 地址估算你的位置。</string>
     <string name="weather_lat">纬度</string>
     <string name="weather_lon">经度</string>
     <string name="weather_zip">邮政编码</string>
@@ -223,6 +223,7 @@
     <string name="about_license">基于 GNU General Public License v3.0（GPLv3）许可。您可以自由使用、研究、分享和修改 Couchy Launcher。</string>
     <string name="about_thirdparty">航拍视频：Apple、Amazon 和社区合集，从其所有者处串流。</string>
     <string name="rerun_wizard">重新运行设置向导</string>
+    <string name="rerun_wizard_confirm">要重新运行设置向导吗？</string>
     <string name="rerun_wizard_sub">默认启动器设置和首次使用提示</string>
 
     <!-- 设置向导 -->
@@ -312,7 +313,7 @@
     <string name="weather_location_missing">请设置有效地点以加载天气。</string>
     <string name="weather_location_failed">无法确定地点。请检查设置或手动输入坐标。</string>
     <string name="weather_forecast_failed">无法加载预报。请检查电视的网络连接后重试。</string>
-    <string name="weather_ip_enable">使用 GeoJS 根据 IP 确定位置</string>
+    <string name="weather_ip_enable">使用 IP 地址确定位置</string>
     <string name="weather_ip_rate_limited">IP 位置查询次数已达上限。Couchy 会在下次启动时重试。你也可以现在按城市查找。</string>
     <string name="weather_ip_city">预报地点：%1$s</string>
     <string name="weather_using_saved_ip_city">正在使用最近保存的 IP 位置。本次使用期间不会再次查询 IP。</string>
@@ -377,6 +378,7 @@
     <string name="recommended_action_failed">无法完成此操作。</string>
     <string name="recommended_storage_required">请授予存储权限，以便将 APK 保存到下载文件夹。</string>
     <string name="recommended_settings">添加推荐应用</string>
+    <string name="recommended_settings_sub">关联应用目录以显示您自己的推荐应用列表。</string>
     <string name="recommended_catalog_url">目录 JSON 网址</string>
     <string name="recommended_catalog_invalid">请输入指向兼容推荐应用 JSON 文件的有效 HTTPS 链接。</string>
     <string name="apps_reorder_mode">应用排序模式</string>
@@ -395,5 +397,20 @@
     <string name="shortcut_keyboard_languages">键盘语言</string>
     <string name="shortcut_screensaver">选择屏幕保护程序</string>
     <string name="shortcut_power_timeout">自动关闭</string>
+    <string name="power_timeout_never">从不</string>
     <string name="wizard_language_title">你希望 Couchy 使用哪种语言？</string>
+    <string name="wizard_developer_options">启用开发者选项</string>
+    <string name="wizard_developer_steps">在“关于”中选择 Android TV 操作系统版本，按七次确定键，再按返回键。</string>
+    <string name="wizard_enable_adb">启用 ADB 调试</string>
+    <string name="wizard_adb_steps">在开发者选项中开启网络调试或 ADB 调试，然后按返回键。</string>
+    <string name="recommended_catalog_prompt">配置网址</string>
+    <string name="recommended_catalog_description">输入推荐应用 JSON 文件的 HTTPS 链接。</string>
+    <string name="recommended_adb_commands">ADB 命令</string>
+    <string name="recommended_adb_run">运行命令</string>
+    <string name="recommended_adb_review">在此电视上使用 ADB shell 权限运行之前，请检查该命令。</string>
+    <string name="recommended_adb_completed">命令已执行完成。</string>
+    <string name="recommended_adb_exit_code">命令已退出，退出代码为 %1$d。</string>
+    <string name="wizard_weather_confirm">确认位置</string>
+    <string name="wizard_weather_locating">正在查找你的大致位置…</string>
+    <string name="wizard_weather_ip_missing">无法根据 IP 地址确定你的位置。请选择按城市查找。</string>
 </resources>

@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">Bij benadering (IP-adres)</string>
     <string name="weather_src_latlong">Handmatige coördinaten</string>
     <string name="weather_src_zip">Postcode</string>
-    <string name="weather_geoip_notice">Stuurt je IP-adres naar GeoJS (get.geojs.io) om een locatie te schatten — geen account, geen andere gegevens</string>
+    <string name="weather_geoip_notice">Je IP-adres wordt gebruikt om je locatie te schatten.</string>
     <string name="weather_lat">Breedtegraad</string>
     <string name="weather_lon">Lengtegraad</string>
     <string name="weather_zip">Postcode</string>
@@ -178,6 +178,7 @@
     <string name="about_license">Gelicentieerd onder de GNU General Public License v3.0 (GPLv3). Je bent vrij om Couchy Launcher te gebruiken, bestuderen, delen en wijzigen.</string>
     <string name="about_thirdparty">Luchtvideo\'s: Apple-, Amazon- en communitycollecties, gestreamd van hun eigenaars.</string>
     <string name="rerun_wizard">Installatiewizard opnieuw uitvoeren</string>
+    <string name="rerun_wizard_confirm">De installatiewizard opnieuw starten?</string>
     <string name="rerun_wizard_sub">Standaardlauncher instellen en eerste gebruikstips</string>
 
     <string name="wizard_welcome_title">Welkom bij Couchy Launcher</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">Voer geldige coördinaten, een postcode of een landcode van twee letters in.</string>
     <string name="weather_location_failed">Locatie niet gevonden. Controleer je instellingen of voer coördinaten in.</string>
     <string name="weather_forecast_failed">De verwachting kon niet worden geladen. Controleer de internetverbinding van de tv en probeer het opnieuw.</string>
-    <string name="weather_ip_enable">GeoJS gebruiken voor IP-locatie</string>
+    <string name="weather_ip_enable">Je IP-adres gebruiken voor je locatie</string>
     <string name="weather_ip_rate_limited">De limiet voor IP-locaties is bereikt. Couchy probeert het bij de volgende start opnieuw. Zoek nu op plaats om een locatie in te stellen.</string>
     <string name="weather_ip_city">Weerlocatie: %1$s</string>
     <string name="weather_using_saved_ip_city">De laatst opgeslagen IP-locatie wordt gebruikt. Er volgt geen nieuwe IP-zoekopdracht in deze sessie.</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">Deze actie kon niet worden voltooid.</string>
     <string name="recommended_storage_required">Geef toegang tot opslag om APK’s in Downloads op te slaan.</string>
     <string name="recommended_settings">Aanbevolen apps toevoegen</string>
+    <string name="recommended_settings_sub">Koppel een catalogus om je eigen lijst met aanbevolen apps te tonen.</string>
     <string name="recommended_catalog_url">JSON-URL van catalogus</string>
     <string name="recommended_catalog_invalid">Voer een geldige HTTPS-link naar een compatibel JSON-bestand met aanbevolen apps in.</string>
     <string name="apps_reorder_mode">Apps herschikken</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">Toetsenbordtalen</string>
     <string name="shortcut_screensaver">Schermbeveiliging kiezen</string>
     <string name="shortcut_power_timeout">Automatisch uitschakelen</string>
+    <string name="power_timeout_never">Nooit</string>
     <string name="wizard_language_title">In welke taal wil je Couchy gebruiken?</string>
+    <string name="wizard_developer_options">Ontwikkelaarsopties inschakelen</string>
+    <string name="wizard_developer_steps">Selecteer bij Over de Android TV OS-build en druk zeven keer op OK. Druk op Terug om terug te gaan.</string>
+    <string name="wizard_enable_adb">ADB-foutopsporing inschakelen</string>
+    <string name="wizard_adb_steps">Schakel bij Ontwikkelaarsopties netwerk- of ADB-foutopsporing in en druk op Terug.</string>
+    <string name="recommended_catalog_prompt">Configuratie-URL</string>
+    <string name="recommended_catalog_description">Voer de HTTPS-link naar je JSON-bestand met aanbevolen apps in.</string>
+    <string name="recommended_adb_commands">ADB-opdrachten</string>
+    <string name="recommended_adb_run">Opdracht uitvoeren</string>
+    <string name="recommended_adb_review">Controleer de opdracht voordat je deze op deze tv uitvoert met ADB-shellrechten.</string>
+    <string name="recommended_adb_completed">Opdracht voltooid.</string>
+    <string name="recommended_adb_exit_code">De opdracht is beëindigd met code %1$d.</string>
+    <string name="wizard_weather_confirm">Locatie bevestigen</string>
+    <string name="wizard_weather_locating">Je geschatte locatie wordt gezocht…</string>
+    <string name="wizard_weather_ip_missing">Je locatie kon niet via IP worden bepaald. Kies Zoeken op stad.</string>
 </resources>

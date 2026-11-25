@@ -1,0 +1,1 @@
+A clear-glass dock and status bar, weather location confirmation in setup, and direct access to Android settings. Recommended Apps catalogs can include ADB commands for you to review and run on your TV. Translation coverage checked in all 19 languages.

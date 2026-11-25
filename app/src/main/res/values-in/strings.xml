@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">Perkiraan (alamat IP)</string>
     <string name="weather_src_latlong">Koordinat manual</string>
     <string name="weather_src_zip">Kode pos</string>
-    <string name="weather_geoip_notice">Mengirim alamat IP Anda ke GeoJS (get.geojs.io) untuk memperkirakan lokasi — tanpa akun, tanpa data lain</string>
+    <string name="weather_geoip_notice">Alamat IP Anda digunakan untuk memperkirakan lokasi Anda.</string>
     <string name="weather_lat">Lintang</string>
     <string name="weather_lon">Bujur</string>
     <string name="weather_zip">Kode pos</string>
@@ -178,6 +178,7 @@
     <string name="about_license">Dilisensikan di bawah GNU General Public License v3.0 (GPLv3). Anda bebas menggunakan, mempelajari, membagikan, dan memodifikasi Couchy Launcher.</string>
     <string name="about_thirdparty">Video udara: koleksi Apple, Amazon, dan komunitas, streaming dari pemiliknya.</string>
     <string name="rerun_wizard">Jalankan wizard penyiapan lagi</string>
+    <string name="rerun_wizard_confirm">Jalankan lagi wizard penyiapan?</string>
     <string name="rerun_wizard_sub">Penyiapan launcher default dan tips pertama kali</string>
 
     <string name="wizard_welcome_title">Selamat datang di Couchy Launcher</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">Masukkan koordinat, kode pos, atau kode negara dua huruf yang valid.</string>
     <string name="weather_location_failed">Lokasi tidak ditemukan. Periksa setelan atau masukkan koordinat secara manual.</string>
     <string name="weather_forecast_failed">Prakiraan tidak dapat dimuat. Periksa internet TV dan coba lagi.</string>
-    <string name="weather_ip_enable">Gunakan GeoJS untuk lokasi IP</string>
+    <string name="weather_ip_enable">Gunakan IP Anda untuk lokasi</string>
     <string name="weather_ip_rate_limited">Batas pencarian lokasi IP tercapai. Couchy akan mencoba lagi saat dibuka berikutnya. Cari berdasarkan kota untuk menentukan lokasi sekarang.</string>
     <string name="weather_ip_city">Lokasi prakiraan: %1$s</string>
     <string name="weather_using_saved_ip_city">Menggunakan lokasi IP terakhir yang disimpan. Tidak ada pencarian IP lain dalam sesi ini.</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">Tindakan ini tidak dapat diselesaikan.</string>
     <string name="recommended_storage_required">Izinkan akses penyimpanan untuk menyimpan APK di folder Unduhan.</string>
     <string name="recommended_settings">Tambahkan aplikasi yang direkomendasikan</string>
+    <string name="recommended_settings_sub">Tautkan katalog untuk menampilkan daftar aplikasi rekomendasi Anda sendiri.</string>
     <string name="recommended_catalog_url">URL JSON katalog</string>
     <string name="recommended_catalog_invalid">Masukkan tautan HTTPS yang valid ke file JSON aplikasi yang direkomendasikan dan kompatibel.</string>
     <string name="apps_reorder_mode">Mode susun ulang aplikasi</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">Bahasa keyboard</string>
     <string name="shortcut_screensaver">Pilih screensaver</string>
     <string name="shortcut_power_timeout">Matikan otomatis</string>
+    <string name="power_timeout_never">Tidak pernah</string>
     <string name="wizard_language_title">Bahasa apa yang ingin Anda gunakan di Couchy?</string>
+    <string name="wizard_developer_options">Aktifkan opsi developer</string>
+    <string name="wizard_developer_steps">Di Tentang, pilih build OS Android TV dan tekan OK tujuh kali. Tekan Kembali untuk kembali.</string>
+    <string name="wizard_enable_adb">Aktifkan debugging ADB</string>
+    <string name="wizard_adb_steps">Di opsi developer, aktifkan debugging jaringan atau ADB, lalu tekan Kembali.</string>
+    <string name="recommended_catalog_prompt">URL konfigurasi</string>
+    <string name="recommended_catalog_description">Masukkan tautan HTTPS ke file JSON aplikasi rekomendasi Anda.</string>
+    <string name="recommended_adb_commands">Perintah ADB</string>
+    <string name="recommended_adb_run">Jalankan perintah</string>
+    <string name="recommended_adb_review">Tinjau perintah sebelum menjalankannya di TV ini dengan izin shell ADB.</string>
+    <string name="recommended_adb_completed">Perintah selesai.</string>
+    <string name="recommended_adb_exit_code">Perintah berakhir dengan kode %1$d.</string>
+    <string name="wizard_weather_confirm">Konfirmasi lokasi</string>
+    <string name="wizard_weather_locating">Mencari perkiraan lokasi Anda…</string>
+    <string name="wizard_weather_ip_missing">Lokasi tidak dapat ditentukan dari IP. Pilih Cari berdasarkan kota.</string>
 </resources>

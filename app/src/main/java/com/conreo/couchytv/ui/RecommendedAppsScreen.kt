@@ -37,10 +37,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -60,20 +62,34 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.conreo.couchytv.Actions
 import com.conreo.couchytv.R
+import com.conreo.couchytv.data.IconLibrary
 import com.conreo.couchytv.data.RecommendedApp
+import com.conreo.couchytv.data.RecommendedCatalog
+import com.conreo.couchytv.data.RecommendedCommand
 import com.conreo.couchytv.data.RecommendedApps
 import com.conreo.couchytv.data.RecommendedDownload
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun RecommendedAppsScreen(catalogUrl: String, verifiedApps: List<RecommendedApp>) {
+internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: RecommendedCatalog) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val repository = remember(context, catalogUrl) { RecommendedApps(context, catalogUrl) }
     val scope = rememberCoroutineScope()
-    var entries by remember(repository) { mutableStateOf(verifiedApps) }
+    var catalog by remember(repository) { mutableStateOf(verifiedCatalog) }
+    val apps = catalog.apps
+    val commands = catalog.adbCommands
+    val locale = LocalConfiguration.current.locales[0]
+    var selectedCommand by remember(repository) { mutableStateOf<RecommendedCommand?>(null) }
+    val terminal by produceState<ImageBitmap?>(initialValue = null, commands.isNotEmpty()) {
+        value = if (commands.isEmpty()) null else withContext(Dispatchers.IO) {
+            IconLibrary.load(context).find("terminal")?.render(96)?.asImageBitmap()
+        }
+    }
     var downloads by remember { mutableStateOf(emptyMap<String, RecommendedDownload>()) }
     var pending by remember { mutableStateOf(emptySet<String>()) }
     var storageRequest by rememberSaveable { mutableStateOf<String?>(null) }
@@ -81,15 +97,15 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedApps: List<Recomm
 
     LaunchedEffect(repository) {
         try {
-            entries = repository.refresh()
+            catalog = repository.refresh()
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
             // The verified catalog remains available if a refresh fails.
         }
     }
-    LaunchedEffect(entries, lifecycle) {
-        val apps = entries?.takeUnless { it.isEmpty() } ?: return@LaunchedEffect
+    LaunchedEffect(apps, lifecycle) {
+        if (apps.isEmpty()) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             while (true) {
                 try {
@@ -110,7 +126,7 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedApps: List<Recomm
         scope.launch {
             try {
                 action()
-                downloads = repository.downloads(entries.orEmpty())
+                downloads = repository.downloads(catalog.apps)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
@@ -124,23 +140,29 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedApps: List<Recomm
     fun install(entry: RecommendedApp) = perform(entry) { context.startActivity(repository.installer(entry)) }
 
     val storagePermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        val entry = entries?.firstOrNull { it.key == storageRequest }
+        val entry = catalog.apps.firstOrNull { it.key == storageRequest }
         storageRequest = null
         if (granted && entry != null) enqueue(entry)
         else Actions.toast(context, context.getString(R.string.recommended_storage_required))
     }
     val installPermission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        val entry = entries?.firstOrNull { it.key == installRequest }
+        val entry = catalog.apps.firstOrNull { it.key == installRequest }
         installRequest = null
         if (context.packageManager.canRequestPackageInstalls() && entry != null) install(entry)
         else Actions.toast(context, context.getString(R.string.update_permission))
     }
 
-    val apps = entries
     Column(Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.recommended_title), style = MaterialTheme.typography.titleLarge)
+        Text(
+            stringResource(R.string.recommended_title),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
         when {
-            apps.isEmpty() -> Text(stringResource(R.string.recommended_empty))
+            apps.isEmpty() && commands.isEmpty() -> Text(
+                stringResource(R.string.recommended_empty),
+                color = MaterialTheme.colorScheme.onSurface,
+            )
             else -> {
                 val first = initialFocus()
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -192,9 +214,41 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedApps: List<Recomm
                             )
                         }
                     }
+                    if (commands.isNotEmpty()) {
+                        item(key = "adb-commands") {
+                            Text(
+                                stringResource(R.string.recommended_adb_commands),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        items(commands.size, key = { "command:${commands[it].key}" }) { index ->
+                            val entry = commands[index]
+                            SettingsItem(
+                                onClick = { selectedCommand = entry },
+                                modifier = if (apps.isEmpty() && index == 0) Modifier.focusRequester(first)
+                                    else Modifier,
+                                headlineContent = { Text(entry.displayName(locale)) },
+                                leadingContent = {
+                                    val bitmap = terminal
+                                    if (bitmap != null) {
+                                        Image(
+                                            bitmap,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(24.dp),
+                                            colorFilter = ColorFilter.tint(LocalContentColor.current),
+                                        )
+                                    } else Icon(AppIcons.Apps, contentDescription = null, modifier = Modifier.size(24.dp))
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+    selectedCommand?.let { entry ->
+        RecommendedCommandDialog(entry.displayName(locale), entry.commands) { selectedCommand = null }
     }
 }
 

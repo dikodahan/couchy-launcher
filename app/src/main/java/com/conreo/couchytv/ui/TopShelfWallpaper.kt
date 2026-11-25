@@ -1,10 +1,10 @@
 package com.conreo.couchytv.ui
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import android.util.LruCache
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -78,17 +77,18 @@ internal fun TopShelfWallpaper(packageName: String?, backdrop: LauncherBackdrop)
                 }
             }
         }
+        val refracted = remember { Animatable(0f) }
         DisposableEffect(backdrop) {
-            onDispose { backdrop.frame = null }
+            backdrop.frameVisibility = { refracted.value }
+            onDispose {
+                backdrop.frame = null
+                backdrop.frameVisibility = null
+            }
         }
         LaunchedEffect(artwork, backdrop) {
-            backdrop.frame = artwork?.let { image ->
-                withContext(Dispatchers.Default) {
-                    val width = minOf(image.width, 48)
-                    val height = (image.height * width / image.width).coerceAtLeast(1)
-                    Bitmap.createScaledBitmap(image.asAndroidBitmap(), width, height, true).asImageBitmap()
-                }
-            }
+            refracted.snapTo(0f)
+            backdrop.frame = artwork
+            if (artwork != null) refracted.animateTo(1f, tween(450))
         }
         Crossfade(targetState = artwork, animationSpec = tween(450), label = "topShelfArtwork") { slide ->
             if (slide != null) Image(slide, contentDescription = null, modifier = Modifier.fillMaxSize(),

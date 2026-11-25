@@ -7,6 +7,51 @@ class WeatherTest {
     private val enabled = LauncherConfig(weatherEnabled = true, weatherLat = 40.7, weatherLon = -74.0)
     private val response = """{"current":{"temperature_2m":21.5,"weather_code":61},"daily":{"time":[1795392000],"temperature_2m_min":[12.0],"temperature_2m_max":[22.0],"weather_code":[61],"precipitation_probability_max":[60]}}"""
 
+    @Test fun firstLaunchUnitsUseCountryCodesAndFallBackToCelsius() {
+        for (country in listOf("US", "PW", "MH", "FM", "AS", "GU", "MP", "PR", "UM", "VI", " us ")) {
+            var calls = 0
+            val client = WeatherClient(get = { url ->
+                assertEquals("https://get.geojs.io/v1/ip/geo.json", url)
+                calls++
+                WeatherHttpResponse("""{"country_code":"$country","city":"Example","latitude":"40","longitude":"-74"}""", 200)
+            })
+            assertEquals(country, 1, client.initialWeatherUnit())
+            assertEquals("Example", client.previewIpLocation()?.label)
+            assertEquals(1, calls)
+        }
+        for (response in listOf(
+            WeatherHttpResponse("""{"country_code":"GB"}""", 200),
+            WeatherHttpResponse("""{"country_code":"CA"}""", 200),
+            WeatherHttpResponse("invalid", 200),
+            WeatherHttpResponse(status = 429),
+            WeatherHttpResponse(),
+        )) {
+            assertEquals(0, WeatherClient(get = { response }).initialWeatherUnit())
+        }
+    }
+
+    @Test fun freshDefaultsNeverCopyPersonalConfigurationOrChangeLegacyBackupDefaults() {
+        val fresh = newInstallDefaults()
+        assertTrue(fresh.useBuiltinAerials)
+        assertFalse(fresh.h24)
+        assertEquals(2, fresh.dateFormat)
+        assertFalse(fresh.showVpnButton)
+        assertEquals(WEATHER_ICONS_ANIMATED, fresh.weatherForecastIconStyle)
+        assertFalse(fresh.setupDone)
+        assertFalse(fresh.weatherEnabled)
+        assertFalse(fresh.weatherGeoJsEnabled)
+        assertFalse(fresh.recommendedAppsEnabled)
+        assertTrue(fresh.recommendedAppsUrl.isEmpty())
+        assertTrue(fresh.order.isEmpty())
+        assertTrue(fresh.sections.isEmpty())
+
+        val legacy = ConfigBackup.decode("""{"categories":[{"id":"apps","name":"Apps"}]}""")
+        assertFalse(legacy.useBuiltinAerials)
+        assertTrue(legacy.h24)
+        assertTrue(legacy.showVpnButton)
+        assertEquals(0, legacy.weatherUnit)
+    }
+
     @Test fun disabledAndInvalidInputsProduceNoRequest() {
         assertNull(WeatherRequest.from(LauncherConfig()))
         for (bad in listOf(enabled.copy(weatherLat = 91.0), enabled.copy(weatherLon = -181.0),
@@ -117,7 +162,7 @@ class WeatherTest {
         var time = 1_000L
         var ipCalls = 0
         var forecastCalls = 0
-        var saved: WeatherIpLocation? = null
+        var saved: WeatherLocation? = null
         val client = WeatherClient(get = {
             if (it.startsWith("https://get.geojs.io")) {
                 ipCalls++
@@ -136,7 +181,7 @@ class WeatherTest {
         time += 8 * 60 * 60 * 1000
         assertNotNull(client.fetch(ip.copy(unit = 1)).data)
         assertNotNull(client.fetch(ip).data)
-        assertEquals(WeatherIpLocation(52.52, 13.41, "Berlin, Germany"), saved)
+        assertEquals(WeatherLocation(52.52, 13.41, "Berlin, Germany"), saved)
         assertEquals(1, ipCalls)
         assertEquals(3, forecastCalls)
     }
@@ -157,7 +202,7 @@ class WeatherTest {
         repeat(3) { assertEquals(WeatherFailure.IpRateLimited, firstLaunch.fetch(ip).failure) }
         assertEquals(1, ipCalls)
         val secondLaunch = WeatherClient(get = transport)
-        val result = secondLaunch.fetch(ip, loadIpLocation = { WeatherIpLocation(52.52, 13.41, "Berlin") })
+        val result = secondLaunch.fetch(ip, loadIpLocation = { WeatherLocation(52.52, 13.41, "Berlin") })
         assertTrue(result.usingSavedIpLocation)
         assertEquals("Berlin", result.ipLocationLabel)
         assertNotNull(result.data)
@@ -195,4 +240,33 @@ class WeatherTest {
         assertEquals(WeatherIconKind.Rain, forecast.daily.single().kind)
     }
 
+
+    @Test fun confirmedIpPreviewUsesSavedCoordinatesWithoutAnotherIpLookup() {
+        val requests = mutableListOf<String>()
+        val client = WeatherClient(get = { url ->
+            requests += url
+            if (url.startsWith("https://get.geojs.io")) {
+                WeatherHttpResponse("""{"latitude":"52.52","longitude":"13.41","city":"Berlin"}""", 200)
+            } else WeatherHttpResponse(response, 200)
+        })
+        val location = client.previewIpLocation()!!
+        assertEquals("Berlin", location.label)
+        assertEquals(location, client.previewIpLocation())
+        val config = LauncherConfig().withWeatherLocation(location).copy(weatherEnabled = true)
+        assertEquals(WEATHER_SRC_LATLONG, config.weatherLocationSource)
+        assertEquals("Berlin", config.weatherCityLabel)
+        assertNotNull(client.fetch(WeatherRequest.from(config)!!).data)
+        assertEquals(2, requests.size)
+        assertTrue(requests.last().contains("latitude=52.52&longitude=13.41"))
+    }
+
+    @Test fun failedIpPreviewDoesNotPreventConfirmingASearchedCity() {
+        val client = WeatherClient(get = { WeatherHttpResponse(status = 429) })
+        assertNull(client.previewIpLocation())
+        val city = WeatherCity("Paris", 48.85, 2.35, country = "France")
+        val config = LauncherConfig().withWeatherLocation(city.toLocation()).copy(weatherEnabled = true)
+        assertEquals("Paris, France", config.weatherCityLabel)
+        assertEquals(48.85, WeatherRequest.from(config)!!.lat, 0.00001)
+        assertEquals(2.35, WeatherRequest.from(config)!!.lon, 0.00001)
+    }
 }

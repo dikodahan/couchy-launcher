@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">Приблизительно (по IP-адресу)</string>
     <string name="weather_src_latlong">Координаты вручную</string>
     <string name="weather_src_zip">Почтовый индекс</string>
-    <string name="weather_geoip_notice">Отправляет ваш IP-адрес на GeoJS (get.geojs.io) для приблизительного определения местоположения — без аккаунта и других данных</string>
+    <string name="weather_geoip_notice">Ваш IP-адрес используется для приблизительного определения местоположения.</string>
     <string name="weather_lat">Широта</string>
     <string name="weather_lon">Долгота</string>
     <string name="weather_zip">Почтовый индекс</string>
@@ -178,6 +178,7 @@
     <string name="about_license">Лицензия GNU General Public License v3.0 (GPLv3). Вы можете свободно использовать, изучать, делиться и изменять Couchy Launcher.</string>
     <string name="about_thirdparty">Аэровидео: коллекции Apple, Amazon и сообщества, транслируются от их владельцев.</string>
     <string name="rerun_wizard">Запустить мастер настройки снова</string>
+    <string name="rerun_wizard_confirm">Запустить мастер настройки заново?</string>
     <string name="rerun_wizard_sub">Настройка лаунчера по умолчанию и советы для начала</string>
 
     <string name="wizard_welcome_title">Добро пожаловать в Couchy Launcher</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">Введите корректные координаты, почтовый индекс или двухбуквенный код страны.</string>
     <string name="weather_location_failed">Не удалось определить местоположение. Проверьте настройки или введите координаты вручную.</string>
     <string name="weather_forecast_failed">Не удалось загрузить прогноз. Проверьте подключение телевизора к интернету и попробуйте снова.</string>
-    <string name="weather_ip_enable">Использовать GeoJS для определения местоположения по IP</string>
+    <string name="weather_ip_enable">Определять местоположение по IP</string>
     <string name="weather_ip_rate_limited">Достигнут лимит запросов местоположения по IP. Couchy повторит попытку при следующем запуске. Сейчас можно найти город.</string>
     <string name="weather_ip_city">Местоположение для прогноза: %1$s</string>
     <string name="weather_using_saved_ip_city">Используется последнее сохранённое местоположение по IP. Повторных запросов по IP в этой сессии не будет.</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">Не удалось выполнить это действие.</string>
     <string name="recommended_storage_required">Разрешите доступ к хранилищу для сохранения APK в папку загрузок.</string>
     <string name="recommended_settings">Добавить рекомендуемые приложения</string>
+    <string name="recommended_settings_sub">Подключите каталог, чтобы показать свой список рекомендуемых приложений.</string>
     <string name="recommended_catalog_url">URL каталога JSON</string>
     <string name="recommended_catalog_invalid">Введите действительную HTTPS-ссылку на совместимый JSON-файл с рекомендуемыми приложениями.</string>
     <string name="apps_reorder_mode">Режим перестановки приложений</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">Языки клавиатуры</string>
     <string name="shortcut_screensaver">Выбрать заставку</string>
     <string name="shortcut_power_timeout">Автоматическое выключение</string>
+    <string name="power_timeout_never">Никогда</string>
     <string name="wizard_language_title">На каком языке вы хотите использовать Couchy?</string>
+    <string name="wizard_developer_options">Включить параметры разработчика</string>
+    <string name="wizard_developer_steps">В разделе «Об устройстве» выберите сборку Android TV и семь раз нажмите OK. Нажмите «Назад».</string>
+    <string name="wizard_enable_adb">Включить отладку ADB</string>
+    <string name="wizard_adb_steps">В параметрах разработчика включите отладку по сети или ADB, затем нажмите «Назад».</string>
+    <string name="recommended_catalog_prompt">URL конфигурации</string>
+    <string name="recommended_catalog_description">Введите HTTPS-ссылку на ваш JSON-файл с рекомендуемыми приложениями.</string>
+    <string name="recommended_adb_commands">Команды ADB</string>
+    <string name="recommended_adb_run">Выполнить команду</string>
+    <string name="recommended_adb_review">Проверьте команду перед её запуском на этом телевизоре с правами оболочки ADB.</string>
+    <string name="recommended_adb_completed">Команда выполнена.</string>
+    <string name="recommended_adb_exit_code">Команда завершилась с кодом %1$d.</string>
+    <string name="wizard_weather_confirm">Подтвердить местоположение</string>
+    <string name="wizard_weather_locating">Поиск приблизительного местоположения…</string>
+    <string name="wizard_weather_ip_missing">Не удалось определить местоположение по IP. Выберите поиск по городу.</string>
 </resources>

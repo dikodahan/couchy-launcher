@@ -52,6 +52,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
@@ -59,7 +61,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDirection
 import com.conreo.couchytv.BuildConfig
-import com.conreo.couchytv.data.RecommendedApp
+import com.conreo.couchytv.data.RecommendedCatalog
 import com.conreo.couchytv.data.RecommendedApps
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,6 +70,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Button
+import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.ListItem
@@ -101,6 +104,7 @@ import com.conreo.couchytv.data.TelegramCloudBackup
 import com.conreo.couchytv.data.WEATHER_CLICK_APP
 import com.conreo.couchytv.data.WEATHER_SRC_GEOIP
 import com.conreo.couchytv.data.WEATHER_SRC_LATLONG
+import com.conreo.couchytv.data.withWeatherLocation
 import com.conreo.couchytv.data.WEATHER_SRC_ZIP
 import kotlinx.coroutines.Dispatchers
 import androidx.compose.runtime.withFrameNanos
@@ -153,22 +157,22 @@ internal fun SettingsSheet(
     val catalogUrl = config.recommendedAppsUrl.takeIf {
         BuildConfig.GITHUB_UPDATES && !BuildConfig.DEBUG && config.recommendedAppsEnabled && it.isNotBlank()
     }
-    val verifiedCatalog by produceState<Pair<String, List<RecommendedApp>>?>(null, catalogUrl) {
+    val verifiedCatalog by produceState<Pair<String, RecommendedCatalog>?>(null, catalogUrl) {
         if (catalogUrl == null) {
             value = null
             return@produceState
         }
         val repository = RecommendedApps(context, catalogUrl)
-        val apps = repository.cached() ?: try {
+        val catalog = repository.cached() ?: try {
             repository.refresh()
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (_: Exception) {
             null
         }
-        value = apps?.let { catalogUrl to it }
+        value = catalog?.let { catalogUrl to it }
     }
-    val configuredApps = verifiedCatalog?.takeIf { it.first == catalogUrl }
+    val configuredCatalog = verifiedCatalog?.takeIf { it.first == catalogUrl }
 
     fun selectTopShelf() {
         scope.launch {
@@ -293,7 +297,7 @@ internal fun SettingsSheet(
                         onStatusBar = { openSettings(SettingsScreen.StatusBar) },
                         onWeather = { openSettings(SettingsScreen.Weather) },
                         onApps = { openSettings(SettingsScreen.Apps) },
-                        onRecommendedApps = if (configuredApps != null) {
+                        onRecommendedApps = if (configuredCatalog != null) {
                             { openSettings(SettingsScreen.RecommendedApps) }
                         } else null,
                         onCategories = { openSettings(SettingsScreen.Categories) },
@@ -384,8 +388,8 @@ internal fun SettingsSheet(
                         onBack = { screen = SettingsScreen.Main },
                     )
                     SettingsScreen.Parental -> ParentalSettings(parentalState, parental)
-                    SettingsScreen.RecommendedApps -> configuredApps?.let { (url, apps) ->
-                        androidx.compose.runtime.key(url) { RecommendedAppsScreen(url, apps) }
+                    SettingsScreen.RecommendedApps -> configuredCatalog?.let { (url, catalog) ->
+                        androidx.compose.runtime.key(url) { RecommendedAppsScreen(url, catalog) }
                     }
                     SettingsScreen.Apps -> AppsScreen(
                         apps = apps,
@@ -441,6 +445,7 @@ private fun MainScreen(
     updatePrompt: AppUpdatePrompt?,
     onAbout: () -> Unit,
 ) {
+    val context = LocalContext.current
     val focus = initialFocus()
     val target = if (returnTo == SettingsScreen.RecommendedApps && onRecommendedApps == null) {
         SettingsScreen.Apps
@@ -532,12 +537,19 @@ private fun MainScreen(
             modifier = focusFor(SettingsScreen.Launcher),
             headlineContent = { Text(stringResource(R.string.item_launcher_settings)) },
             supportingContent = { Text(stringResource(R.string.item_launcher_settings_sub)) },
-            leadingContent = { BrandLogo(Modifier.size(24.dp)) },
+            leadingContent = {
+                Icon(painterResource(R.drawable.brand_silhouette), contentDescription = null, modifier = Modifier.size(24.dp))
+            },
         )
         SettingsItem(
             onClick = onAndroidShortcuts,
             modifier = focusFor(SettingsScreen.AndroidShortcuts),
             headlineContent = { Text(stringResource(R.string.android_shortcuts)) },
+            leadingContent = { Icon(AppIcons.Shortcut, contentDescription = null) },
+        )
+        SettingsItem(
+            onClick = { Actions.openSystemSettings(context) },
+            headlineContent = { Text(stringResource(R.string.item_android_settings)) },
             leadingContent = { Icon(AppIcons.Gear, contentDescription = null) },
         )
         if (updatePrompt != null) {
@@ -861,6 +873,7 @@ private fun LauncherSettingsSubscreen(
         pane = target
     }
     var pendingCloud by remember { mutableStateOf<LauncherPane?>(null) }
+    var confirmWizardRerun by remember { mutableStateOf(false) }
     var showAuth by remember { mutableStateOf(false) }
     LaunchedEffect(cloud) { cloud.warmup() }
 
@@ -1059,6 +1072,7 @@ private fun LauncherSettingsSubscreen(
                     onClick = { openPane(LauncherPane.RecommendedApps) },
                     modifier = focusFor(LauncherPane.RecommendedApps),
                     headlineContent = { Text(stringResource(R.string.recommended_settings)) },
+                    supportingContent = { Text(stringResource(R.string.recommended_settings_sub)) },
                     leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
                 )
             }
@@ -1080,11 +1094,42 @@ private fun LauncherSettingsSubscreen(
             )
             SettingsItem(
                 selected = false,
-                onClick = onRerunWizard,
+                onClick = { confirmWizardRerun = true },
                 headlineContent = { Text(stringResource(R.string.rerun_wizard)) },
                 supportingContent = { Text(stringResource(R.string.rerun_wizard_sub)) },
                 leadingContent = { Icon(AppIcons.Play, contentDescription = null) },
             )
+        }
+    }
+
+    if (confirmWizardRerun) {
+        val dismiss = { confirmWizardRerun = false }
+        Dialog(onDismissRequest = dismiss) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+            ) {
+                Column(Modifier.width(400.dp).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(
+                        stringResource(R.string.rerun_wizard_confirm),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    val cancelFocus = initialFocus()
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = dismiss,
+                            modifier = Modifier.fillMaxWidth().focusRequester(cancelFocus),
+                        ) { Text(stringResource(R.string.cancel)) }
+                        Button(
+                            onClick = {
+                                dismiss()
+                                onRerunWizard()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text(stringResource(R.string.rerun_wizard)) }
+                    }
+                }
+            }
         }
     }
 
@@ -1545,12 +1590,7 @@ private fun WeatherScreen(
                     savingCity = true
                     runCatching {
                         store.update {
-                            it.copy(
-                                weatherLocationSource = WEATHER_SRC_LATLONG,
-                                weatherLat = city.latitude,
-                                weatherLon = city.longitude,
-                                weatherCityLabel = city.label,
-                            )
+                            it.withWeatherLocation(city.toLocation())
                         }
                     }.onSuccess { findCity = false }
                         .onFailure { error ->
@@ -1864,31 +1904,66 @@ private fun RecommendedAppsSettings(config: LauncherConfig, store: ConfigStore) 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.recommended_settings), style = MaterialTheme.typography.titleLarge)
-        SettingsItem(
-            onClick = {
-                if (config.recommendedAppsEnabled) {
-                    scope.launch { store.update { it.copy(recommendedAppsEnabled = false) } }
-                } else {
-                    error = null
-                    editUrl = true
+        Button(
+            onClick = { error = null; editUrl = true },
+            modifier = Modifier.fillMaxWidth().focusRequester(focus),
+            colors = ButtonDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                focusedContainerColor = Color(0xFFF1F2F4),
+                focusedContentColor = Color(0xFF14151A),
+            ),
+            scale = ButtonDefaults.scale(focusedScale = 1f),
+            shape = ButtonDefaults.shape(shape = RoundedCornerShape(12.dp)),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(AppIcons.Link, contentDescription = null, modifier = Modifier.size(24.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.recommended_catalog_prompt),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Text(
+                        stringResource(R.string.recommended_catalog_description),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    if (config.recommendedAppsUrl.isNotBlank()) {
+                        Text(
+                            config.recommendedAppsUrl,
+                            style = MaterialTheme.typography.bodySmall.copy(textDirection = TextDirection.Ltr),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
-            },
-            modifier = Modifier.focusRequester(focus),
-            headlineContent = { Text(stringResource(R.string.recommended_settings)) },
-            trailingContent = { CheckMark(config.recommendedAppsEnabled) },
-        )
-        if (config.recommendedAppsEnabled) {
+            }
+        }
+        if (config.recommendedAppsUrl.isNotBlank()) {
             SettingsItem(
-                onClick = { error = null; editUrl = true },
-                headlineContent = { Text(stringResource(R.string.recommended_catalog_url)) },
-                supportingContent = { Text(config.recommendedAppsUrl, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                onClick = {
+                    if (config.recommendedAppsEnabled) {
+                        scope.launch { store.update { it.copy(recommendedAppsEnabled = false) } }
+                    } else {
+                        error = null
+                        editUrl = true
+                    }
+                },
+                headlineContent = { Text(stringResource(R.string.recommended_settings)) },
+                trailingContent = { CheckMark(config.recommendedAppsEnabled) },
             )
         }
     }
 
     if (editUrl) {
         TextEntryDialog(
-            title = stringResource(R.string.recommended_catalog_url),
+            title = stringResource(R.string.recommended_catalog_prompt),
             initial = config.recommendedAppsUrl,
             onSave = { url ->
                 if (!checking) {
@@ -1913,6 +1988,7 @@ private fun RecommendedAppsSettings(config: LauncherConfig, store: ConfigStore) 
             busy = checking,
             status = if (checking) R.string.recommended_loading else error,
             urlInput = true,
+            positionAboveKeyboard = true,
         )
     }
 }
@@ -1932,7 +2008,10 @@ internal fun TextEntryDialog(
     positionAboveKeyboard: Boolean = false,
 ) {
     var name by remember { mutableStateOf(initial) }
+    val keyboard = LocalSoftwareKeyboardController.current
     val saveFocus = remember { FocusRequester() }
+    val cancelFocus = remember { FocusRequester() }
+    val canSave = !busy && (allowEmpty || name.isNotBlank())
     fun submit() {
         val trimmed = name.trim()
         if (!busy && (allowEmpty || trimmed.isNotEmpty())) onSave(trimmed)
@@ -1946,11 +2025,17 @@ internal fun TextEntryDialog(
             Column(Modifier.width(340.dp).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 val f = initialFocus()
+                var editorFocused by remember { mutableStateOf(false) }
+                if (urlInput) LaunchedEffect(Unit) {
+                    f.requestFocus()
+                    withFrameNanos {}
+                    keyboard?.show()
+                }
                 Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 12.dp)
+                    Modifier.fillMaxWidth()
+                        .background(Color(0xFF252C37), RoundedCornerShape(8.dp))
+                        .border(1.dp, if (editorFocused) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp, vertical = 12.dp),
                 ) {
                     BasicTextField(
                         value = name,
@@ -1970,20 +2055,36 @@ internal fun TextEntryDialog(
                         keyboardActions = KeyboardActions(
                             onDone = { submit() }
                         ),
-                        modifier = Modifier.fillMaxWidth().focusRequester(f).onPreviewKeyEvent { event ->
-                            if (urlInput && event.key == Key.DirectionDown && event.type == KeyEventType.KeyDown) {
-                                saveFocus.requestFocus()
-                                true
-                            } else false
+                        decorationBox = { editor ->
+                            Box {
+                                if (urlInput && name.isEmpty()) {
+                                    Text(
+                                    "https://",
+                                    color = Color(0xFFC3CBD8),
+                                    style = TextStyle(fontSize = 15.sp, textDirection = TextDirection.Ltr),
+                                )
+                                }
+                                editor()
+                            }
                         },
+                        modifier = Modifier.fillMaxWidth().focusRequester(f)
+                            .onFocusChanged { editorFocused = it.isFocused }
+                            .onPreviewKeyEvent { event ->
+                                if (urlInput && event.key == Key.DirectionDown && event.type == KeyEventType.KeyDown) {
+                                    (if (canSave) saveFocus else cancelFocus).requestFocus()
+                                    true
+                                } else false
+                            },
                     )
                 }
                 if (status != null) Text(stringResource(status))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = ::submit, modifier = Modifier.focusRequester(saveFocus)) {
+                    Button(onClick = ::submit, enabled = !urlInput || canSave, modifier = Modifier.focusRequester(saveFocus)) {
                         Text(stringResource(submitLabel))
                     }
-                    Button(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                    Button(onClick = onDismiss, modifier = Modifier.focusRequester(cancelFocus)) {
+                        Text(stringResource(R.string.cancel))
+                    }
                 }
             }
         }

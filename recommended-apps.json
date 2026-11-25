@@ -1,13 +1,33 @@
-[
-  {
-    "category": "Entertainment",
-    "name": "Example Video App",
-    "downloadUrl": "https://example.org/downloads/video-app.apk",
-    "iconUrl": "https://example.org/images/video-app.png"
-  },
-  {
-    "category": "Utilities",
-    "name": "Example TV Utility",
-    "downloadUrl": "https://example.org/downloads/tv-utility.apk"
-  }
-]
+{
+  "apps": [
+    {
+      "category": "Entertainment",
+      "name": "Example Video App",
+      "downloadUrl": "https://example.org/downloads/video-app.apk",
+      "iconUrl": "https://example.org/images/video-app.png"
+    },
+    {
+      "category": "Utilities",
+      "name": "Example TV Utility",
+      "downloadUrl": "https://example.org/downloads/tv-utility.apk"
+    }
+  ],
+  "adbCommands": [
+    {
+      "name": {
+        "en": "Show Android version",
+        "he": "הצגת גרסת Android",
+        "es": "Mostrar la versión de Android"
+      },
+      "command": "getprop ro.build.version.release"
+    },
+    {
+      "name": {
+        "en": "Show device details",
+        "he": "הצגת פרטי המכשיר"
+      },
+      "command1": "getprop ro.product.model",
+      "command2": "getprop ro.build.version.release"
+    }
+  ]
+}

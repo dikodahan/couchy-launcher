@@ -237,6 +237,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
         parental.state.collect { value = it }
     }
     val storedConfig by produceState<StoredConfig?>(initialValue = null, store) {
+        if (store.prepareFirstLaunch()) launch { store.finishInitialWeatherUnit() }
         store.storedConfig.collect { value = it }
     }
     // Kick off the app scan on the FIRST composition — concurrent with the
@@ -250,7 +251,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
         LoadingScreen()
         return
     }
-    val (config, restoreRevision) = storedConfig ?: run {
+    val (config, restoreRevision, useInitialIpLocation) = storedConfig ?: run {
         LoadingScreen()
         return
     }
@@ -307,8 +308,10 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                     config = config,
                     saving = savingSetup,
                     languageApplied = (activity as? com.conreo.couchytv.MainActivity)?.attachedLanguage == config.language,
+                    useInitialIpLocation = useInitialIpLocation,
                     onChooseLanguage = { language -> store.update { it.copy(language = language) } },
-                    onDone = { pressHome, vpnPackage, useIpWeather ->
+                    onConfigureWeather = store::saveSetupWeather,
+                    onDone = { pressHome, vpnPackage ->
                         if (!savingSetup) {
                             savingSetup = true
                             scope.launch {
@@ -318,10 +321,6 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                                             setupDone = true,
                                             showVpnButton = vpnPackage != null,
                                             vpnApp = vpnPackage.orEmpty(),
-                                            weatherEnabled = useIpWeather ?: current.weatherEnabled,
-                                            weatherLocationSource = if (useIpWeather == true)
-                                                WEATHER_SRC_GEOIP else current.weatherLocationSource,
-                                            weatherGeoJsEnabled = useIpWeather ?: current.weatherGeoJsEnabled,
                                         )
                                     }
                                     // Android can bring this activity to the front via Home.
@@ -650,9 +649,24 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
         shelfFocus?.second?.takeUnless(parentalState::isLocked)
     } else null
 
-    val backdropPhoto = wallpaperBlurred.takeUnless { config.useTopShelf || videoWallpaper }
-    val glassBackdrop = remember(backdropPhoto, presetBrush, config.useTopShelf, videoWallpaper) {
-        LauncherBackdrop(backdropPhoto, presetBrush)
+    val playsAerial = aerialWallpaper != null && net.connected && !aerialCoolingDown
+    val playsLocalVideo = config.useVideoWallpaper && config.videoUri.isNotEmpty()
+    val videoBackdropVisible = !config.useTopShelf && (playsAerial || playsLocalVideo)
+    val wallpaperScrim = when (config.scrimMode) {
+        4 -> null
+        3 -> ScrimFull
+        2 -> ScrimBottom
+        1 -> ScrimTop
+        else -> ScrimTopBottom
+    }
+    val overlayAlpha = animateFloatAsState(
+        targetValue = if (dockExpanded || reorderFrom != null) 1f else 0f,
+        animationSpec = tween(1000),
+        label = "dockOverlay",
+    )
+    val backdropPhoto = wallpaperSharp.takeUnless { config.useTopShelf || videoBackdropVisible }
+    val glassBackdrop = remember(backdropPhoto, presetBrush, wallpaperScrim, config.useTopShelf, videoBackdropVisible) {
+        LauncherBackdrop(backdropPhoto, presetBrush, wallpaperScrim, videoBackdropVisible, overlayAlpha)
     }
     val sampleGlassVideo = reorderFrom == null && LocalWindowInfo.current.isWindowFocused &&
         (config.statusBarGlass || (config.layout == LAYOUT_DOCK && !dockExpanded))
@@ -683,7 +697,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
             if (config.useTopShelf) {
                 Box(Modifier.fillMaxSize().background(presetBrush))
                 TopShelfWallpaper(shelfPackage, glassBackdrop)
-            } else if (aerial != null && net.connected && !aerialCoolingDown) {
+            } else if (aerial != null && playsAerial) {
                 VideoWallpaper(
                     uri = aerial,
                     nextUri = nextAerialWallpaper,
@@ -707,7 +721,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                     onReady = ::recordAerialReady,
                     onError = ::recordAerialFailure,
                 )
-            } else if (config.useVideoWallpaper && config.videoUri.isNotEmpty()) {
+            } else if (playsLocalVideo) {
                 VideoWallpaper(
                     uri = config.videoUri,
                     speed = videoSpeed,
@@ -727,34 +741,24 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
             }
             // Dock-expanded overlay: cheap pseudo-blur (tiny bitmap upscaled)
             // + dim, crossfaded. Works identically on every Android version.
-            val overlayAlpha by animateFloatAsState(
-                targetValue = if (dockExpanded || reorderFrom != null) 1f else 0f,
-                animationSpec = tween(1000),
-                label = "dockOverlay",
-            )
-            if (overlayAlpha > 0.01f) {
+            val dim = overlayAlpha.value
+            if (dim > 0.01f) {
                 if (wallpaperBlurred != null) {
                     Image(
                         bitmap = wallpaperBlurred,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = overlayAlpha },
+                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = dim },
                     )
                 }
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .graphicsLayer { alpha = overlayAlpha }
+                        .graphicsLayer { alpha = dim }
                         .background(Color.Black.copy(alpha = 0.45f))
                 )
             }
-            when (config.scrimMode) {
-                4 -> {} // off
-                3 -> Box(Modifier.fillMaxSize().background(ScrimFull))
-                2 -> Box(Modifier.fillMaxSize().background(ScrimBottom))
-                1 -> Box(Modifier.fillMaxSize().background(ScrimTop))
-                else -> Box(Modifier.fillMaxSize().background(ScrimTopBottom))
-            }
+            wallpaperScrim?.let { Box(Modifier.fillMaxSize().background(it)) }
 
             // Launch entrance: after the boot logo, wait a beat, then the glass
             // panels slide in (status bar from the top, dock from the bottom) and
@@ -1164,7 +1168,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
             }
             pinPrompt?.let { PinDialog(it) { pinPrompt = null } }
             updatePrompt?.let { AppUpdateDialog(it) }
-            if (showSetupHomePrompt) PressHomeDialog { pressHomeAtTick = null }
+            if (showSetupHomePrompt) PressHomeDialog(waitForHome = true) {}
 
             if (showForecast) {
                 weather?.let {
@@ -1494,8 +1498,8 @@ private fun DockArea(
 }
 
 /**
- * The dock's frosted-glass panel with its row-0 icons — DISSOCIATED so they
- * animate independently on expand: the frosted background slides DOWN and fades
+ * The dock's glass panel with its row-0 icons — DISSOCIATED so they
+ * animate independently on expand: the glass background slides DOWN and fades
  * out fast, while the icons fade and drift UP as the grid rises them into place.
  * Kept in its own (non-Column) composable so AnimatedVisibility resolves to the
  * plain overload, and so LocalCornerRadius updates the corners live.
@@ -1515,7 +1519,7 @@ private fun DockGlassPanel(
     onMenu: (AppEntry) -> Unit,
 ) {
     Box(contentAlignment = Alignment.Center) {
-        // Frosted background — its exit is the exact mirror of its enter: rises
+        // Glass background — its exit is the exact mirror of its enter: rises
         // up + fades in on close, sinks down + fades out on open (same 300ms fade
         // / 500ms S-curve slide, just reversed).
         AnimatedVisibility(
@@ -1630,17 +1634,17 @@ private fun VideoWallpaper(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val backdrop = LocalLauncherBackdrop.current
     var videoSurface by remember { mutableStateOf<android.view.SurfaceView?>(null) }
-    DisposableEffect(backdrop) {
-        onDispose { backdrop?.frame = null }
-    }
-    SampleGlassVideo(videoSurface, backdrop, sampleGlass)
-
-    // Slow fondu: a clip is hidden until its FIRST FRAME is actually rendered
-    // (i.e. buffered enough to show), then fades up. On a source change the old
-    // clip fades out first, so rotations are a symmetric fade out → in instead
-    // of a hard cut or a half-buffered pop.
+    // Keep the refracted sample in step with the first-frame cover and the clip transition.
     val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
     val transitionVeil = remember { androidx.compose.animation.core.Animatable(0f) }
+    DisposableEffect(backdrop) {
+        backdrop?.frameVisibility = { alpha.value * (1f - transitionVeil.value) }
+        onDispose {
+            backdrop?.frame = null
+            backdrop?.frameVisibility = null
+        }
+    }
+    SampleGlassVideo(videoSurface, backdrop, sampleGlass)
     val playerScope = rememberCoroutineScope()
     var firstFrameGen by remember { mutableIntStateOf(0) }
 
@@ -1873,9 +1877,11 @@ private fun LoadingScreen() {
             ),
             label = "pulse",
         )
-        BrandLogo(
+        Image(
+            painter = androidx.compose.ui.res.painterResource(com.conreo.couchytv.R.drawable.brand_loading),
+            contentDescription = null,
             modifier = Modifier
-                .size(88.dp)
+                .size(200.dp)
                 .graphicsLayer { scaleX = scale; scaleY = scale },
         )
     }

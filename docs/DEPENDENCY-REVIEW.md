@@ -38,7 +38,7 @@ Connected tests with AGP 8.5.2 exposed unsafe pre-22 protobuf-generated UTP Test
 
 ## External services and feature limits
 
-Weather, aerial streaming and Telegram are optional external services, subject to outages and endpoint/format changes. Forecast coordinates go to Open-Meteo. With explicit opt-in, IP location uses GeoJS once per launch. City search uses Open-Meteo Geocoding, and postal lookup uses Zippopotam.us. GeoJS currently publishes no fixed rate limit but reserves the right to throttle usage. Forecast attribution remains in the README. No device location permission, trackers, Google Play Services or proprietary runtime SDKs are added.
+Weather, aerial streaming and Telegram use external services, subject to outages and endpoint or format changes. Forecast coordinates go to Open-Meteo. GeoJS supplies the first-launch location suggestion and default units, and IP-based weather reuses the launch’s lookup. City search uses Open-Meteo Geocoding, and postal lookup uses Zippopotam.us. GeoJS currently publishes no fixed rate limit but reserves the right to throttle usage. Forecast attribution remains in the README. No device location permission, trackers, Google Play Services or proprietary runtime SDKs are added.
 
 JSON backups include preferences and selected pack names, not custom media, installed packs, document grants or Telegram session credentials. Missing packs/media on a destination TV fall back to original app art or the preset background. Close & clear cache uses an approved local TV debugging connection and Android’s cache-only command. This removed the HiddenApiBypass dependency.
 

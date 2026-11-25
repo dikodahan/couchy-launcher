@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Untranslated strings intentionally fall back to English; existing translations remain active. -->
+<resources>
     <string name="app_name">Couchy Launcher</string>
 
     <!-- Default category names (first install) -->
@@ -40,13 +39,13 @@
     <string name="menu_rename">Rename</string>
     <string name="menu_change_icon">Change icon…</string>
     <string name="menu_reset_appearance">Reset appearance</string>
-    <string name="icon_source_photo" tools:ignore="MissingTranslation">Photo…</string>
-    <string name="icon_source_app" tools:ignore="MissingTranslation">Another app\'s icon…</string>
-    <string name="icon_source_pack" tools:ignore="MissingTranslation">Icon pack…</string>
-    <string name="icon_pick_apps_title" tools:ignore="MissingTranslation">Choose app icon</string>
-    <string name="icon_pick_choose_pack" tools:ignore="MissingTranslation">Choose icon pack</string>
-    <string name="icon_pick_search_hint" tools:ignore="MissingTranslation">Search</string>
-    <string name="icon_pick_empty" tools:ignore="MissingTranslation">No icons found</string>
+    <string name="icon_source_photo">Photo…</string>
+    <string name="icon_source_app">Another app\'s icon…</string>
+    <string name="icon_source_pack">Icon pack…</string>
+    <string name="icon_pick_apps_title">Choose app icon</string>
+    <string name="icon_pick_choose_pack">Choose icon pack</string>
+    <string name="icon_pick_search_hint">Search</string>
+    <string name="icon_pick_empty">No icons found</string>
     <string name="menu_close">Close</string>
     <string name="menu_app_info">App info</string>
     <string name="menu_force_stop" translatable="false">Force stop</string>
@@ -87,42 +86,42 @@
     <string name="item_save_config_sub">Export your settings, categories and layout</string>
     <string name="item_load_config">Load configuration</string>
     <string name="item_load_config_sub">Restore settings from a previously saved backup</string>
-    <string name="item_save_local" tools:ignore="MissingTranslation">Save locally</string>
-    <string name="item_save_local_sub" tools:ignore="MissingTranslation">Write CouchyBackup.json to Downloads on this device</string>
-    <string name="item_save_cloud" tools:ignore="MissingTranslation">Save in the Cloud</string>
-    <string name="item_save_cloud_sub" tools:ignore="MissingTranslation">Send a backup to your Telegram Saved Messages</string>
-    <string name="item_load_local" tools:ignore="MissingTranslation">Restore from a local file</string>
-    <string name="item_load_local_sub" tools:ignore="MissingTranslation">Pick a JSON backup from this device or USB</string>
-    <string name="item_load_cloud" tools:ignore="MissingTranslation">Restore from the Cloud</string>
-    <string name="item_load_cloud_sub" tools:ignore="MissingTranslation">Load the latest Couchy backup from Telegram Saved Messages</string>
-    <string name="cloud_signed_in" tools:ignore="MissingTranslation">Connected as %1$s</string>
-    <string name="cloud_sign_in_hint" tools:ignore="MissingTranslation">Scan a QR code with the Telegram app on your phone</string>
-    <string name="cloud_disconnect" tools:ignore="MissingTranslation">Disconnect Telegram</string>
-    <string name="cloud_disconnect_sub" tools:ignore="MissingTranslation">Forget the Telegram login on this TV</string>
-    <string name="cloud_auth_title" tools:ignore="MissingTranslation">Connect Telegram</string>
-    <string name="cloud_auth_body" tools:ignore="MissingTranslation">On your phone open Telegram → Settings → Devices → Link Desktop Device, then scan this code.</string>
-    <string name="cloud_auth_qr_cd" tools:ignore="MissingTranslation">Telegram login QR code</string>
-    <string name="cloud_auth_waiting" tools:ignore="MissingTranslation">Waiting for Telegram…</string>
-    <string name="cloud_auth_password_title" tools:ignore="MissingTranslation">Two-step verification</string>
-    <string name="cloud_auth_password_body" tools:ignore="MissingTranslation">This account has a cloud password. Enter it to finish linking this TV.</string>
-    <string name="cloud_auth_password_hint" tools:ignore="MissingTranslation">Hint: %1$s</string>
-    <string name="cloud_auth_password_submit" tools:ignore="MissingTranslation">Continue</string>
-    <string name="cloud_auth_2fa_wrong" tools:ignore="MissingTranslation">That password was not accepted — try again</string>
-    <string name="cloud_auth_unsupported" tools:ignore="MissingTranslation">This account needs extra verification that cannot be completed on the TV. Use a phone that already has Telegram open.</string>
-    <string name="cloud_auth_fail" tools:ignore="MissingTranslation">Could not start Telegram login</string>
-    <string name="cloud_not_configured" tools:ignore="MissingTranslation">Cloud backup is not configured in this build</string>
+    <string name="item_save_local">Save locally</string>
+    <string name="item_save_local_sub">Write CouchyBackup.json to Downloads on this device</string>
+    <string name="item_save_cloud">Save in the Cloud</string>
+    <string name="item_save_cloud_sub">Send a backup to your Telegram Saved Messages</string>
+    <string name="item_load_local">Restore from a local file</string>
+    <string name="item_load_local_sub">Pick a JSON backup from this device or USB</string>
+    <string name="item_load_cloud">Restore from the Cloud</string>
+    <string name="item_load_cloud_sub">Load the latest Couchy backup from Telegram Saved Messages</string>
+    <string name="cloud_signed_in">Connected as %1$s</string>
+    <string name="cloud_sign_in_hint">Scan a QR code with the Telegram app on your phone</string>
+    <string name="cloud_disconnect">Disconnect Telegram</string>
+    <string name="cloud_disconnect_sub">Forget the Telegram login on this TV</string>
+    <string name="cloud_auth_title">Connect Telegram</string>
+    <string name="cloud_auth_body">On your phone open Telegram → Settings → Devices → Link Desktop Device, then scan this code.</string>
+    <string name="cloud_auth_qr_cd">Telegram login QR code</string>
+    <string name="cloud_auth_waiting">Waiting for Telegram…</string>
+    <string name="cloud_auth_password_title">Two-step verification</string>
+    <string name="cloud_auth_password_body">This account has a cloud password. Enter it to finish linking this TV.</string>
+    <string name="cloud_auth_password_hint">Hint: %1$s</string>
+    <string name="cloud_auth_password_submit">Continue</string>
+    <string name="cloud_auth_2fa_wrong">That password was not accepted — try again</string>
+    <string name="cloud_auth_unsupported">This account needs extra verification that cannot be completed on the TV. Use a phone that already has Telegram open.</string>
+    <string name="cloud_auth_fail">Could not start Telegram login</string>
+    <string name="cloud_not_configured">Cloud backup is not configured in this build</string>
     <string name="toast_config_saved">Configuration saved</string>
-    <string name="toast_config_saved_local" tools:ignore="MissingTranslation">Saved to Downloads/CouchyBackup.json</string>
-    <string name="toast_config_saved_path" tools:ignore="MissingTranslation">Saved to %1$s</string>
-    <string name="toast_config_missing" tools:ignore="MissingTranslation">Backup file not found: %1$s</string>
-    <string name="toast_backup_need_action" tools:ignore="MissingTranslation">Specify save or restore (see README)</string>
-    <string name="toast_config_saved_cloud" tools:ignore="MissingTranslation">Configuration saved to Telegram Saved Messages</string>
+    <string name="toast_config_saved_local">Saved to Downloads/CouchyBackup.json</string>
+    <string name="toast_config_saved_path">Saved to %1$s</string>
+    <string name="toast_config_missing">Backup file not found: %1$s</string>
+    <string name="toast_backup_need_action">Specify save or restore (see README)</string>
+    <string name="toast_config_saved_cloud">Configuration saved to Telegram Saved Messages</string>
     <string name="toast_config_save_failed">Could not save configuration</string>
     <string name="toast_config_loaded">Configuration loaded — restart may be needed</string>
     <string name="toast_config_bad">Invalid or corrupted backup file</string>
-    <string name="toast_cloud_save_fail" tools:ignore="MissingTranslation">Could not save to Telegram</string>
-    <string name="toast_cloud_load_fail" tools:ignore="MissingTranslation">Could not load from Telegram</string>
-    <string name="toast_cloud_load_missing" tools:ignore="MissingTranslation">No Couchy backup found in Telegram Saved Messages</string>
+    <string name="toast_cloud_save_fail">Could not save to Telegram</string>
+    <string name="toast_cloud_load_fail">Could not load from Telegram</string>
+    <string name="toast_cloud_load_missing">No Couchy backup found in Telegram Saved Messages</string>
     <string name="item_about">About</string>
 
     <!-- Settings: display -->
@@ -207,7 +206,7 @@
     <string name="weather_src_geoip">Approximate (IP address)</string>
     <string name="weather_src_latlong">Manual coordinates</string>
     <string name="weather_src_zip">Zip / postal code</string>
-    <string name="weather_geoip_notice">Sends your IP address to GeoJS (get.geojs.io) to estimate a location — no account, no other data</string>
+    <string name="weather_geoip_notice">Uses your IP address to estimate your location.</string>
     <string name="weather_lat">Latitude</string>
     <string name="weather_lon">Longitude</string>
     <string name="weather_zip">Zip / postal code</string>
@@ -227,13 +226,13 @@
     <string name="weather_click_app">Open weather app</string>
     <string name="weather_app_opens">Weather app</string>
     <string name="weather_forecast_title">Weather forecast</string>
-    <string name="weather_kind_clear" tools:ignore="MissingTranslation">Clear</string>
-    <string name="weather_kind_partly_cloudy" tools:ignore="MissingTranslation">Partly cloudy</string>
-    <string name="weather_kind_cloudy" tools:ignore="MissingTranslation">Cloudy</string>
-    <string name="weather_kind_fog" tools:ignore="MissingTranslation">Fog</string>
-    <string name="weather_kind_rain" tools:ignore="MissingTranslation">Rain</string>
-    <string name="weather_kind_snow" tools:ignore="MissingTranslation">Snow</string>
-    <string name="weather_kind_storm" tools:ignore="MissingTranslation">Storm</string>
+    <string name="weather_kind_clear">Clear</string>
+    <string name="weather_kind_partly_cloudy">Partly cloudy</string>
+    <string name="weather_kind_cloudy">Cloudy</string>
+    <string name="weather_kind_fog">Fog</string>
+    <string name="weather_kind_rain">Rain</string>
+    <string name="weather_kind_snow">Snow</string>
+    <string name="weather_kind_storm">Storm</string>
     <string name="icon_pack_hint">Icon packs installed like any other app (Nova/ADW-compatible, e.g. ProjectivyIconPack) are detected automatically.</string>
     <string name="icon_pack_none">None (use each app\'s own icon)</string>
     <string name="icon_pack_match_count">Matches %1$d of %2$d apps</string>
@@ -247,6 +246,7 @@
     <string name="github_url" translatable="false">https://github.com/dikodahan/couchy-launcher</string>
     <string name="about_thirdparty">Aerial videos: Apple, Amazon and community collections.</string>
     <string name="rerun_wizard">Run setup wizard again</string>
+    <string name="rerun_wizard_confirm">Run the setup wizard again?</string>
     <string name="rerun_wizard_sub">Default-launcher setup and first-run tips</string>
 
     <!-- Setup wizard -->
@@ -267,57 +267,57 @@
     <string name="cd_move_up">Move up</string>
     <string name="cd_move_down">Move down</string>
     <string name="cd_delete_section">Delete section</string>
-    <string name="weather_invalid_input" tools:ignore="MissingTranslation">Enter a valid coordinate, postal code, or two-letter country code</string>
-    <string name="icon_save_failed" tools:ignore="MissingTranslation">Could not save the selected image</string>
-    <string name="home_launcher_title" tools:ignore="MissingTranslation">Home launcher</string>
-    <string name="home_current" tools:ignore="MissingTranslation">Current Home: %1$s</string>
-    <string name="home_not_selected" tools:ignore="MissingTranslation">Not selected</string>
+    <string name="weather_invalid_input">Enter a valid coordinate, postal code, or two-letter country code</string>
+    <string name="icon_save_failed">Could not save the selected image</string>
+    <string name="home_launcher_title">Home launcher</string>
+    <string name="home_current">Current Home: %1$s</string>
+    <string name="home_not_selected">Not selected</string>
     <string name="home_open_debugging">Open debugging settings</string>
-    <string name="home_use_couchy" tools:ignore="MissingTranslation">Use Couchy as Home</string>
-    <string name="home_restore_stock" tools:ignore="MissingTranslation">Restore paused system launchers</string>
-    <string name="home_restore_stock_sub" tools:ignore="MissingTranslation">Restore the system launcher components recorded by Couchy. Choose another Home afterwards if you want to switch away.</string>
-    <string name="home_confirm_title" tools:ignore="MissingTranslation">Use %1$s as Home?</string>
-    <string name="home_confirm_switch" tools:ignore="MissingTranslation">This changes the Home launcher through TV debugging. Any system launchers paused by Couchy are restored before switching away.</string>
-    <string name="home_confirm_pause" tools:ignore="MissingTranslation">Couchy will become Home and known stock launcher components will be paused. Recovery information is saved first so they can be restored here.</string>
-    <string name="home_confirm_action" tools:ignore="MissingTranslation">Apply change</string>
-    <string name="home_connecting" tools:ignore="MissingTranslation">Connecting to TV debugging… Approve the debugging prompt on your TV if it appears. This can take up to 45 seconds.</string>
-    <string name="home_change_done" tools:ignore="MissingTranslation">Home settings updated and checked.</string>
-    <string name="home_change_failed" tools:ignore="MissingTranslation">Could not complete the Home change. Check network/ADB debugging and retry. If stock launchers are paused, use Restore paused system launchers.</string>
-    <string name="home_error_removed" tools:ignore="MissingTranslation">The selected Home launcher is no longer installed.</string>
-    <string name="home_error_user" tools:ignore="MissingTranslation">Could not identify the active TV user.</string>
-    <string name="home_error_rejected" tools:ignore="MissingTranslation">The TV rejected the Home change. Try the Android picker or check its firmware restrictions.</string>
-    <string name="home_error_not_saved" tools:ignore="MissingTranslation">Could not save Home recovery information. No stock launcher will be paused.</string>
+    <string name="home_use_couchy">Use Couchy as Home</string>
+    <string name="home_restore_stock">Restore paused system launchers</string>
+    <string name="home_restore_stock_sub">Restore the system launcher components recorded by Couchy. Choose another Home afterwards if you want to switch away.</string>
+    <string name="home_confirm_title">Use %1$s as Home?</string>
+    <string name="home_confirm_switch">This changes the Home launcher through TV debugging. Any system launchers paused by Couchy are restored before switching away.</string>
+    <string name="home_confirm_pause">Couchy will become Home and known stock launcher components will be paused. Recovery information is saved first so they can be restored here.</string>
+    <string name="home_confirm_action">Apply change</string>
+    <string name="home_connecting">Connecting to TV debugging… Approve the debugging prompt on your TV if it appears. This can take up to 45 seconds.</string>
+    <string name="home_change_done">Home settings updated and checked.</string>
+    <string name="home_change_failed">Could not complete the Home change. Check network/ADB debugging and retry. If stock launchers are paused, use Restore paused system launchers.</string>
+    <string name="home_error_removed">The selected Home launcher is no longer installed.</string>
+    <string name="home_error_user">Could not identify the active TV user.</string>
+    <string name="home_error_rejected">The TV rejected the Home change. Try the Android picker or check its firmware restrictions.</string>
+    <string name="home_error_not_saved">Could not save Home recovery information. No stock launcher will be paused.</string>
     <string name="home_connection_timeout">TV debugging timed out. Enable network ADB debugging, approve Couchy, and retry.</string>
-    <string name="home_keep_current" tools:ignore="MissingTranslation">Keep current launcher</string>
-    <string name="home_stock_still_active" tools:ignore="MissingTranslation">The stock launcher is still active</string>
-    <string name="home_wizard_debug_needed" tools:ignore="MissingTranslation">To finish switching Home, enable network ADB debugging on this TV, then choose Use Couchy as Home again. You can also keep your current launcher and make the change later in Launcher settings.</string>
-    <string name="home_press_home_title" tools:ignore="MissingTranslation">Press Home on your remote</string>
-    <string name="home_press_home_body" tools:ignore="MissingTranslation">Check that pressing Home opens Couchy.</string>
-    <string name="home_debug_export" tools:ignore="MissingTranslation">Export debug log</string>
-    <string name="home_debug_export_sub" tools:ignore="MissingTranslation">Save Home switching details for troubleshooting</string>
-    <string name="home_debug_downloads" tools:ignore="MissingTranslation">Debug log saved in Downloads: %1$s</string>
-    <string name="home_debug_exported" tools:ignore="MissingTranslation">Debug log saved</string>
-    <string name="home_debug_export_failed" tools:ignore="MissingTranslation">Could not save the debug log</string>
-    <string name="weather_loading_short" tools:ignore="MissingTranslation">Weather…</string>
-    <string name="weather_unavailable_short" tools:ignore="MissingTranslation">Weather unavailable</string>
-    <string name="weather_loading" tools:ignore="MissingTranslation">Loading forecast…</string>
-    <string name="weather_location_missing" tools:ignore="MissingTranslation">Set a valid location below to load weather.</string>
-    <string name="weather_ip_rate_limited" tools:ignore="MissingTranslation">IP location is rate limited. Couchy will try again next launch. Choose Find by city to set a location now.</string>
-    <string name="weather_location_failed" tools:ignore="MissingTranslation">Could not find the location. Check your location settings or try manual coordinates.</string>
-    <string name="weather_forecast_failed" tools:ignore="MissingTranslation">Could not load the forecast. Check the TV’s internet connection or try again later.</string>
-    <string name="weather_retry" tools:ignore="MissingTranslation">Retry weather</string>
-    <string name="weather_find_city" tools:ignore="MissingTranslation">Find by city</string>
-    <string name="weather_find_city_sub" tools:ignore="MissingTranslation">Search Open-Meteo and save a forecast location.</string>
-    <string name="weather_city_search" tools:ignore="MissingTranslation">Search</string>
-    <string name="weather_city_invalid" tools:ignore="MissingTranslation">Enter a city name of 2–80 characters.</string>
-    <string name="weather_city_searching" tools:ignore="MissingTranslation">Looking for cities…</string>
-    <string name="weather_city_no_matches" tools:ignore="MissingTranslation">No matches. Try the city and country, separated by a comma.</string>
-    <string name="weather_city_failed" tools:ignore="MissingTranslation">City search failed. Check the connection or try again later.</string>
-    <string name="weather_city_choose" tools:ignore="MissingTranslation">Choose your city</string>
-    <string name="weather_city_search_again" tools:ignore="MissingTranslation">Search again</string>
-    <string name="weather_using_saved_ip_city" tools:ignore="MissingTranslation">Using the last saved IP location. No further IP lookup will run this session.</string>
-    <string name="weather_ip_city" tools:ignore="MissingTranslation">Forecast location: %1$s</string>
-    <string name="weather_ip_enable" tools:ignore="MissingTranslation">Use GeoJS for IP location</string>
+    <string name="home_keep_current">Keep current launcher</string>
+    <string name="home_stock_still_active">The stock launcher is still active</string>
+    <string name="home_wizard_debug_needed">To finish switching Home, enable network ADB debugging on this TV, then choose Use Couchy as Home again. You can also keep your current launcher and make the change later in Launcher settings.</string>
+    <string name="home_press_home_title">Press Home on your remote</string>
+    <string name="home_press_home_body">Check that pressing Home opens Couchy.</string>
+    <string name="home_debug_export">Export debug log</string>
+    <string name="home_debug_export_sub">Save Home switching details for troubleshooting</string>
+    <string name="home_debug_downloads">Debug log saved in Downloads: %1$s</string>
+    <string name="home_debug_exported">Debug log saved</string>
+    <string name="home_debug_export_failed">Could not save the debug log</string>
+    <string name="weather_loading_short">Weather…</string>
+    <string name="weather_unavailable_short">Weather unavailable</string>
+    <string name="weather_loading">Loading forecast…</string>
+    <string name="weather_location_missing">Set a valid location below to load weather.</string>
+    <string name="weather_ip_rate_limited">IP location is rate limited. Couchy will try again next launch. Choose Find by city to set a location now.</string>
+    <string name="weather_location_failed">Could not find the location. Check your location settings or try manual coordinates.</string>
+    <string name="weather_forecast_failed">Could not load the forecast. Check the TV’s internet connection or try again later.</string>
+    <string name="weather_retry">Retry weather</string>
+    <string name="weather_find_city">Find by city</string>
+    <string name="weather_find_city_sub">Search Open-Meteo and save a forecast location.</string>
+    <string name="weather_city_search">Search</string>
+    <string name="weather_city_invalid">Enter a city name of 2–80 characters.</string>
+    <string name="weather_city_searching">Looking for cities…</string>
+    <string name="weather_city_no_matches">No matches. Try the city and country, separated by a comma.</string>
+    <string name="weather_city_failed">City search failed. Check the connection or try again later.</string>
+    <string name="weather_city_choose">Choose your city</string>
+    <string name="weather_city_search_again">Search again</string>
+    <string name="weather_using_saved_ip_city">Using the last saved IP location. No further IP lookup will run this session.</string>
+    <string name="weather_ip_city">Forecast location: %1$s</string>
+    <string name="weather_ip_enable">Use your IP for location</string>
     <string name="weather_forecast_hourly">Next 6 hours</string>
     <string name="weather_forecast_daily">Next 7 days</string>
     <string name="weather_forecast_no_data">Forecast unavailable</string>
@@ -380,6 +380,7 @@
     <string name="recommended_action_failed">Could not complete this action.</string>
     <string name="recommended_storage_required">Allow storage access to save APKs to Downloads.</string>
     <string name="recommended_settings">Add recommended apps</string>
+    <string name="recommended_settings_sub">Link a catalog to show your own list of recommended apps.</string>
     <string name="recommended_catalog_url">Catalog JSON URL</string>
     <string name="recommended_catalog_invalid">Enter a valid HTTPS link to a compatible recommended apps JSON file.</string>
     <string name="apps_reorder_mode">Apps reorder mode</string>
@@ -399,5 +400,20 @@
     <string name="shortcut_keyboard_languages">Keyboard languages</string>
     <string name="shortcut_screensaver">Choose screen saver</string>
     <string name="shortcut_power_timeout">Automatically turn off</string>
+    <string name="power_timeout_never">Never</string>
     <string name="wizard_language_title">Which language should Couchy use?</string>
+    <string name="wizard_developer_options">Enable Developer options</string>
+    <string name="wizard_developer_steps">In About, select Android TV OS build and press OK seven times. Press Back to return.</string>
+    <string name="wizard_enable_adb">Enable ADB debugging</string>
+    <string name="wizard_adb_steps">In Developer options, turn on Network or ADB debugging, then press Back.</string>
+    <string name="recommended_catalog_prompt">Configuration URL</string>
+    <string name="recommended_catalog_description">Enter the HTTPS link to your recommended apps JSON file.</string>
+    <string name="recommended_adb_commands">ADB Commands</string>
+    <string name="recommended_adb_run">Run command</string>
+    <string name="recommended_adb_review">Review the command before running it on this TV with ADB shell permissions.</string>
+    <string name="recommended_adb_completed">Command completed.</string>
+    <string name="recommended_adb_exit_code">Command exited with code %1$d.</string>
+    <string name="wizard_weather_confirm">Confirm location</string>
+    <string name="wizard_weather_locating">Finding your approximate location…</string>
+    <string name="wizard_weather_ip_missing">Could not locate you from your IP. Choose Find by city.</string>
 </resources>

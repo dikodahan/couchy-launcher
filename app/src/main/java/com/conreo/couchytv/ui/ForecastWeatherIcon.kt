@@ -1,15 +1,21 @@
 package com.conreo.couchytv.ui
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
@@ -19,7 +25,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import com.conreo.couchytv.data.WeatherIconKind
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import kotlin.math.PI
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 @Composable
@@ -34,14 +43,27 @@ internal fun ColoredForecastIcon(
         contentDescription = description
         role = Role.Image
     }
-    Canvas(modifier.then(semantics)) {
-        // Read the shared clock during drawing to avoid recomposing forecast rows on every frame.
-        val progress = phase?.value
-        val unit = size.minDimension / 32f
-        scale(unit, unit, pivot = Offset.Zero) {
-            drawWeather(kind, isDay, progress)
+    Spacer(modifier.clipToBounds().then(semantics).drawWithCache {
+        val edge = size.minDimension.roundToInt().coerceAtLeast(1)
+        val rasterSize = IntSize(edge, edge)
+        val bitmap = ImageBitmap(32, 32)
+        val bitmapCanvas = Canvas(bitmap)
+        val iconScope = CanvasDrawScope()
+        val raster = bitmap.asAndroidBitmap()
+
+        onDrawBehind {
+            // Draw in the artwork's 32-pixel viewport. Scaling the finished
+            // image keeps all the moving parts aligned on TV renderers.
+            raster.eraseColor(android.graphics.Color.TRANSPARENT)
+            val progress = phase?.value
+            iconScope.draw(this, layoutDirection, bitmapCanvas, Size(32f, 32f)) {
+                drawWeather(kind, isDay, progress)
+            }
+            val left = ((size.width - edge) / 2f).roundToInt()
+            val top = ((size.height - edge) / 2f).roundToInt()
+            drawImage(bitmap, dstOffset = IntOffset(left, top), dstSize = rasterSize)
         }
-    }
+    })
 }
 
 private val sunFill = Brush.linearGradient(

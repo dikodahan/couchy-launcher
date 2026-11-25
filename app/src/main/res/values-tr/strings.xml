@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">Yaklaşık (IP adresi)</string>
     <string name="weather_src_latlong">Manuel koordinatlar</string>
     <string name="weather_src_zip">Posta kodu</string>
-    <string name="weather_geoip_notice">Konumu tahmin etmek için IP adresinizi GeoJS (get.geojs.io)\'ya gönderir — hesap veya başka veri yok</string>
+    <string name="weather_geoip_notice">IP adresiniz yaklaşık konumunuzu belirlemek için kullanılır.</string>
     <string name="weather_lat">Enlem</string>
     <string name="weather_lon">Boylam</string>
     <string name="weather_zip">Posta kodu</string>
@@ -178,6 +178,7 @@
     <string name="about_license">GNU General Public License v3.0 (GPLv3) altında lisanslanmıştır. Couchy Launcher\'ı kullanmakta, incelemekte, paylaşmakta ve değiştirmekte özgürsünüz.</string>
     <string name="about_thirdparty">Hava videoları: Apple, Amazon ve topluluk koleksiyonları, sahiplerinden yayınlanır.</string>
     <string name="rerun_wizard">Kurulum sihirbazını tekrar çalıştır</string>
+    <string name="rerun_wizard_confirm">Kurulum sihirbazı yeniden çalıştırılsın mı?</string>
     <string name="rerun_wizard_sub">Varsayılan başlatıcı kurulumu ve ilk çalıştırma ipuçları</string>
 
     <string name="wizard_welcome_title">Couchy Launcher\'a hoş geldiniz</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">Geçerli koordinatlar, posta kodu veya iki harfli ülke kodu girin.</string>
     <string name="weather_location_failed">Konum bulunamadı. Ayarları kontrol edin veya koordinatları elle girin.</string>
     <string name="weather_forecast_failed">Tahmin yüklenemedi. TV’nin internet bağlantısını kontrol edip yeniden deneyin.</string>
-    <string name="weather_ip_enable">IP konumu için GeoJS kullan</string>
+    <string name="weather_ip_enable">Konum için IP adresinizi kullanın</string>
     <string name="weather_ip_rate_limited">IP konumu sorgu sınırına ulaşıldı. Couchy bir sonraki açılışta yeniden deneyecek. Şimdi konum seçmek için şehre göre arayın.</string>
     <string name="weather_ip_city">Tahmin konumu: %1$s</string>
     <string name="weather_using_saved_ip_city">Son kaydedilen IP konumu kullanılıyor. Bu oturumda tekrar IP araması yapılmayacak.</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">Bu işlem tamamlanamadı.</string>
     <string name="recommended_storage_required">APK dosyalarını İndirilenler klasörüne kaydetmek için depolama erişimine izin verin.</string>
     <string name="recommended_settings">Önerilen uygulamaları ekle</string>
+    <string name="recommended_settings_sub">Kendi önerilen uygulama listenizi göstermek için bir katalog bağlayın.</string>
     <string name="recommended_catalog_url">Katalog JSON URL’si</string>
     <string name="recommended_catalog_invalid">Uyumlu bir önerilen uygulamalar JSON dosyasına ait geçerli bir HTTPS bağlantısı girin.</string>
     <string name="apps_reorder_mode">Uygulamaları yeniden sıralama modu</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">Klavye dilleri</string>
     <string name="shortcut_screensaver">Ekran koruyucu seç</string>
     <string name="shortcut_power_timeout">Otomatik kapat</string>
+    <string name="power_timeout_never">Hiçbir zaman</string>
     <string name="wizard_language_title">Couchy hangi dili kullansın?</string>
+    <string name="wizard_developer_options">Geliştirici seçeneklerini etkinleştir</string>
+    <string name="wizard_developer_steps">Hakkında bölümünde Android TV OS derlemesini seç ve Tamam düğmesine yedi kez bas. Geri dönmek için Geri düğmesine bas.</string>
+    <string name="wizard_enable_adb">ADB hata ayıklamayı etkinleştir</string>
+    <string name="wizard_adb_steps">Geliştirici seçeneklerinde ağ veya ADB hata ayıklamayı aç ve Geri düğmesine bas.</string>
+    <string name="recommended_catalog_prompt">Yapılandırma URL’si</string>
+    <string name="recommended_catalog_description">Önerilen uygulamalar JSON dosyanızın HTTPS bağlantısını girin.</string>
+    <string name="recommended_adb_commands">ADB Komutları</string>
+    <string name="recommended_adb_run">Komutu çalıştır</string>
+    <string name="recommended_adb_review">Komutu bu TV’de ADB kabuk izinleriyle çalıştırmadan önce gözden geçir.</string>
+    <string name="recommended_adb_completed">Komut tamamlandı.</string>
+    <string name="recommended_adb_exit_code">Komut %1$d koduyla sona erdi.</string>
+    <string name="wizard_weather_confirm">Konumu onayla</string>
+    <string name="wizard_weather_locating">Yaklaşık konumunuz aranıyor…</string>
+    <string name="wizard_weather_ip_missing">IP adresinizden konumunuz belirlenemedi. Şehre göre aramayı seçin.</string>
 </resources>

@@ -61,10 +61,17 @@ internal class LocalAdb private constructor(
 
     private val key by lazy(keyProvider)
 
-    suspend fun shell(command: String): AdbShellResult {
-        require(command.isNotBlank() && '\u0000' !in command) { "Invalid ADB command" }
-        require(command.toByteArray(Charsets.UTF_8).size <= MAX_COMMAND_BYTES) { "ADB command is too long" }
-        return withTimeout(CONNECT_TIMEOUT_MS.toLong() + authTimeoutMs + operationTimeoutMs + TIMEOUT_HEADROOM_MS) {
+    suspend fun shell(command: String): AdbShellResult = shellSequence(listOf(command)).single()
+
+    /** A single authenticated transport, with one completed shell stream per step. */
+    suspend fun shellSequence(commands: List<String>): List<AdbShellResult> {
+        require(commands.size in 1..MAX_SEQUENCE_COMMANDS)
+        commands.forEach { command ->
+            require(command.isNotBlank() && '\u0000' !in command) { "Invalid ADB command" }
+            require(command.toByteArray(Charsets.UTF_8).size <= MAX_COMMAND_BYTES) { "ADB command is too long" }
+        }
+        val operationBudget = (operationTimeoutMs * commands.size).coerceAtMost(MAX_SEQUENCE_OPERATION_MS)
+        return withTimeout(CONNECT_TIMEOUT_MS.toLong() + authTimeoutMs + operationBudget + TIMEOUT_HEADROOM_MS) {
             withContext(Dispatchers.IO) {
                 // The cancellation handler closes a blocked socket immediately; read polling also checks
                 // cancellation/deadlines every second. No detached worker survives the calling coroutine.
@@ -77,8 +84,15 @@ internal class LocalAdb private constructor(
                         socket.tcpNoDelay = true
                         socket.connect(InetSocketAddress(LOOPBACK, port), CONNECT_TIMEOUT_MS)
                         val session = AdbSession(socket.getInputStream(), socket.getOutputStream(), continuation.context)
-                        val result = session.shell(command, { key }, authTimeoutMs, operationTimeoutMs)
-                        if (continuation.isActive) continuation.resume(result)
+                        val remoteMax = session.connect({ key }, authTimeoutMs)
+                        val results = buildList {
+                            for ((index, command) in commands.withIndex()) {
+                                val result = session.shell(command, remoteMax, index + 1, operationTimeoutMs)
+                                add(result)
+                                if (result.exitCode != 0) break
+                            }
+                        }
+                        if (continuation.isActive) continuation.resume(results)
                     } catch (cancelled: CancellationException) {
                         continuation.cancel(cancelled)
                     } catch (error: Exception) {
@@ -107,7 +121,9 @@ internal class LocalAdb private constructor(
 
         private const val CONNECT_TIMEOUT_MS = 4_000
         private const val TIMEOUT_HEADROOM_MS = 1_000L
-        private const val MAX_COMMAND_BYTES = 8 * 1024
+        const val MAX_COMMAND_BYTES = 8 * 1024
+        const val MAX_SEQUENCE_COMMANDS = 32
+        private const val MAX_SEQUENCE_OPERATION_MS = 120_000L
         private const val READ_POLL_MS = 1_000
     }
 }
@@ -191,7 +207,7 @@ private class AdbSession(
 ) {
     private var legacyChecksums = false
 
-    fun shell(command: String, keyProvider: () -> AdbAuthKey, authTimeoutMs: Long, operationTimeoutMs: Long): AdbShellResult {
+    fun connect(keyProvider: () -> AdbAuthKey, authTimeoutMs: Long): Int {
         send(AdbWire.CNXN, AdbWire.VERSION, AdbWire.MAX_PACKET_BYTES, "host::\u0000".toByteArray())
         val authDeadline = deadline(authTimeoutMs)
         var authResponses = 0
@@ -220,21 +236,24 @@ private class AdbSession(
             }
         }
 
+        return remoteMax
+    }
+
+    fun shell(command: String, remoteMax: Int, localId: Int, operationTimeoutMs: Long): AdbShellResult {
         val operationDeadline = deadline(operationTimeoutMs)
         val marker = "__COUCHY_EXIT_${UUID.randomUUID().toString().replace("-", "")}:"
         // Run in a subshell so an explicit exit or shell state change cannot skip the exit marker.
-        val script = "($command)\n__couchy_exit=\$?\nprintf '\\n${marker}%s\\n' \"\$__couchy_exit\""
+        val script = "(\n$command\n)\n__couchy_exit=\$?\nprintf '\\n${marker}%s\\n' \"\$__couchy_exit\""
         val service = ("shell:" + script + '\u0000').toByteArray(Charsets.UTF_8)
         if (service.size > remoteMax) throw IOException("Command exceeds this ADB daemon's service limit")
-        val localId = 1
         send(AdbWire.OPEN, localId, 0, service)
-        val opened = read(operationDeadline)
+        val opened = readForShell(operationDeadline, localId)
         if (opened.command != AdbWire.OKAY || opened.arg0 == 0 || opened.arg1 != localId || opened.payload.isNotEmpty())
             throw IOException("Local ADB shell service was refused")
         val remoteId = opened.arg0
         val response = ByteArrayOutputStream()
         while (true) {
-            val packet = read(operationDeadline)
+            val packet = readForShell(operationDeadline, localId)
             if (packet.arg0 != remoteId || packet.arg1 != localId)
                 throw IOException("Local ADB shell stream did not match")
             when (packet.command) {
@@ -250,6 +269,17 @@ private class AdbSession(
                     return parseResult(response.toString("UTF-8"), marker)
                 }
                 else -> throw IOException("Unexpected local ADB shell packet")
+            }
+        }
+    }
+
+    private fun readForShell(deadline: Long, localId: Int): AdbPacket {
+        while (true) {
+            val packet = read(deadline)
+            // Android may send a second close after the previous stream has
+            // already completed. It does not belong to the next shell.
+            if (packet.command != AdbWire.CLSE || packet.arg1 !in 1 until localId || packet.payload.isNotEmpty()) {
+                return packet
             }
         }
     }

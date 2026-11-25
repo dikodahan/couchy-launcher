@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">Ước lượng (địa chỉ IP)</string>
     <string name="weather_src_latlong">Tọa độ thủ công</string>
     <string name="weather_src_zip">Mã bưu chính</string>
-    <string name="weather_geoip_notice">Gửi địa chỉ IP của bạn đến GeoJS (get.geojs.io) để ước tính vị trí — không tài khoản, không dữ liệu khác</string>
+    <string name="weather_geoip_notice">Địa chỉ IP của bạn được dùng để ước tính vị trí.</string>
     <string name="weather_lat">Vĩ độ</string>
     <string name="weather_lon">Kinh độ</string>
     <string name="weather_zip">Mã bưu chính</string>
@@ -178,6 +178,7 @@
     <string name="about_license">Được cấp phép theo GNU General Public License v3.0 (GPLv3). Bạn được tự do sử dụng, nghiên cứu, chia sẻ và sửa đổi Couchy Launcher.</string>
     <string name="about_thirdparty">Video trên không: bộ sưu tập Apple, Amazon và cộng đồng, phát từ chủ sở hữu.</string>
     <string name="rerun_wizard">Chạy lại trình hướng dẫn cài đặt</string>
+    <string name="rerun_wizard_confirm">Chạy lại trình hướng dẫn thiết lập?</string>
     <string name="rerun_wizard_sub">Thiết lập launcher mặc định và mẹo lần đầu</string>
 
     <string name="wizard_welcome_title">Chào mừng đến với Couchy Launcher</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">Nhập tọa độ, mã bưu chính hoặc mã quốc gia gồm hai chữ cái hợp lệ.</string>
     <string name="weather_location_failed">Không xác định được vị trí. Hãy kiểm tra cài đặt hoặc nhập tọa độ thủ công.</string>
     <string name="weather_forecast_failed">Không tải được dự báo. Hãy kiểm tra kết nối Internet của TV rồi thử lại.</string>
-    <string name="weather_ip_enable">Dùng GeoJS để xác định vị trí qua IP</string>
+    <string name="weather_ip_enable">Dùng IP của bạn để xác định vị trí</string>
     <string name="weather_ip_rate_limited">Đã đạt giới hạn tra cứu vị trí qua IP. Couchy sẽ thử lại khi mở lần sau. Bạn có thể tìm theo thành phố ngay.</string>
     <string name="weather_ip_city">Vị trí dự báo: %1$s</string>
     <string name="weather_using_saved_ip_city">Đang dùng vị trí qua IP được lưu gần nhất. Không tra cứu thêm qua IP trong phiên này.</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">Không thể hoàn tất thao tác này.</string>
     <string name="recommended_storage_required">Hãy cho phép truy cập bộ nhớ để lưu APK vào thư mục Tải xuống.</string>
     <string name="recommended_settings">Thêm ứng dụng đề xuất</string>
+    <string name="recommended_settings_sub">Liên kết danh mục để hiển thị danh sách ứng dụng đề xuất của riêng bạn.</string>
     <string name="recommended_catalog_url">URL JSON của danh mục</string>
     <string name="recommended_catalog_invalid">Nhập liên kết HTTPS hợp lệ đến tệp JSON ứng dụng đề xuất tương thích.</string>
     <string name="apps_reorder_mode">Chế độ sắp xếp ứng dụng</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">Ngôn ngữ bàn phím</string>
     <string name="shortcut_screensaver">Chọn trình bảo vệ màn hình</string>
     <string name="shortcut_power_timeout">Tự động tắt</string>
+    <string name="power_timeout_never">Không bao giờ</string>
     <string name="wizard_language_title">Bạn muốn sử dụng Couchy bằng ngôn ngữ nào?</string>
+    <string name="wizard_developer_options">Bật tùy chọn nhà phát triển</string>
+    <string name="wizard_developer_steps">Trong mục Giới thiệu, chọn bản dựng hệ điều hành Android TV và nhấn OK bảy lần. Nhấn Quay lại để trở về.</string>
+    <string name="wizard_enable_adb">Bật gỡ lỗi ADB</string>
+    <string name="wizard_adb_steps">Trong tùy chọn nhà phát triển, bật gỡ lỗi qua mạng hoặc ADB, rồi nhấn Quay lại.</string>
+    <string name="recommended_catalog_prompt">URL cấu hình</string>
+    <string name="recommended_catalog_description">Nhập liên kết HTTPS đến tệp JSON chứa các ứng dụng đề xuất của bạn.</string>
+    <string name="recommended_adb_commands">Lệnh ADB</string>
+    <string name="recommended_adb_run">Chạy lệnh</string>
+    <string name="recommended_adb_review">Xem lại lệnh trước khi chạy trên TV này với quyền trình bao ADB.</string>
+    <string name="recommended_adb_completed">Lệnh đã hoàn tất.</string>
+    <string name="recommended_adb_exit_code">Lệnh kết thúc với mã %1$d.</string>
+    <string name="wizard_weather_confirm">Xác nhận vị trí</string>
+    <string name="wizard_weather_locating">Đang tìm vị trí gần đúng của bạn…</string>
+    <string name="wizard_weather_ip_missing">Không xác định được vị trí của bạn từ IP. Hãy chọn Tìm theo thành phố.</string>
 </resources>

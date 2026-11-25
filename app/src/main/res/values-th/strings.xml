@@ -148,7 +148,7 @@
     <string name="weather_src_geoip">โดยประมาณ (ที่อยู่ IP)</string>
     <string name="weather_src_latlong">พิกัดที่กำหนดเอง</string>
     <string name="weather_src_zip">รหัสไปรษณีย์</string>
-    <string name="weather_geoip_notice">ส่งที่อยู่ IP ของคุณไปยัง GeoJS (get.geojs.io) เพื่อประมาณตำแหน่ง — ไม่มีบัญชีหรือข้อมูลอื่นใด</string>
+    <string name="weather_geoip_notice">ใช้ที่อยู่ IP ของคุณเพื่อประมาณตำแหน่งของคุณ</string>
     <string name="weather_lat">ละติจูด</string>
     <string name="weather_lon">ลองจิจูด</string>
     <string name="weather_zip">รหัสไปรษณีย์</string>
@@ -178,6 +178,7 @@
     <string name="about_license">ได้รับอนุญาตภายใต้ GNU General Public License v3.0 (GPLv3) คุณมีอิสระในการใช้ ศึกษา แบ่งปัน และแก้ไข Couchy Launcher</string>
     <string name="about_thirdparty">วิดีโอทางอากาศ: คอลเล็กชัน Apple, Amazon และชุมชน สตรีมจากเจ้าของ</string>
     <string name="rerun_wizard">เรียกใช้ตัวช่วยตั้งค่าอีกครั้ง</string>
+    <string name="rerun_wizard_confirm">เรียกใช้ตัวช่วยตั้งค่าอีกครั้งไหม</string>
     <string name="rerun_wizard_sub">การตั้งค่าลอนเชอร์เริ่มต้นและเคล็ดลับการใช้งานครั้งแรก</string>
 
     <string name="wizard_welcome_title">ยินดีต้อนรับสู่ Couchy Launcher</string>
@@ -265,7 +266,7 @@
     <string name="weather_invalid_input">ป้อนพิกัด รหัสไปรษณีย์ หรือรหัสประเทศสองตัวอักษรที่ถูกต้อง</string>
     <string name="weather_location_failed">ไม่พบสถานที่ ตรวจสอบการตั้งค่าหรือลองป้อนพิกัดด้วยตนเอง</string>
     <string name="weather_forecast_failed">โหลดพยากรณ์อากาศไม่ได้ ตรวจสอบอินเทอร์เน็ตของทีวีแล้วลองอีกครั้ง</string>
-    <string name="weather_ip_enable">ใช้ GeoJS เพื่อระบุตำแหน่งจาก IP</string>
+    <string name="weather_ip_enable">ใช้ IP ของคุณเพื่อระบุตำแหน่ง</string>
     <string name="weather_ip_rate_limited">ถึงขีดจำกัดการค้นหาตำแหน่งจาก IP แล้ว Couchy จะลองอีกครั้งเมื่อเปิดครั้งถัดไป คุณค้นหาตามเมืองได้ทันที</string>
     <string name="weather_ip_city">สถานที่สำหรับพยากรณ์อากาศ: %1$s</string>
     <string name="weather_using_saved_ip_city">ใช้ตำแหน่งจาก IP ที่บันทึกไว้ล่าสุด จะไม่ค้นหาจาก IP ซ้ำในเซสชันนี้</string>
@@ -363,6 +364,7 @@
     <string name="recommended_action_failed">ดำเนินการนี้ไม่สำเร็จ</string>
     <string name="recommended_storage_required">อนุญาตให้เข้าถึงพื้นที่จัดเก็บเพื่อบันทึก APK ในโฟลเดอร์ดาวน์โหลด</string>
     <string name="recommended_settings">เพิ่มแอปแนะนำ</string>
+    <string name="recommended_settings_sub">ลิงก์แคตตาล็อกเพื่อแสดงรายการแอปแนะนำของคุณเอง</string>
     <string name="recommended_catalog_url">URL ของแค็ตตาล็อก JSON</string>
     <string name="recommended_catalog_invalid">ป้อนลิงก์ HTTPS ที่ถูกต้องไปยังไฟล์ JSON ของแอปแนะนำที่รองรับ</string>
     <string name="apps_reorder_mode">โหมดจัดลำดับแอป</string>
@@ -381,5 +383,20 @@
     <string name="shortcut_keyboard_languages">ภาษาของแป้นพิมพ์</string>
     <string name="shortcut_screensaver">เลือกโปรแกรมรักษาหน้าจอ</string>
     <string name="shortcut_power_timeout">ปิดอัตโนมัติ</string>
+    <string name="power_timeout_never">ไม่เลย</string>
     <string name="wizard_language_title">ต้องการใช้ Couchy ในภาษาใด</string>
+    <string name="wizard_developer_options">เปิดตัวเลือกสำหรับนักพัฒนา</string>
+    <string name="wizard_developer_steps">ในหน้าเกี่ยวกับ ให้เลือกบิลด์ Android TV OS แล้วกดตกลงเจ็ดครั้ง จากนั้นกดย้อนกลับ</string>
+    <string name="wizard_enable_adb">เปิดการแก้ไขข้อบกพร่อง ADB</string>
+    <string name="wizard_adb_steps">ในตัวเลือกสำหรับนักพัฒนา ให้เปิดการแก้ไขข้อบกพร่องผ่านเครือข่ายหรือ ADB แล้วกดย้อนกลับ</string>
+    <string name="recommended_catalog_prompt">URL การกำหนดค่า</string>
+    <string name="recommended_catalog_description">ป้อนลิงก์ HTTPS ของไฟล์ JSON สำหรับแอปแนะนำของคุณ</string>
+    <string name="recommended_adb_commands">คำสั่ง ADB</string>
+    <string name="recommended_adb_run">เรียกใช้คำสั่ง</string>
+    <string name="recommended_adb_review">ตรวจสอบคำสั่งก่อนเรียกใช้บนทีวีเครื่องนี้ด้วยสิทธิ์เชลล์ ADB</string>
+    <string name="recommended_adb_completed">คำสั่งเสร็จสมบูรณ์</string>
+    <string name="recommended_adb_exit_code">คำสั่งสิ้นสุดด้วยรหัส %1$d</string>
+    <string name="wizard_weather_confirm">ยืนยันตำแหน่ง</string>
+    <string name="wizard_weather_locating">กำลังค้นหาตำแหน่งโดยประมาณ…</string>
+    <string name="wizard_weather_ip_missing">ไม่พบตำแหน่งจาก IP โปรดเลือกค้นหาตามเมือง</string>
 </resources>
