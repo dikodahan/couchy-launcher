@@ -219,6 +219,7 @@
     <string name="weather_click_app">打开天气应用</string>
     <string name="weather_app_opens">天气应用</string>
     <string name="weather_forecast_title">天气预报</string>
+    <string name="icon_pack_available">可供下载</string>
     <string name="icon_pack_hint">像安装其他应用一样安装的图标包（兼容 Nova/ADW，例如 ProjectivyIconPack）会被自动检测到。</string>
     <string name="icon_pack_none">无（使用每个应用自带的图标）</string>
     <string name="icon_pack_match_count">匹配 %2$d 个应用中的 %1$d 个</string>
@@ -364,6 +365,8 @@
     <string name="icon_library_unavailable">无法打开图标库。</string>
     <string name="update_bell">Couchy 有可用更新</string>
     <string name="update_title">有可用更新</string>
+    <string name="update_release_notes">版本说明</string>
+    <string name="update_release_notes_missing">暂无版本说明。</string>
     <string name="update_available">Couchy Launcher %1$s 可以安装。下载大小：%2$s。</string>
     <string name="update_action">更新</string>
     <string name="update_later">稍后</string>

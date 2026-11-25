@@ -175,6 +175,7 @@
     <string name="weather_click_app">날씨 앱 열기</string>
     <string name="weather_app_opens">날씨 앱</string>
     <string name="weather_forecast_title">일기 예보</string>
+    <string name="icon_pack_available">다운로드 가능</string>
     <string name="icon_pack_hint">다른 앱처럼 설치된 아이콘 팩(Nova/ADW 호환, 예: ProjectivyIconPack)은 자동으로 감지됩니다.</string>
     <string name="icon_pack_none">없음(각 앱 고유 아이콘 사용)</string>
     <string name="icon_pack_match_count">앱 %2$d개 중 %1$d개와 일치</string>
@@ -350,6 +351,8 @@
     <string name="icon_library_unavailable">아이콘 라이브러리를 열 수 없습니다.</string>
     <string name="update_bell">Couchy 업데이트 있음</string>
     <string name="update_title">업데이트 있음</string>
+    <string name="update_release_notes">릴리스 노트</string>
+    <string name="update_release_notes_missing">릴리스 노트를 사용할 수 없습니다.</string>
     <string name="update_available">Couchy Launcher %1$s을 설치할 수 있습니다. 다운로드 크기: %2$s.</string>
     <string name="update_action">업데이트</string>
     <string name="update_later">나중에</string>

@@ -26,6 +26,7 @@ internal data class AppUpdate(
     val url: String,
     val size: Long,
     val sha256: String,
+    val releaseNotes: String = "",
 )
 
 @Serializable
@@ -34,6 +35,7 @@ private data class GitHubRelease(
     val draft: Boolean,
     val prerelease: Boolean,
     val assets: List<GitHubAsset>,
+    val body: String? = null,
 )
 
 @Serializable
@@ -66,7 +68,7 @@ internal fun parseAppUpdate(json: String, installed: String): AppUpdate? {
     if (asset.state != "uploaded" || asset.url != url || asset.size !in 1..MAX_APK_BYTES) {
         throw IOException("Invalid release APK metadata")
     }
-    return AppUpdate(version, url, asset.size, digest.removePrefix("sha256:"))
+    return AppUpdate(version, url, asset.size, digest.removePrefix("sha256:"), release.body.orEmpty().trim())
 }
 
 internal class AppUpdates(context: Context) {

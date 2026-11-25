@@ -251,7 +251,7 @@ private fun android.content.Context.findActivity(): android.app.Activity? {
     androidx.compose.ui.ExperimentalComposeUiApi::class,
 )
 @Composable
-fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
+fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     val context = LocalContext.current
     val store = remember(context) { ConfigStore(context) }
     val scope = rememberCoroutineScope()
@@ -270,8 +270,13 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     // DataStore config read, not serialized after it (scan takes no config).
     // Warm relaunches start from the in-memory cache (instant); a fresh scan
     // still runs to pick up changes. Not rendered until past the gates below.
-    val appsOrNull by produceState(initialValue = AppRepository.memoryCache, rescanTick) {
-        value = withContext(Dispatchers.Default) { AppRepository.scan(context.applicationContext) }
+    var loadedArtworkGeneration by remember { mutableIntStateOf(artworkGeneration) }
+    val appsOrNull by produceState(initialValue = AppRepository.memoryCache, rescanTick, artworkGeneration) {
+        val reloadArtwork = loadedArtworkGeneration != artworkGeneration
+        value = withContext(Dispatchers.Default) {
+            AppRepository.scan(context.applicationContext, reloadArtwork = reloadArtwork)
+        }
+        loadedArtworkGeneration = artworkGeneration
     }
     val parentalState = parentalOrNull ?: run {
         LoadingScreen()
@@ -702,6 +707,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
     Box(Modifier.fillMaxSize()) {
     ScaledUi(uiScale) {
     androidx.compose.runtime.CompositionLocalProvider(
+        LocalHomeArtworkGeneration provides artworkGeneration,
         LocalCornerRadius provides corner,
         LocalLauncherBackdrop provides glassBackdrop,
         LocalTopShelfFocus provides reportShelfFocus.takeIf { config.useTopShelf },
@@ -1197,6 +1203,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int) {
                 SettingsSheet(
                     config = config,
                     apps = displayApps,
+                    iconPacks = iconPacks,
                     store = store,
                     parental = parental,
                     parentalState = parentalState,
@@ -1668,15 +1675,17 @@ private fun PeekStrip(app: AppEntry, cardWidth: Dp, cardHeight: Dp, peekH: Dp) {
             .clip(RoundedCornerShape(topStart = corner, topEnd = corner))
             .background(app.tile),
     ) {
-        if (app.banner != null) {
-            Image(
-                bitmap = app.banner,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                alignment = Alignment.TopCenter,
-                // full card height, parent clips to peekH → only the top slice shows.
-                modifier = Modifier.width(cardWidth).height(cardHeight),
-            )
+        key(LocalHomeArtworkGeneration.current) {
+            if (app.banner != null) {
+                Image(
+                    bitmap = app.banner,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.TopCenter,
+                    // full card height, parent clips to peekH → only the top slice shows.
+                    modifier = Modifier.width(cardWidth).height(cardHeight),
+                )
+            }
         }
     }
 }

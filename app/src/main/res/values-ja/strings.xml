@@ -175,6 +175,7 @@
     <string name="weather_click_app">天気アプリを開く</string>
     <string name="weather_app_opens">天気アプリ</string>
     <string name="weather_forecast_title">天気予報</string>
+    <string name="icon_pack_available">ダウンロード可能</string>
     <string name="icon_pack_hint">他のアプリと同様にインストールされたアイコンパック(Nova/ADW互換、例: ProjectivyIconPack)は自動的に検出されます。</string>
     <string name="icon_pack_none">なし(各アプリ本来のアイコンを使用)</string>
     <string name="icon_pack_match_count">%2$d個中%1$d個のアプリに一致</string>
@@ -350,6 +351,8 @@
     <string name="icon_library_unavailable">アイコンライブラリを開けませんでした。</string>
     <string name="update_bell">Couchyのアップデートがあります</string>
     <string name="update_title">アップデートがあります</string>
+    <string name="update_release_notes">リリースノート</string>
+    <string name="update_release_notes_missing">リリースノートはありません。</string>
     <string name="update_available">Couchy Launcher %1$sをインストールできます。ダウンロードサイズ：%2$s。</string>
     <string name="update_action">更新する</string>
     <string name="update_later">後で</string>

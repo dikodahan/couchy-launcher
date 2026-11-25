@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -254,15 +255,17 @@ private fun UpdateBell(onClick: () -> Unit) {
         scale = ClickableSurfaceDefaults.scale(focusedScale = STATUS_FOCUS_SCALE),
     ) {
         Box(Modifier.size(STATUS_SLOT_SIZE), contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = AppIcons.Bell,
-                contentDescription = stringResource(R.string.update_bell),
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp).graphicsLayer {
-                    rotationZ = swing.value
-                    transformOrigin = TransformOrigin(0.5f, 0.25f)
-                },
-            )
+            key(LocalHomeArtworkGeneration.current) {
+                Icon(
+                    imageVector = AppIcons.Bell,
+                    contentDescription = stringResource(R.string.update_bell),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp).graphicsLayer {
+                        rotationZ = swing.value
+                        transformOrigin = TransformOrigin(0.5f, 0.25f)
+                    },
+                )
+            }
         }
     }
 }
@@ -281,11 +284,13 @@ private fun statusControlColors() = ClickableSurfaceDefaults.colors(
 @Composable
 private fun StatusGlyph(icon: ImageVector, contentDescription: String, active: Boolean) {
     Box(Modifier.size(STATUS_SLOT_SIZE), contentAlignment = Alignment.Center) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = Color.White.copy(alpha = if (active) 0.95f else 0.35f),
-            modifier = Modifier.size(22.dp),
-        )
+        key(LocalHomeArtworkGeneration.current) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = Color.White.copy(alpha = if (active) 0.95f else 0.35f),
+                modifier = Modifier.size(22.dp),
+            )
+        }
     }
 }

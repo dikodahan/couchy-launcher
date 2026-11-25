@@ -7,7 +7,6 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
@@ -90,7 +89,7 @@ object AppRepository {
         (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(2)
     )
 
-    suspend fun scan(context: Context): List<AppEntry> = coroutineScope {
+    suspend fun scan(context: Context, reloadArtwork: Boolean = false): List<AppEntry> = coroutineScope {
         val pm = context.packageManager
         val cacheDir = File(context.filesDir, "iconcache").apply { mkdirs() }
 
@@ -128,7 +127,7 @@ object AppRepository {
         //    Entries whose package is unchanged since the previous scan are
         //    REUSED as-is — no disk read, no decode, no new bitmaps, and the
         //    same object identity so Compose skips their cards entirely.
-        val previous = memoryCache?.associateBy { it.pkg }
+        val previous = memoryCache?.takeUnless { reloadArtwork }?.associateBy { it.pkg }
         val entries = candidates.map { (pkg, ri) ->
             async(scanDispatcher) {
                 val ai = ri.activityInfo
@@ -137,7 +136,7 @@ object AppRepository {
                 val firstInstall = pkgInfo?.firstInstallTime ?: 0L
                 // Size is baked into the name: a density change (or the earlier
                 // fixed-size caches) regenerates instead of loading a stale size.
-                val bannerName = "$pkg-$stamp-b$bannerW.webp"
+                val bannerName = "$pkg-$stamp-b$bannerW-v2.webp"
                 val iconName = "$pkg-$stamp-i128.webp"
 
                 previous?.get(pkg)?.takeIf { it.stamp == stamp }?.let { cached ->
@@ -150,17 +149,12 @@ object AppRepository {
                 // original behaviour — a size threshold wrongly demoted good
                 // banners whose loaded bitmap is below 320px on this density).
                 val bannerDrawable = runCatching { ai.loadBanner(pm) }.getOrNull()
-                val bannerConfig = if (
-                    bannerDrawable is BitmapDrawable && !bannerDrawable.bitmap.hasAlpha()
-                ) {
-                    // TV banners are normally opaque. RGB_565 halves their Java
-                    // heap and upload footprint while translucent art keeps alpha.
-                    Bitmap.Config.RGB_565
-                } else Bitmap.Config.ARGB_8888
+                // Use a consistent 32-bit raster for cached TV banners. Leave
+                // texture upload to the first draw on the current render surface.
                 val banner = if (bannerDrawable == null) null else
-                    cachedBitmap(cacheDir, bannerName, bannerConfig) {
+                    cachedBitmap(cacheDir, bannerName, Bitmap.Config.ARGB_8888) {
                         runCatching {
-                            bannerDrawable.toBitmap(bannerW, bannerH, bannerConfig)
+                            bannerDrawable.toBitmap(bannerW, bannerH, Bitmap.Config.ARGB_8888)
                         }.getOrNull()
                     }
                 val icon = if (banner == null) {
@@ -171,11 +165,6 @@ object AppRepository {
                 } else null
                 if (banner != null) validCacheNames.add(bannerName)
                 if (icon != null) validCacheNames.add(iconName)
-                // Upload textures ahead of first draw so the GPU never stalls
-                // mid-frame on a fresh bitmap.
-                banner?.prepareToDraw()
-                icon?.prepareToDraw()
-
                 AppEntry(
                     pkg = pkg,
                     label = runCatching { ri.loadLabel(pm)?.toString() }.getOrNull() ?: pkg,

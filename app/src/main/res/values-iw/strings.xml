@@ -213,6 +213,7 @@
     <string name="weather_kind_rain">גשם</string>
     <string name="weather_kind_snow">שלג</string>
     <string name="weather_kind_storm">סופת רעמים</string>
+    <string name="icon_pack_available">זמינות להורדה</string>
     <string name="icon_pack_hint">חבילות סמלים תואמות Nova או ADW, כמו ProjectivyIconPack, מותקנות כאפליקציות רגילות ומזוהות אוטומטית.</string>
     <string name="icon_pack_none">ללא חבילה (שימוש בסמל המקורי של כל אפליקציה)</string>
     <string name="icon_pack_match_count">מתאים ל־%1$d מתוך %2$d אפליקציות</string>
@@ -335,6 +336,8 @@
     <string name="icon_library_unavailable">לא ניתן לפתוח את ספריית הסמלים.</string>
     <string name="update_bell">עדכון ל־Couchy זמין</string>
     <string name="update_title">עדכון זמין</string>
+    <string name="update_release_notes">הערות גרסה</string>
+    <string name="update_release_notes_missing">הערות הגרסה אינן זמינות.</string>
     <string name="update_available">Couchy Launcher %1$s מוכן להתקנה. גודל ההורדה: %2$s.</string>
     <string name="update_action">עדכון</string>
     <string name="update_later">מאוחר יותר</string>

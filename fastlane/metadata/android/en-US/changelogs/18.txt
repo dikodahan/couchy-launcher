@@ -1,0 +1,3 @@
+• Read scrollable release notes from the update notification.
+• Discover four built-in icon pack downloads in the GitHub build.
+• Refresh Home banners and tray icons when the Android screensaver closes.

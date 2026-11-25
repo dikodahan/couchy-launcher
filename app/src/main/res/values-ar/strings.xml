@@ -175,6 +175,7 @@
     <string name="weather_click_app">فتح تطبيق الطقس</string>
     <string name="weather_app_opens">تطبيق الطقس</string>
     <string name="weather_forecast_title">توقعات الطقس</string>
+    <string name="icon_pack_available">متاحة للتنزيل</string>
     <string name="icon_pack_hint">يتم اكتشاف حزم الأيقونات المثبَّتة مثل أي تطبيق آخر (متوافقة مع Nova/ADW، مثل ProjectivyIconPack) تلقائيًا.</string>
     <string name="icon_pack_none">بلا (أيقونة كل تطبيق الخاصة به)</string>
     <string name="icon_pack_match_count">يطابق %1$d من %2$d تطبيقات</string>
@@ -350,6 +351,8 @@
     <string name="icon_library_unavailable">تعذر فتح مكتبة الأيقونات.</string>
     <string name="update_bell">يتوفر تحديث لـ Couchy</string>
     <string name="update_title">يتوفر تحديث</string>
+    <string name="update_release_notes">ملاحظات الإصدار</string>
+    <string name="update_release_notes_missing">ملاحظات الإصدار غير متاحة.</string>
     <string name="update_available">Couchy Launcher %1$s جاهز للتثبيت. حجم التنزيل: %2$s.</string>
     <string name="update_action">تحديث</string>
     <string name="update_later">لاحقًا</string>

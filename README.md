@@ -219,6 +219,12 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 <details>
 <summary>Click to expand</summary>
 
+**v1.2.6**
+
+- Redraw Home app banners and tray icons after the Android screensaver closes.
+- Open the scrollable release notes using the information button in the update notification.
+- Download and install Minimalist, Projectivy, Articons, and CoreBuildsApp from **Settings → Icon pack** in the GitHub build. Compatible packs installed manually also appear there.
+
 **v1.2.5**
 
 - Switch back to Couchy directly from **Settings → Launcher settings → Home launcher** after a successful setup on that TV. Couchy reuses the stock-launcher approval recorded for that device when needed.

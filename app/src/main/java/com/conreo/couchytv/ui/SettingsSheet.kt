@@ -77,6 +77,8 @@ import com.conreo.couchytv.Actions
 import com.conreo.couchytv.R
 import com.conreo.couchytv.data.AppEntry
 import com.conreo.couchytv.data.AppRepository
+import com.conreo.couchytv.data.BUILTIN_ICON_PACKS
+import com.conreo.couchytv.data.BUILTIN_ICON_PACK_CATALOG
 import com.conreo.couchytv.data.BuiltinAerials
 import com.conreo.couchytv.data.CategoryCfg
 import com.conreo.couchytv.data.CloudNotConfigured
@@ -85,6 +87,7 @@ import com.conreo.couchytv.data.ConfigBackup
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.DATE_FORMATS
 import com.conreo.couchytv.data.IconPack
+import com.conreo.couchytv.data.IconPackInfo
 import com.conreo.couchytv.data.ICON_SCALE_EXTRA_SMALL
 import com.conreo.couchytv.data.GLASS_STYLE_LIQUID
 import com.conreo.couchytv.data.LAYOUT_DOCK
@@ -122,6 +125,7 @@ private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Weather
 internal fun SettingsSheet(
     config: LauncherConfig,
     apps: List<AppEntry>,
+    iconPacks: List<IconPackInfo>,
     store: ConfigStore,
     onDismiss: () -> Unit,
     parental: ParentalControls,
@@ -385,8 +389,8 @@ internal fun SettingsSheet(
                     SettingsScreen.IconPack -> IconPackScreen(
                         config = config,
                         apps = apps,
+                        packs = iconPacks,
                         store = store,
-                        onBack = { screen = SettingsScreen.Main },
                     )
                     SettingsScreen.Parental -> ParentalSettings(parentalState, parental)
                     SettingsScreen.RecommendedApps -> configuredCatalog?.let { (url, catalog) ->
@@ -2009,14 +2013,11 @@ internal fun TextEntryDialog(
 private fun IconPackScreen(
     config: LauncherConfig,
     apps: List<AppEntry>,
+    packs: List<IconPackInfo>,
     store: ConfigStore,
-    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val packs by produceState(initialValue = emptyList<com.conreo.couchytv.data.IconPackInfo>(), apps) {
-        value = withContext(Dispatchers.IO) { IconPack.installedIconPacks(context) }
-    }
     val matchCounts by produceState(initialValue = emptyMap<String, Int>(), packs, apps) {
         value = withContext(Dispatchers.IO) {
             packs.associate { pack ->
@@ -2056,7 +2057,14 @@ private fun IconPackScreen(
                 trailingContent = { CheckMark(checked = config.iconPackPkg == pack.pkg) },
             )
         }
-        if (packs.isEmpty()) {
+        if (BuildConfig.GITHUB_UPDATES && !BuildConfig.DEBUG) {
+            val repository = remember(context) { RecommendedApps(context, BUILTIN_ICON_PACK_CATALOG) }
+            val actions = rememberRecommendedDownloadActions(repository, BUILTIN_ICON_PACKS)
+            SettingsSectionLabel(stringResource(R.string.icon_pack_available))
+            BUILTIN_ICON_PACKS.forEach { entry ->
+                RecommendedAppRow(entry, repository, actions)
+            }
+        } else if (packs.isEmpty()) {
             Text(
                 stringResource(R.string.icon_pack_empty),
                 style = MaterialTheme.typography.bodySmall,

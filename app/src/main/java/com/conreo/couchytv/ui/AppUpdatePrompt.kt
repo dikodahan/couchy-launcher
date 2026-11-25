@@ -172,6 +172,7 @@ internal fun AppUpdateDialog(prompt: AppUpdatePrompt) {
     val scope = rememberCoroutineScope()
     var status by remember(update) { mutableStateOf(UpdateStatus.Ready) }
     var progress by remember(update) { mutableStateOf(0) }
+    var showReleaseNotes by remember(update) { mutableStateOf(false) }
     val locale = context.resources.configuration.locales[0]
     val percentFormat = remember(locale) { NumberFormat.getPercentInstance(locale) }
 
@@ -213,7 +214,21 @@ internal fun AppUpdateDialog(prompt: AppUpdatePrompt) {
     Dialog(onDismissRequest = prompt::later) {
         Surface(shape = RoundedCornerShape(20.dp)) {
             Column(Modifier.width(390.dp).padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text(stringResource(R.string.update_title), style = MaterialTheme.typography.titleLarge)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(SettingsControlGap),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.update_title),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    SettingsIconButton(
+                        AppIcons.Info,
+                        stringResource(R.string.update_release_notes),
+                    ) { showReleaseNotes = true }
+                }
                 Text(stringResource(R.string.update_available, update.version, Formatter.formatShortFileSize(context, update.size)))
                 val statusText = when (status) {
                     UpdateStatus.Ready -> null
@@ -235,6 +250,7 @@ internal fun AppUpdateDialog(prompt: AppUpdatePrompt) {
             }
         }
     }
+    if (showReleaseNotes) ReleaseNotesDialog(update) { showReleaseNotes = false }
 }
 
 private enum class UpdateStatus { Ready, Downloading, PermissionRequired, Failed }

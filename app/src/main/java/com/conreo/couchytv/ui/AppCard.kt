@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.width
 import android.os.SystemClock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,6 +40,10 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import androidx.compose.foundation.BorderStroke
 import com.conreo.couchytv.data.AppEntry
+
+// Recreate the artwork draw nodes after Android dismisses a screensaver.
+// Keep focusable controls and cached bitmaps outside the keyed content.
+internal val LocalHomeArtworkGeneration = compositionLocalOf { 0 }
 
 /** One immutable shader shared by every fallback tile. */
 private val AppCardSheen = Brush.verticalGradient(
@@ -149,46 +155,48 @@ fun AppCard(
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
         ) {
-            if (app.banner != null) {
-                Image(
-                    bitmap = app.banner,
-                    contentDescription = app.label,
-                    contentScale = ContentScale.Crop,
-                    // The TV Surface already owns the focus transform layer. A
-                    // second graphicsLayer here duplicated compositor work for
-                    // every banner and consumed scarce layer memory.
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                // Banner-less apps: give the flat tile depth with a subtle sheen
-                // (light top, dark bottom) so it sits next to real banners.
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(AppCardSheen)
-                )
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        if (app.icon != null) {
-                            Image(
-                                bitmap = app.icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
+            key(LocalHomeArtworkGeneration.current) {
+                if (app.banner != null) {
+                    Image(
+                        bitmap = app.banner,
+                        contentDescription = app.label,
+                        contentScale = ContentScale.Crop,
+                        // The TV Surface already owns the focus transform layer. A
+                        // second graphicsLayer here duplicated compositor work for
+                        // every banner and consumed scarce layer memory.
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    // Banner-less apps: give the flat tile depth with a subtle sheen
+                    // (light top, dark bottom) so it sits next to real banners.
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(AppCardSheen)
+                    )
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            if (app.icon != null) {
+                                Image(
+                                    bitmap = app.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                )
+                            }
+                        }
+                        if (showLabel) {
+                            Text(
+                                text = app.label,
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
-                    }
-                    if (showLabel) {
-                        Text(
-                            text = app.label,
-                            style = MaterialTheme.typography.labelMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
                     }
                 }
             }

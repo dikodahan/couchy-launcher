@@ -225,6 +225,7 @@
     <string name="weather_click_app">Ouvrir l\'appli météo</string>
     <string name="weather_app_opens">Application météo</string>
     <string name="weather_forecast_title">Prévisions météo</string>
+    <string name="icon_pack_available">Disponibles au téléchargement</string>
     <string name="icon_pack_hint">Les packs d\'icônes installés comme n\'importe quelle appli (compatibles Nova/ADW, p. ex. ProjectivyIconPack) sont détectés automatiquement.</string>
     <string name="icon_pack_none">Aucun (icône propre à chaque appli)</string>
     <string name="icon_pack_match_count">Correspond à %1$d application(s) sur %2$d</string>
@@ -364,6 +365,8 @@
     <string name="icon_library_unavailable">Impossible d’ouvrir la bibliothèque d’icônes.</string>
     <string name="update_bell">Mise à jour de Couchy disponible</string>
     <string name="update_title">Mise à jour disponible</string>
+    <string name="update_release_notes">Notes de version</string>
+    <string name="update_release_notes_missing">Les notes de version sont indisponibles.</string>
     <string name="update_available">Couchy Launcher %1$s est prêt à être installé. Taille du téléchargement : %2$s.</string>
     <string name="update_action">Mettre à jour</string>
     <string name="update_later">Plus tard</string>

@@ -37,6 +37,16 @@ class AppUpdatesTest {
     }
 
     @Test
+    fun keepsOptionalNotesFromTheSameValidatedRelease() {
+        val notes = "## Changes\n- One\n- Two"
+        val withNotes = release().replace("\"assets\"", "\"body\": \"## Changes\\n- One\\n- Two\", \"assets\"")
+        val nullNotes = release().replace("\"assets\"", "\"body\": null, \"assets\"")
+        assertEquals(notes, parseAppUpdate(withNotes, "1.9.9")?.releaseNotes)
+        assertEquals("", parseAppUpdate(nullNotes, "1.9.9")?.releaseNotes)
+        assertEquals("", parseAppUpdate(release(), "1.9.9")?.releaseNotes)
+    }
+
+    @Test
     fun ignoresPreviewAndDraftReleases() {
         assertNull(parseAppUpdate(release(prerelease = true), "1.1.0"))
         assertNull(parseAppUpdate(release(draft = true), "1.1.0"))

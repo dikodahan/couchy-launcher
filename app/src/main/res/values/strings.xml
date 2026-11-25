@@ -240,6 +240,7 @@
     <string name="weather_kind_rain">Rain</string>
     <string name="weather_kind_snow">Snow</string>
     <string name="weather_kind_storm">Storm</string>
+    <string name="icon_pack_available">Available to download</string>
     <string name="icon_pack_hint">Icon packs installed like any other app (Nova/ADW-compatible, e.g. ProjectivyIconPack) are detected automatically.</string>
     <string name="icon_pack_none">None (use each app\'s own icon)</string>
     <string name="icon_pack_match_count">Matches %1$d of %2$d apps</string>
@@ -366,6 +367,8 @@
     <string name="icon_library_unavailable">The icon library could not be opened.</string>
     <string name="update_bell">Couchy update available</string>
     <string name="update_title">Update available</string>
+    <string name="update_release_notes">Release notes</string>
+    <string name="update_release_notes_missing">Release notes are unavailable.</string>
     <string name="update_available">Couchy Launcher %1$s is ready to install. Download size: %2$s.</string>
     <string name="update_action">Update</string>
     <string name="update_later">Later</string>

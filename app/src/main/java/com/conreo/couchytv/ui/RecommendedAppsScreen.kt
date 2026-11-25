@@ -75,9 +75,7 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: RecommendedCatalog) {
     val context = LocalContext.current
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
     val repository = remember(context, catalogUrl) { RecommendedApps(context, catalogUrl) }
-    val scope = rememberCoroutineScope()
     var catalog by remember(repository) { mutableStateOf(verifiedCatalog) }
     val apps = catalog.apps
     val commands = catalog.adbCommands
@@ -88,11 +86,6 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: Recommen
             IconLibrary.load(context).find("terminal")?.render(96)?.asImageBitmap()
         }
     }
-    var downloads by remember { mutableStateOf(emptyMap<String, RecommendedDownload>()) }
-    var pending by remember { mutableStateOf(emptySet<String>()) }
-    var storageRequest by rememberSaveable { mutableStateOf<String?>(null) }
-    var installRequest by rememberSaveable { mutableStateOf<String?>(null) }
-
     LaunchedEffect(repository) {
         try {
             catalog = repository.refresh()
@@ -102,53 +95,7 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: Recommen
             // The verified catalog remains available if a refresh fails.
         }
     }
-    LaunchedEffect(apps, lifecycle) {
-        if (apps.isEmpty()) return@LaunchedEffect
-        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            while (true) {
-                try {
-                    downloads = repository.downloads(apps)
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (_: Exception) {
-                    // A temporary DownloadManager error leaves the last visible state intact.
-                }
-                delay(if (downloads.values.any { it is RecommendedDownload.Active }) 350 else 1_250)
-            }
-        }
-    }
-
-    fun perform(entry: RecommendedApp, action: suspend () -> Unit) {
-        if (entry.key in pending) return
-        pending = pending + entry.key
-        scope.launch {
-            try {
-                action()
-                downloads = repository.downloads(catalog.apps)
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                Actions.toast(context, context.getString(R.string.recommended_action_failed))
-            } finally {
-                pending = pending - entry.key
-            }
-        }
-    }
-    fun enqueue(entry: RecommendedApp) = perform(entry) { repository.enqueue(entry) }
-    fun install(entry: RecommendedApp) = perform(entry) { context.startActivity(repository.installer(entry)) }
-
-    val storagePermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        val entry = catalog.apps.firstOrNull { it.key == storageRequest }
-        storageRequest = null
-        if (granted && entry != null) enqueue(entry)
-        else Actions.toast(context, context.getString(R.string.recommended_storage_required))
-    }
-    val installPermission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        val entry = catalog.apps.firstOrNull { it.key == installRequest }
-        installRequest = null
-        if (context.packageManager.canRequestPackageInstalls() && entry != null) install(entry)
-        else Actions.toast(context, context.getString(R.string.update_permission))
-    }
+    val actions = rememberRecommendedDownloadActions(repository, apps)
 
     Column(Modifier.fillMaxSize().padding(SettingsPageInset), verticalArrangement = Arrangement.spacedBy(SettingsRowGap)) {
         SettingsTitle(stringResource(R.string.recommended_title))
@@ -170,41 +117,8 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: Recommen
                             RecommendedAppRow(
                                 entry = entry,
                                 repository = repository,
-                                download = if (entry.key in pending && downloads[entry.key] == null) {
-                                    RecommendedDownload.Active(null)
-                                } else downloads[entry.key],
-                                enabled = entry.key !in pending,
+                                actions = actions,
                                 downloadFocus = if (entry == apps.first()) first else focus,
-                                onDownload = {
-                                    if (Build.VERSION.SDK_INT == 28 && ContextCompat.checkSelfPermission(
-                                            context, Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                        ) != PackageManager.PERMISSION_GRANTED
-                                    ) {
-                                        if (storageRequest == null) {
-                                            storageRequest = entry.key
-                                            storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                        }
-                                    } else enqueue(entry)
-                                },
-                                onInstall = {
-                                    if (context.packageManager.canRequestPackageInstalls()) install(entry)
-                                    else if (installRequest == null) {
-                                        installRequest = entry.key
-                                        try {
-                                            installPermission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}")))
-                                        } catch (_: Exception) {
-                                            installRequest = null
-                                            Actions.toast(context, context.getString(R.string.update_permission))
-                                        }
-                                    }
-                                },
-                                onDelete = {
-                                    val target = if (entry == apps.first()) first else focus
-                                    perform(entry) {
-                                        repository.delete(entry)
-                                        runCatching { target.requestFocus() }
-                                    }
-                                },
                             )
                         }
                     }
@@ -242,17 +156,119 @@ internal fun RecommendedAppsScreen(catalogUrl: String, verifiedCatalog: Recommen
     }
 }
 
+internal class RecommendedDownloadActions(
+    val downloads: Map<String, RecommendedDownload>,
+    val pending: Set<String>,
+    val download: (RecommendedApp) -> Unit,
+    val install: (RecommendedApp) -> Unit,
+    val delete: (RecommendedApp, FocusRequester) -> Unit,
+)
+
 @Composable
-private fun RecommendedAppRow(
+internal fun rememberRecommendedDownloadActions(
+    repository: RecommendedApps,
+    apps: List<RecommendedApp>,
+): RecommendedDownloadActions {
+    val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val scope = rememberCoroutineScope()
+    var downloads by remember(repository) { mutableStateOf(emptyMap<String, RecommendedDownload>()) }
+    var pending by remember(repository) { mutableStateOf(emptySet<String>()) }
+    var storageRequest by rememberSaveable(repository) { mutableStateOf<String?>(null) }
+    var installRequest by rememberSaveable(repository) { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(repository, apps, lifecycle) {
+        if (apps.isEmpty()) return@LaunchedEffect
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                try {
+                    downloads = repository.downloads(apps)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    // A temporary DownloadManager error leaves the last visible state intact.
+                }
+                delay(if (downloads.values.any { it is RecommendedDownload.Active }) 350 else 1_250)
+            }
+        }
+    }
+
+    fun perform(entry: RecommendedApp, action: suspend () -> Unit) {
+        if (entry.key in pending) return
+        pending = pending + entry.key
+        scope.launch {
+            try {
+                action()
+                downloads = repository.downloads(apps)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                Actions.toast(context, context.getString(R.string.recommended_action_failed))
+            } finally {
+                pending = pending - entry.key
+            }
+        }
+    }
+    fun enqueue(entry: RecommendedApp) = perform(entry) { repository.enqueue(entry) }
+    fun install(entry: RecommendedApp) = perform(entry) { context.startActivity(repository.installer(entry)) }
+
+    val storagePermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        val entry = apps.firstOrNull { it.key == storageRequest }
+        storageRequest = null
+        if (granted && entry != null) enqueue(entry)
+        else Actions.toast(context, context.getString(R.string.recommended_storage_required))
+    }
+    val installPermission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        val entry = apps.firstOrNull { it.key == installRequest }
+        installRequest = null
+        if (context.packageManager.canRequestPackageInstalls() && entry != null) install(entry)
+        else Actions.toast(context, context.getString(R.string.update_permission))
+    }
+
+    return RecommendedDownloadActions(
+        downloads = downloads,
+        pending = pending,
+        download = { entry ->
+            if (Build.VERSION.SDK_INT == 28 && ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                if (storageRequest == null) {
+                    storageRequest = entry.key
+                    storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+            } else enqueue(entry)
+        },
+        install = { entry ->
+            if (context.packageManager.canRequestPackageInstalls()) install(entry)
+            else if (installRequest == null) {
+                installRequest = entry.key
+                try {
+                    installPermission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}")))
+                } catch (_: Exception) {
+                    installRequest = null
+                    Actions.toast(context, context.getString(R.string.update_permission))
+                }
+            }
+        },
+        delete = { entry, target ->
+            perform(entry) {
+                repository.delete(entry)
+                runCatching { target.requestFocus() }
+            }
+        },
+    )
+}
+
+@Composable
+internal fun RecommendedAppRow(
     entry: RecommendedApp,
     repository: RecommendedApps,
-    download: RecommendedDownload?,
-    enabled: Boolean,
-    downloadFocus: FocusRequester,
-    onDownload: () -> Unit,
-    onInstall: () -> Unit,
-    onDelete: () -> Unit,
+    actions: RecommendedDownloadActions,
+    downloadFocus: FocusRequester = remember { FocusRequester() },
 ) {
+    val enabled = entry.key !in actions.pending
+    val download = actions.downloads[entry.key] ?: if (!enabled) RecommendedDownload.Active(null) else null
     val bitmap by produceState<ImageBitmap?>(initialValue = null, entry.iconUrl) {
         value = (entry.iconUrl?.let { repository.icon(it) } ?: repository.fallbackIcon(entry))?.asImageBitmap()
     }
@@ -281,15 +297,15 @@ private fun RecommendedAppRow(
                         ?: ProgressBarRangeInfo.Indeterminate
                 }
             },
-            onClick = { if (enabled && !ready && active == null) onDownload() },
+            onClick = { if (enabled && !ready && active == null) actions.download(entry) },
         ) {
             if (active != null) DownloadRing(active.progress)
             else RecommendedActionIcon(if (ready) AppIcons.Check else AppIcons.Download)
         }
-        RecommendedButton(stringResource(R.string.recommended_install), enabled = ready && enabled, onClick = onInstall) {
+        RecommendedButton(stringResource(R.string.recommended_install), enabled = ready && enabled, onClick = { actions.install(entry) }) {
             RecommendedActionIcon(AppIcons.Install)
         }
-        RecommendedButton(stringResource(R.string.recommended_delete), enabled = ready && enabled, onClick = onDelete) {
+        RecommendedButton(stringResource(R.string.recommended_delete), enabled = ready && enabled, onClick = { actions.delete(entry, downloadFocus) }) {
             RecommendedActionIcon(AppIcons.Delete)
         }
     }

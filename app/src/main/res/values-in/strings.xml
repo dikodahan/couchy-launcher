@@ -175,6 +175,7 @@
     <string name="weather_click_app">Buka aplikasi cuaca</string>
     <string name="weather_app_opens">Aplikasi cuaca</string>
     <string name="weather_forecast_title">Prakiraan cuaca</string>
+    <string name="icon_pack_available">Tersedia untuk diunduh</string>
     <string name="icon_pack_hint">Paket ikon yang dipasang seperti aplikasi lain (kompatibel Nova/ADW, mis. ProjectivyIconPack) akan terdeteksi otomatis.</string>
     <string name="icon_pack_none">Tidak ada (ikon bawaan tiap aplikasi)</string>
     <string name="icon_pack_match_count">Cocok dengan %1$d dari %2$d aplikasi</string>
@@ -350,6 +351,8 @@
     <string name="icon_library_unavailable">Pustaka ikon tidak dapat dibuka.</string>
     <string name="update_bell">Pembaruan Couchy tersedia</string>
     <string name="update_title">Pembaruan tersedia</string>
+    <string name="update_release_notes">Catatan rilis</string>
+    <string name="update_release_notes_missing">Catatan rilis tidak tersedia.</string>
     <string name="update_available">Couchy Launcher %1$s siap dipasang. Ukuran unduhan: %2$s.</string>
     <string name="update_action">Perbarui</string>
     <string name="update_later">Nanti</string>

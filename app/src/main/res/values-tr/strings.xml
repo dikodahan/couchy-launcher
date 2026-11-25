@@ -175,6 +175,7 @@
     <string name="weather_click_app">Hava durumu uygulamasını aç</string>
     <string name="weather_app_opens">Hava durumu uygulaması</string>
     <string name="weather_forecast_title">Hava tahmini</string>
+    <string name="icon_pack_available">İndirilebilir</string>
     <string name="icon_pack_hint">Diğer uygulamalar gibi kurulan simge paketleri (Nova/ADW uyumlu, örn. ProjectivyIconPack) otomatik olarak algılanır.</string>
     <string name="icon_pack_none">Yok (her uygulamanın kendi simgesi)</string>
     <string name="icon_pack_match_count">%2$d uygulamadan %1$d tanesiyle eşleşiyor</string>
@@ -350,6 +351,8 @@
     <string name="icon_library_unavailable">Simge kitaplığı açılamadı.</string>
     <string name="update_bell">Couchy güncellemesi var</string>
     <string name="update_title">Güncelleme var</string>
+    <string name="update_release_notes">Sürüm notları</string>
+    <string name="update_release_notes_missing">Sürüm notları mevcut değil.</string>
     <string name="update_available">Couchy Launcher %1$s yüklenmeye hazır. İndirme boyutu: %2$s.</string>
     <string name="update_action">Güncelle</string>
     <string name="update_later">Daha sonra</string>

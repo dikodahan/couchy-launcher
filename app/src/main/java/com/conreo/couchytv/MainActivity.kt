@@ -22,6 +22,16 @@ class MainActivity : ComponentActivity() {
     var rescanTick by mutableIntStateOf(0)
         private set
 
+    private var artworkGeneration by mutableIntStateOf(0)
+    private val screensaverReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_DREAMING_STOPPED) {
+                artworkGeneration++
+                android.util.Log.d("Couchy", "Refreshing Home artwork after screensaver exit")
+            }
+        }
+    }
+
     private var homeIntentTick by mutableIntStateOf(0)
 
     internal var attachedLanguage: String = ""
@@ -75,11 +85,18 @@ class MainActivity : ComponentActivity() {
             androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
         )
 
+        androidx.core.content.ContextCompat.registerReceiver(
+            this,
+            screensaverReceiver,
+            IntentFilter(Intent.ACTION_DREAMING_STOPPED),
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+
         // Compose reads the host view direction, including when the app's
         // language differs from the system language.
         window.decorView.layoutDirection = resources.configuration.layoutDirection
         setContent {
-            LauncherApp(rescanTick, homeIntentTick)
+            LauncherApp(rescanTick, homeIntentTick, artworkGeneration)
         }
     }
 
@@ -92,6 +109,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        unregisterReceiver(screensaverReceiver)
         unregisterReceiver(packageReceiver)
         super.onDestroy()
     }
