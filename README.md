@@ -12,9 +12,9 @@
 
 [Install](#install) · [Contributing](CONTRIBUTING.md) · [Licensing](LICENSING.md)
 
-<a href="docs/media/couchy-demo.mp4"><img src="docs/media/couchy-demo-poster.jpg" width="800" alt="Watch the Couchy Launcher demo" /></a>
+<a href="https://cdn.jsdelivr.net/gh/dikodahan/couchy-launcher@25a19bae31bab22d567128d256ac65ac18a99e88/docs/media/couchy-demo.mp4"><img src="docs/media/couchy-demo-poster.jpg" width="800" alt="Watch the Couchy Launcher demo" /></a>
 
-[Watch the demo (MP4)](docs/media/couchy-demo.mp4)
+[Watch the demo (MP4)](https://cdn.jsdelivr.net/gh/dikodahan/couchy-launcher@25a19bae31bab22d567128d256ac65ac18a99e88/docs/media/couchy-demo.mp4)
 
 <sub>Big Buck Bunny excerpt and poster frame © 2008 Blender Foundation / www.bigbuckbunny.org. [Trailer source](https://commons.wikimedia.org/wiki/File:Big_Buck_Bunny_Trailer_1080p.ogv) · [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).</sub>
 
