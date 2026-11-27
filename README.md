@@ -34,7 +34,8 @@ One screen, remote-driven, for 1080p and 4K TVs. Fresh installs start with Aeria
 - **Three layouts** - Carousel, Grid, or a floating glass Dock (press **Down** to expand to the full grid).
 - **App order:** Hold OK on an app and choose **Move**. Couchy opens a grid from the top in every layout, including Dock. Press OK to pick up an app, move it with the D-pad, and press OK again to drop it. You can move apps within or between sections, then press Back to save and exit.
 - **Sections** you rename, reorder and fill. An app can appear in several. In **Settings → Sections**, select a section to rename it or choose an icon from the built-in library. For **All apps**, use the pencil next to the toggle. To move apps between sections, use **Apps reorder mode**. New installs go to the first section.
-- **Wallpapers** - gradients, Top Shelf previews for compatible apps, your own photo, a looping video, or optional built-in aerial videos (Apple / Amazon / community, streamed only when enabled), with speed control and cross-fades.
+- **Wallpapers** - gradients, your own photo, a looping video, or optional built-in aerial videos (Apple / Amazon / community, streamed only when enabled), with speed control and cross-fades.
+- **App Content Preview** shows artwork and full-length trailers from compatible apps as you highlight them. Play MP4 and live HLS directly, choose a subtitle language, or use TMDB to look up missing trailers. [Set up App Content Preview](#app-content-preview).
 - **Save & load** your full configuration — categories, layout, wallpaper, and all settings - as a JSON file.
 - **19 languages** - The launcher supports both right-to-left (RTL) and left-to-right (LTR) orientation based on the selected language. Hebrew and Arabic mirror the interface, menus, dialogs, and D-pad controls. English and other LTR languages use left-to-right orientation. Choose a language in **Settings → Launcher settings → Language**, or select **System default** to follow your TV.
 - **Adjustable** - icon size, spacing, corner roundness, interface scale, dimming, and an optional glass status-bar panel.
@@ -60,20 +61,34 @@ Fresh installations use the built-in aerial video wallpapers by default. They st
 
 ---
 
-## Top Shelf wallpaper
+## App Content Preview
 
-Open **Settings → Appearance → Wallpaper → Top Shelf** and allow access to Android TV listings. Highlight a streaming app with the remote and leave it focused. Couchy cycles through movie and TV artwork that the focused app makes available through Android TV Preview or Watch Next. The selected gradient appears when a feed or its images are unavailable. Availability varies by app and TV firmware. Top Shelf uses the platform’s read-only listings permission and is inactive while Android TV parental controls are on. The wallpaper choice is included in backups. Android asks for listings access separately on each device.
+Open **Settings → App Content Preview**, turn on **Enable app content preview**, and allow TV listings access. With the remote, highlight an app that publishes movie or TV artwork through Android TV Preview or Watch Next. Couchy fits the full artwork on screen while the app stays highlighted, including portrait posters. Your selected wallpaper returns when you move to a different tile and stays visible when the focused app has no usable artwork. The option is off by default and is included in backups. Android asks for listings access separately on each device. Previews are unavailable while Android TV parental controls are on.
 
-### Publishing artwork from an Android TV app
+Enable **Play trailers** to start an available trailer about 2.5 seconds after its artwork appears. Apps can supply artwork without supplying a trailer. Trailers are muted by default. Turn off **Mute trailers** to hear the audio. Trailers use the full screen and play to the end. Live streams can keep playing while the preview stays selected. Moving focus away stops playback. The preview, trailer, and mute settings are included in backups.
 
-Top Shelf reads the standard Android TV home-screen feeds. A streaming app can support it with the same AndroidX TV Provider integration it uses to publish a [Preview channel](https://developer.android.com/training/tv/discovery/recommendations-channel) or [Watch Next programs](https://developer.android.com/training/tv/discovery/watch-next-add-programs). Publish records under your Android TV app’s own package so Couchy can match them to its app tile.
+Turn on **Include subtitles for trailers** to show captions when a trailer provides them. **Subtitle language** defaults to the system language, and you can choose a different preferred language. Both settings are included in backups. YouTube may briefly display its own title, pause indicator, or recommendations. Some YouTube trailers may still show captions when Couchy’s subtitle setting is off. Any subtitles burned into the video also remain visible.
+
+In Dock mode, highlight an app with a preview and press **Up** to slide the collapsed dock off screen. **Left** and **Right** switch preview items, including during playback. The glass dots show the item count while artwork is visible. Press **Up** again to access the top tray, or press **Down** or **Back** to return to the dock.
+
+### Find missing trailers with TMDB
+
+In **App Content Preview**, turn on **Play trailers**, then open **TMDB API key**. Copy the value labeled **API Key** (the v3 key) from your TMDB API settings. The **API Read Access Token** is a separate field. Save the API key, then switch on **Find missing trailers**. [Open TMDB API settings](https://www.themoviedb.org/settings/api). The fallback runs when a listing has no playable publisher trailer. It can use a recognized MyKo or TMDB ID, an IMDb ID, or an exact movie or series title. When the listing supplies a release year, Couchy also verifies that it matches. Ambiguous matches are skipped. Couchy keeps the artwork visible while preparing the player and returns to it if a trailer fails. Apps that share no eligible Android TV listings continue to show the selected wallpaper. YouTube trailers fill the player area with standard playback controls hidden. The video can still include its own black bars or branding.
+
+Choose **Set up TMDB with your phone** to scan a QR code that opens the official TMDB API settings page. On compatible TVs, use the paired [Google TV phone remote](https://support.google.com/googletv/answer/11136134) to paste the copied API key into Couchy. The QR code contains only the TMDB page URL.
+
+The fallback is off by default. Enabling it sends the listing ID or title and year to TMDB and opens matched videos in YouTube’s embedded player. The setting and key are included in local and Telegram backups. Treat backup files as private. To remove the key, save an empty field.
+
+### Publishing artwork and trailers from an Android TV app
+
+App Content Preview reads the standard Android TV home-screen feeds. A streaming app can support it with the same AndroidX TV Provider integration it uses to publish a [Preview channel](https://developer.android.com/training/tv/discovery/recommendations-channel) or [Watch Next programs](https://developer.android.com/training/tv/discovery/watch-next-add-programs). Publish records under your Android TV app’s own package so Couchy can match them to its app tile.
 
 1. Declare `com.android.providers.tv.permission.WRITE_EPG_DATA` and use `androidx.tvprovider:tvprovider` to create a Preview channel. Publish titles with `PreviewProgram.Builder`. Use a movie, TV series, TV season, or TV episode program type. A Watch Next publisher can supply the same artwork fields with `WatchNextProgram.Builder`.
 2. Set `thumbnailUri` or `posterArtUri`. A landscape thumbnail (ideally 16:9) works best for the full-screen preview. Couchy tries the thumbnail first and falls back to poster art if the thumbnail is missing or fails to load. Use an HTTPS URL that can load without private headers, or an externally readable `content://` URI from a provider owned by your app. Bundled `android.resource://` artwork can also use your app’s package as its authority. For HTTPS, keep each image at or below 8 MiB. Couchy downsamples images to fit within 1280 × 720.
 3. Publish only items intended for home-screen discovery. Couchy uses entries marked searchable and browsable. It prioritizes Preview entries by weight, then fills the remaining slots with Watch Next entries by most recent engagement. It shows up to four images in a rotation and ignores private or unreadable artwork.
-4. Test on an Android TV or Google TV device with Couchy’s Top Shelf and TV listings permission enabled. Highlight your app tile without pressing OK. Check that artwork appears, rotates if multiple images are available, and clears when focus moves to a different app.
+4. Test on an Android TV or Google TV device with Couchy’s App Content Preview and TV listings permission enabled. Highlight your app tile without pressing OK. Check that artwork appears, rotates if multiple images are available, and clears when focus moves to a different app.
 
-Couchy reads imagery only. The app tile still launches the app normally. A TV’s provider determines which listings it shares with third-party launchers. Private in-app catalogs and proprietary launcher feeds require the app developer to publish compatible entries before Couchy can display them.
+Include any title or logo you want displayed in the preview artwork. Publish the optional trailer in `preview_video_uri`. For the trailer, use a direct HTTPS MP4 or HLS stream, a readable URI owned by your app, or an embeddable HTTPS YouTube link. Couchy uses its native player for direct streams and files. Couchy uses the published stream when trailers are enabled and keeps the artwork if the video cannot be played. The app tile still launches the app normally. A TV’s provider determines which listings it shares with third-party launchers. Private in-app catalogs and proprietary launcher feeds require the app developer to publish compatible entries before Couchy can display them.
 
 ## Install
 
@@ -208,7 +223,7 @@ The same menu opens **Keyboard languages** for Gboard and the Android **Screen s
 
 ## Privacy and security
 
-No ads, analytics or tracking. Aerial wallpapers stream by default and can be changed in Wallpaper settings. Weather forecasts, Top Shelf artwork, and Telegram Saved Messages backup depend on the features you select. Top Shelf reads the focused app’s published TV listings on the device and may load images from the HTTPS hosts named in those listings. GeoJS receives the public IP address on first launch to estimate a default location and select weather units. The wizard reuses that lookup, and Couchy saves a location only after you confirm it. Your choice is stored locally. Third-party endpoints receive ordinary network connection information; manual/selected weather coordinates are sent to Open-Meteo. Settings and custom artwork remain local unless you export settings.
+No ads, analytics or tracking. Aerial wallpapers stream by default and can be changed in Wallpaper settings. Weather forecasts, App Content Preview artwork, and Telegram Saved Messages backup depend on the features you select. App Content Preview reads the focused app’s published TV listings on the device and may load images from the HTTPS hosts named in those listings. GeoJS receives the public IP address on first launch to estimate a default location and select weather units. The wizard reuses that lookup, and Couchy saves a location only after you confirm it. Your choice is stored locally. Third-party endpoints receive ordinary network connection information; manual/selected weather coordinates are sent to Open-Meteo. Settings and custom artwork remain local unless you export settings.
 
 Aerial streams use HTTPS with certificate and hostname validation. Couchy includes the [Apple root certificate](https://www.apple.com/certificateauthority/) for the Apple aerial CDN hostname. If a stream fails, the launcher shows the gradient while retrying. Use **Settings → Wallpaper → Restart aerial playback** to reconnect with the selected collection and quality. Telegram session files are excluded from Android cloud backup and device transfer. Telegram app credentials are set when building Couchy. Telegram account linking happens on each TV.
 
@@ -218,6 +233,14 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 
 <details>
 <summary>Click to expand</summary>
+
+**v1.2.7**
+
+- Enable App Content Preview independently of the selected wallpaper. Compatible apps can show full-screen artwork and trailers.
+- Press **Up** from the collapsed dock to browse preview items. Use **Left** and **Right** to switch items and **Up** again to open the tray.
+- Play direct MP4 and live HLS trailers with the native player, and play full-length trailers without a fixed time limit.
+- Choose trailer subtitles and their language. Some embedded YouTube videos may still show captions while the setting is off.
+- Use the v3 TMDB API Key to find missing trailers. Scan a QR code to open TMDB’s API settings on your phone.
 
 **v1.2.6**
 
@@ -239,14 +262,14 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 
 - Restore Apple aerial playback on TVs that lack the required certificate. Apple’s published root is trusted only for the Apple aerial hostname.
 - Retry failed aerial clips automatically and show the gradient while recovering. **Settings → Wallpaper → Restart aerial playback** retries immediately at the selected quality.
-- Press **Back** from a Home app tile or tray icon to focus the first app for Top Shelf.
+- Press **Back** from a Home app tile or tray icon to focus the first app for App Content Preview.
 
 **v1.2.2**
 
 - Use consistent focus highlights, contrast, and spacing throughout settings, dialogs, and app menus.
 - Open **Reorder** from the long-press app menu. Dock view shows the dock above the remaining apps and backs up its order separately.
 - Choose **Extra small** in **Settings → Display → Icon size** for one more app per row than the previous smallest size, now called **Compact**.
-- Press **Back** from the Home status bar to focus the first app. If Top Shelf is enabled, a compatible first app can show its artwork.
+- Press **Back** from the Home status bar to focus the first app. If App Content Preview is enabled, a compatible first app can show its artwork.
 
 **v1.2.1**
 

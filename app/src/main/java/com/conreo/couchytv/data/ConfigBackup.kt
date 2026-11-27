@@ -52,6 +52,10 @@ object ConfigBackup {
             require(config.labelOverrides.all { (pkg, label) -> pkg.isNotBlank() && label.isNotBlank() && label.length <= 256 })
             require(config.recommendedAppsUrl.isEmpty() || isRecommendedAppsUrl(config.recommendedAppsUrl))
             require(!config.recommendedAppsEnabled || config.recommendedAppsUrl.isNotEmpty())
+            require(config.appContentPreviewTmdbCredential.isEmpty() ||
+                validTmdbCredential(config.appContentPreviewTmdbCredential))
+            require(config.appContentPreviewSubtitleLanguage in LANGUAGES)
+            require(!config.appContentPreviewFallback || config.appContentPreviewTmdbCredential.isNotEmpty())
             require(config.weatherLat.isFinite() && config.weatherLon.isFinite())
         }
     }

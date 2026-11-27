@@ -337,9 +337,23 @@
     <string name="weather_icons_mono">Monochrome</string>
     <string name="weather_icons_color">Colored</string>
     <string name="weather_icons_animated">Animated</string>
-    <string name="top_shelf">Top Shelf</string>
-    <string name="top_shelf_desc">Cycles through movie and TV artwork shared by the highlighted app. Uses the gradient when artwork is unavailable.</string>
-    <string name="top_shelf_need_permission">Allow TV listings access to use Top Shelf.</string>
+    <string name="app_content_preview">App Content Preview</string>
+    <string name="app_content_preview_toggle">Enable app content preview</string>
+    <string name="app_content_preview_desc">Show movie and TV artwork shared by the highlighted app. Your selected wallpaper stays visible when no preview is available.</string>
+    <string name="app_content_preview_trailers">Play trailers</string>
+    <string name="app_content_preview_mute">Mute trailers</string>
+    <string name="trailer_include_subtitles">Include subtitles for trailers</string>
+    <string name="trailer_include_subtitles_desc">Some YouTube videos may still show subtitles when this setting is off.</string>
+    <string name="trailer_subtitles_language">Subtitle language</string>
+    <string name="trailer_fallback">Find missing trailers</string>
+    <string name="trailer_fallback_desc">Use TMDB and YouTube when an app supplies no trailer.</string>
+    <string name="trailer_fallback_credential">TMDB API key</string>
+    <string name="trailer_fallback_credential_desc">Copy the API Key from your TMDB API settings. The API Read Access Token is a separate field. Backups include the key. Save an empty field to remove it.</string>
+    <string name="tmdb_phone_setup">Set up TMDB with your phone</string>
+    <string name="tmdb_phone_setup_steps">Scan to open TMDB and copy the value labeled API Key. The API Read Access Token is a separate field. Then open the TMDB API key field on the TV and paste using the paired Google TV phone remote.</string>
+    <string name="trailer_fallback_credential_failed">Could not verify the credential with TMDB. Check the value and your connection.</string>
+    <string name="tmdb_attribution" translatable="false">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
+    <string name="app_content_preview_need_permission">Allow TV listings access to use App Content Preview.</string>
     <string name="menu_close_cache">Close &amp; clear cache</string>
     <string name="close_cache_complete">App stopped and cache cleared.</string>
     <string name="close_cache_partial">App stopped. Clear its cache in App info.</string>

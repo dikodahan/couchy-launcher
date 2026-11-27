@@ -108,7 +108,7 @@ fun AppCard(
         onLongPress?.invoke()
     }
 
-    val reportFocus = LocalTopShelfFocus.current
+    val reportFocus = LocalAppContentPreviewFocus.current
     val focusModifier = if (reportFocus == null) Modifier else {
         val token = remember(app.pkg) { Any() }
         DisposableEffect(reportFocus, token) {

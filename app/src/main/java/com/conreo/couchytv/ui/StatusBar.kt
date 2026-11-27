@@ -23,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -86,6 +88,7 @@ fun StatusBar(
     onWeatherClick: () -> Unit,
     onWeatherLongClick: () -> Unit,
     onUpdateClick: (() -> Unit)? = null,
+    settingsFocus: FocusRequester? = null,
 ) {
     // Optional glass panel behind the icon cluster — same look as the dock
     // panel, corners follow the roundness setting.
@@ -133,6 +136,7 @@ fun StatusBar(
             active = true,
             contentDescription = stringResource(R.string.cd_settings),
             onClick = onSettingsClick,
+            modifier = settingsFocus?.let { Modifier.focusRequester(it) } ?: Modifier,
         )
         if (onUpdateClick != null) UpdateBell(onUpdateClick)
         if (date.isNotEmpty()) {
@@ -229,9 +233,11 @@ private fun StatusIcon(
     active: Boolean,
     contentDescription: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onClick,
+        modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(CircleShape),
         colors = statusControlColors(),
         scale = ClickableSurfaceDefaults.scale(focusedScale = STATUS_FOCUS_SCALE),

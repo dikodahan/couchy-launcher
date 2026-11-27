@@ -48,10 +48,8 @@ internal class LauncherBackdrop(
     val isVideo: Boolean,
     val liquidGlass: Boolean,
     val overlayAlpha: State<Float>,
+    val fitPhoto: Boolean = false,
 ) {
-    var frame by mutableStateOf<ImageBitmap?>(null)
-    var frameVisibility by mutableStateOf<(() -> Float)?>(null)
-
     private val lenses = mutableStateMapOf<GlassPanel, Pair<Any, GlassLens>>()
 
     fun videoLens(panel: GlassPanel): GlassLens? = lenses[panel]?.second
@@ -139,11 +137,9 @@ internal fun Modifier.launcherGlass(radius: Dp, panel: GlassPanel): Modifier {
                 val location = position
                 if (backdrop != null && !backdrop.isVideo && location != null && location.viewport.minDimension > 0f && falloff > 0f) {
                     val (origin, viewport) = location
-                    val frame = backdrop.frame
-                    val visibility = backdrop.frameVisibility?.invoke() ?: 1f
-                    val opacity = (1f - backdrop.overlayAlpha.value) * (if (frame != null) visibility else 1f)
+                    val opacity = 1f - backdrop.overlayAlpha.value
                     if (opacity > 0.01f) {
-                        val image = frame ?: backdrop.photo ?: run {
+                        val image = backdrop.photo ?: run {
                             if (presetViewport != viewport) {
                                 val width = 320
                                 val height = (width * viewport.height / viewport.width).roundToInt().coerceAtLeast(1)
@@ -159,7 +155,7 @@ internal fun Modifier.launcherGlass(radius: Dp, panel: GlassPanel): Modifier {
                         val imageAspect = image.width.toFloat() / image.height
                         val existing = mesh
                         val current = if (existing?.position == location && existing.imageAspect == imageAspect) existing
-                            else buildGlassMesh(location, imageAspect, size, falloff, displacement).also { mesh = it }
+                            else buildGlassMesh(location, imageAspect, size, falloff, displacement, backdrop.fitPhoto).also { mesh = it }
                         drawIntoCanvas { canvas ->
                             if (opacity < 0.999f) {
                                 layerPaint.alpha = opacity
@@ -201,12 +197,13 @@ private fun buildGlassMesh(
     panel: Size,
     falloff: Float,
     displacement: Float,
+    fitImage: Boolean,
 ): GlassMesh {
     val (origin, viewport) = position
-    // Match the wallpaper's center crop. The mesh moves only around the rim,
-    // so objects in the flat center stay aligned with the surrounding image.
-    val width = maxOf(viewport.width, viewport.height * imageAspect)
-    val height = maxOf(viewport.height, viewport.width / imageAspect)
+    // Match the displayed image bounds so the glass does not shift the artwork.
+    val scaledWidth = viewport.height * imageAspect
+    val width = if (fitImage) minOf(viewport.width, scaledWidth) else maxOf(viewport.width, scaledWidth)
+    val height = width / imageAspect
     val left = (viewport.width - width) / 2f - origin.x
     val top = (viewport.height - height) / 2f - origin.y
     val columns = ceil(viewport.width / (falloff * 0.65f)).toInt().coerceIn(24, 100)

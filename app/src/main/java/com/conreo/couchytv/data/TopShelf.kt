@@ -21,6 +21,12 @@ internal const val READ_TV_LISTINGS = "android.permission.READ_TV_LISTINGS"
 private const val MAX_SLIDES = 4
 private const val MAX_ART_BYTES = 8 * 1024 * 1024
 
+internal data class AppPreviewProgram(
+    val images: List<Uri>,
+    val trailer: Uri?,
+    val fallback: TrailerLookup?,
+)
+
 internal object TopShelf {
     private val projection = arrayOf(
         "package_name",
@@ -31,17 +37,24 @@ internal object TopShelf {
         PreviewPrograms.COLUMN_POSTER_ART_URI,
     )
 
+    private val trailerProjection = projection + PreviewPrograms.COLUMN_PREVIEW_VIDEO_URI
+    private val metadataProjection = projection + arrayOf(
+        PreviewPrograms.COLUMN_TITLE,
+        PreviewPrograms.COLUMN_RELEASE_DATE,
+        PreviewPrograms.COLUMN_CONTENT_ID,
+    )
+
     fun hasPermission(context: Context): Boolean =
         context.checkSelfPermission(READ_TV_LISTINGS) == PackageManager.PERMISSION_GRANTED
 
-    suspend fun artwork(context: Context, packageName: String): List<List<Uri>> {
+    suspend fun programs(context: Context, packageName: String, includeTrailers: Boolean, includeFallback: Boolean): List<AppPreviewProgram> {
         val job = currentCoroutineContext()
         if (!hasPermission(context)) return emptyList()
         // Let the system launcher handle ratings on devices with parental controls.
         if (runCatching { context.getSystemService(TvInputManager::class.java)?.isParentalControlsEnabled }
                 .getOrNull() != false) return emptyList()
 
-        val art = linkedMapOf<Uri, List<Uri>>()
+        val art = linkedMapOf<Uri, AppPreviewProgram>()
         val tables = listOf(
             PreviewPrograms.CONTENT_URI to "${PreviewPrograms.COLUMN_WEIGHT} DESC, _id ASC",
             WatchNextPrograms.CONTENT_URI to "${WatchNextPrograms.COLUMN_LAST_ENGAGEMENT_TIME_UTC_MILLIS} DESC, _id ASC",
@@ -49,22 +62,50 @@ internal object TopShelf {
         for ((table, order) in tables) {
             job.ensureActive()
             val uri = table.buildUpon().appendQueryParameter("package", packageName).build()
-            val cursor = try {
-                context.contentResolver.query(uri, projection, null, null, order)
+            fun query(columns: Array<String>) = try {
+                context.contentResolver.query(uri, columns, null, null, order)
             } catch (_: RuntimeException) {
-                null // Some OEM providers restrict cross-package listings.
-            } ?: continue
+                null // An OEM provider may omit optional columns or restrict cross-package listings.
+            }
+            val cursor = when {
+                includeFallback -> query(metadataProjection + PreviewPrograms.COLUMN_PREVIEW_VIDEO_URI)
+                    ?: query(metadataProjection)
+                    ?: query(trailerProjection)
+                    ?: query(projection)
+                includeTrailers -> query(trailerProjection) ?: query(projection)
+                else -> query(projection)
+            }
+            if (cursor == null) continue
             cursor.use { rows ->
+                val titleColumn = rows.getColumnIndex(PreviewPrograms.COLUMN_TITLE)
+                val releaseDateColumn = rows.getColumnIndex(PreviewPrograms.COLUMN_RELEASE_DATE)
+                val contentIdColumn = rows.getColumnIndex(PreviewPrograms.COLUMN_CONTENT_ID)
+                val trailerColumn = rows.getColumnIndex(PreviewPrograms.COLUMN_PREVIEW_VIDEO_URI)
+                fun string(column: Int) = if (column >= 0) rows.getString(column) else null
+                fun media(column: Int) = string(column)?.let(Uri::parse)?.takeIf {
+                    isSupported(context, it, packageName)
+                }
                 var scanned = 0
                 while (art.size < MAX_SLIDES && scanned++ < 80 && rows.moveToNext()) {
                     job.ensureActive()
                     if (rows.getString(0) != packageName || !isMovieOrShow(rows.getInt(1)) ||
                         rows.getInt(2) != 1 || rows.getInt(3) != 1
                     ) continue
-                    val images = (4..5).mapNotNull { column ->
-                        rows.getString(column)?.let(Uri::parse)?.takeIf { isSupported(context, it, packageName) }
-                    }
-                    images.firstOrNull()?.let { art.putIfAbsent(it, images.distinct()) }
+                    val images = (4..5).mapNotNull(::media).distinct()
+                    val primary = images.firstOrNull() ?: continue
+                    if (primary in art) continue
+                    val type = rows.getInt(1)
+                    val fallback = if (includeFallback) {
+                        trailerLookup(
+                            packageName,
+                            film = type == PreviewPrograms.TYPE_MOVIE,
+                            episodic = type == PreviewPrograms.TYPE_TV_SEASON || type == PreviewPrograms.TYPE_TV_EPISODE,
+                            contentId = string(contentIdColumn),
+                            title = string(titleColumn),
+                            releaseDate = string(releaseDateColumn),
+                        )
+                    } else null
+                    art[primary] = AppPreviewProgram(images, media(trailerColumn), fallback)
                 }
             }
             if (art.size >= MAX_SLIDES) break
@@ -105,6 +146,7 @@ internal object TopShelf {
         }
         job.ensureActive()
         return ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
             val scale = minOf(1f, 1280f / info.size.width, 720f / info.size.height)
             decoder.setTargetSize(
                 (info.size.width * scale).roundToInt().coerceAtLeast(1),

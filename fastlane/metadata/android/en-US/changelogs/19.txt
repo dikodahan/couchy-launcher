@@ -1,0 +1,4 @@
+Browse app previews directly from the dock and play full-length trailers.
+Play MP4 and live HLS in the native player.
+Choose trailer captions and their language.
+Find missing trailers with the TMDB API Key and phone setup QR code.

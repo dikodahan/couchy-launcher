@@ -43,8 +43,8 @@ android {
         applicationId = "com.conreo.couchytv"
         minSdk = 28
         targetSdk = 34
-        versionCode = 18
-        versionName = "1.2.6"
+        versionCode = 19
+        versionName = "1.2.7"
         buildConfigField("boolean", "GITHUB_UPDATES", githubUpdates.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -152,6 +152,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     // Video wallpaper playback — plays Apple .mov aerials that MediaPlayer can't
     implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.4.1")
     // Public aerial streaming uses normal certificate and hostname validation.
     implementation("androidx.media3:media3-datasource-okhttp:1.4.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.1")

@@ -36,6 +36,9 @@ object AppIcons {
         icon("Install", "M21 16v5H3v-5h2v3h14v-3zM11 2h2v10l3-3 1.4 1.4L12 16l-5.4-5.6L8 9l3 3z")
     }
     val Play by lazy { icon("Play", "M8 5v14l11-7z") }
+    val Audio by lazy {
+        icon("Audio", "M3 9v6h4l5 5V4L7 9H3zm11 .2v5.6a3 3 0 0 0 0-5.6zm0-5.9v2a7 7 0 0 1 0 13.4v2a9 9 0 0 0 0-17.4z")
+    }
     val Refresh by lazy { icon("Refresh", "M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.93 9h-2.02A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z") }
     val Bolt by lazy {
         icon("Bolt", "M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z")

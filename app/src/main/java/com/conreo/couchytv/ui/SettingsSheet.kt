@@ -100,6 +100,7 @@ import com.conreo.couchytv.data.ParentalControls
 import com.conreo.couchytv.data.ParentalState
 import com.conreo.couchytv.data.READ_TV_LISTINGS
 import com.conreo.couchytv.data.TopShelf
+import com.conreo.couchytv.data.TrailerFallback
 import com.conreo.couchytv.data.TelegramCloudBackup
 import com.conreo.couchytv.data.WEATHER_CLICK_APP
 import com.conreo.couchytv.data.WEATHER_SRC_GEOIP
@@ -114,7 +115,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 
-private enum class SettingsScreen { Main, Wallpaper, Display, StatusBar, Weather, Apps, RecommendedApps, Categories, IconPack, Parental, Launcher, AndroidShortcuts, About }
+private enum class SettingsScreen { Main, Wallpaper, AppContentPreview, Display, StatusBar, Weather, Apps, RecommendedApps, Categories, IconPack, Parental, Launcher, AndroidShortcuts, About }
 
 /**
  * Settings panel built entirely from focusable rows and buttons — every
@@ -178,21 +179,12 @@ internal fun SettingsSheet(
     }
     val configuredCatalog = verifiedCatalog?.takeIf { it.first == catalogUrl }
 
-    fun selectTopShelf() {
-        scope.launch {
-            store.update {
-                it.copy(
-                    useTopShelf = true,
-                    useCustomWallpaper = false,
-                    useVideoWallpaper = false,
-                    useBuiltinAerials = false,
-                )
-            }
-        }
+    fun setAppContentPreview(enabled: Boolean) {
+        scope.launch { store.update { it.copy(appContentPreviewEnabled = enabled) } }
     }
     val tvListingsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) selectTopShelf()
-        else Actions.toast(context, context.getString(R.string.top_shelf_need_permission))
+        if (granted) setAppContentPreview(true)
+        else Actions.toast(context, context.getString(R.string.app_content_preview_need_permission))
     }
 
     // Same document-picker flow as videos: opens the system file manager,
@@ -212,7 +204,6 @@ internal fun SettingsSheet(
                 store.update {
                     it.copy(
                         useCustomWallpaper = true,
-                        useTopShelf = false,
                         useVideoWallpaper = false,
                         useBuiltinAerials = false,
                     )
@@ -238,7 +229,6 @@ internal fun SettingsSheet(
                     it.copy(
                         videoUri = uri.toString(),
                         useVideoWallpaper = true,
-                        useTopShelf = false,
                         useCustomWallpaper = false,
                         useBuiltinAerials = false,
                     )
@@ -297,6 +287,7 @@ internal fun SettingsSheet(
                         returnTo = settingsReturnTo,
                         scroll = mainMenuScroll,
                         onWallpaper = { openSettings(SettingsScreen.Wallpaper) },
+                        onAppContentPreview = { openSettings(SettingsScreen.AppContentPreview) },
                         onDisplay = { openSettings(SettingsScreen.Display) },
                         onStatusBar = { openSettings(SettingsScreen.StatusBar) },
                         onWeather = { openSettings(SettingsScreen.Weather) },
@@ -319,7 +310,6 @@ internal fun SettingsSheet(
                                 store.update {
                                     it.copy(
                                         useBuiltinAerials = true,
-                                        useTopShelf = false,
                                         useVideoWallpaper = false,
                                         useCustomWallpaper = false,
                                     )
@@ -344,17 +334,12 @@ internal fun SettingsSheet(
                                 store.update {
                                     it.copy(
                                         wallpaper = i,
-                                        useTopShelf = false,
                                         useCustomWallpaper = false,
                                         useVideoWallpaper = false,
                                         useBuiltinAerials = false,
                                     )
                                 }
                             }
-                        },
-                        onSelectTopShelf = {
-                            if (TopShelf.hasPermission(context)) selectTopShelf()
-                            else tvListingsPermission.launch(READ_TV_LISTINGS)
                         },
                         onPickPhoto = {
                             runCatching { photoPicker.launch(arrayOf("image/*")) }
@@ -363,6 +348,23 @@ internal fun SettingsSheet(
                         onPickVideo = {
                             runCatching { videoPicker.launch(arrayOf("video/*")) }
                                 .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
+                        },
+                    )
+                    SettingsScreen.AppContentPreview -> AppContentPreviewScreen(
+                        config = config,
+                        store = store,
+                        onTogglePreview = {
+                            when {
+                                config.appContentPreviewEnabled -> setAppContentPreview(false)
+                                TopShelf.hasPermission(context) -> setAppContentPreview(true)
+                                else -> tvListingsPermission.launch(READ_TV_LISTINGS)
+                            }
+                        },
+                        onToggleTrailers = {
+                            scope.launch { store.update { it.copy(appContentPreviewTrailers = !it.appContentPreviewTrailers) } }
+                        },
+                        onToggleMuted = {
+                            scope.launch { store.update { it.copy(appContentPreviewMuted = !it.appContentPreviewMuted) } }
                         },
                     )
                     SettingsScreen.Display -> DisplayScreen(
@@ -438,6 +440,7 @@ private fun MainScreen(
     returnTo: SettingsScreen,
     scroll: androidx.compose.foundation.ScrollState,
     onWallpaper: () -> Unit,
+    onAppContentPreview: () -> Unit,
     onDisplay: () -> Unit,
     onStatusBar: () -> Unit,
     onWeather: () -> Unit,
@@ -513,6 +516,13 @@ private fun MainScreen(
             headlineContent = { Text(stringResource(R.string.item_wallpaper)) },
             supportingContent = { Text(stringResource(R.string.item_wallpaper_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
+        )
+        SettingsItem(
+            onClick = onAppContentPreview,
+            modifier = focusFor(SettingsScreen.AppContentPreview),
+            headlineContent = { Text(stringResource(R.string.app_content_preview)) },
+            supportingContent = { Text(stringResource(R.string.app_content_preview_desc)) },
+            leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
         )
         SettingsItem(
             onClick = onStatusBar,
@@ -625,6 +635,17 @@ private fun AboutScreen(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp, top = 14.dp, bottom = 8.dp),
+        )
+        Image(
+            painter = painterResource(R.drawable.tmdb_attribution),
+            contentDescription = "TMDB",
+            modifier = Modifier.padding(start = 8.dp).width(72.dp).height(24.dp),
+        )
+        Text(
+            stringResource(R.string.tmdb_attribution),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 8.dp),
         )
     }
 }
@@ -1923,6 +1944,7 @@ internal fun TextEntryDialog(
     status: Int? = null,
     urlInput: Boolean = false,
     positionAboveKeyboard: Boolean = false,
+    secretInput: Boolean = false,
 ) {
     var name by remember { mutableStateOf(initial) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -1943,7 +1965,7 @@ internal fun TextEntryDialog(
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 val f = initialFocus()
                 var editorFocused by remember { mutableStateOf(false) }
-                if (urlInput) LaunchedEffect(Unit) {
+                if (urlInput || secretInput) LaunchedEffect(Unit) {
                     f.requestFocus()
                     withFrameNanos {}
                     keyboard?.show()
@@ -1961,13 +1983,20 @@ internal fun TextEntryDialog(
                         textStyle = TextStyle(
                             color = Color.White,
                             fontSize = 15.sp,
-                            textDirection = if (urlInput) TextDirection.Ltr else TextDirection.Unspecified,
+                            textDirection = if (urlInput || secretInput) TextDirection.Ltr else TextDirection.Unspecified,
                         ),
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Done,
-                            keyboardType = if (urlInput) KeyboardType.Uri else KeyboardType.Text,
+                            keyboardType = when {
+                                secretInput -> KeyboardType.Password
+                                urlInput -> KeyboardType.Uri
+                                else -> KeyboardType.Text
+                            },
                         ),
+                        visualTransformation = if (secretInput) {
+                            androidx.compose.ui.text.input.PasswordVisualTransformation()
+                        } else androidx.compose.ui.text.input.VisualTransformation.None,
                         keyboardActions = KeyboardActions(
                             onDone = { submit() }
                         ),
@@ -1986,7 +2015,7 @@ internal fun TextEntryDialog(
                         modifier = Modifier.fillMaxWidth().focusRequester(f)
                             .onFocusChanged { editorFocused = it.isFocused }
                             .onPreviewKeyEvent { event ->
-                                if (urlInput && event.key == Key.DirectionDown && event.type == KeyEventType.KeyDown) {
+                                if ((urlInput || secretInput) && event.key == Key.DirectionDown && event.type == KeyEventType.KeyDown) {
                                     (if (canSave) saveFocus else cancelFocus).requestFocus()
                                     true
                                 } else false
@@ -2091,7 +2120,6 @@ private fun WallpaperScreen(
     onSetScrim: (Int) -> Unit,
     onSetSpeed: (Int) -> Unit,
     onPreset: (Int) -> Unit,
-    onSelectTopShelf: () -> Unit,
     onPickPhoto: () -> Unit,
     onPickVideo: () -> Unit,
 ) {
@@ -2099,7 +2127,7 @@ private fun WallpaperScreen(
         SettingsTitle(stringResource(R.string.item_wallpaper))
         val f = initialFocus()
         val staticActive = !config.useBuiltinAerials &&
-            !config.useVideoWallpaper && !config.useCustomWallpaper && !config.useTopShelf
+            !config.useVideoWallpaper && !config.useCustomWallpaper
 
         // Dimming — how much the wallpaper is darkened for icon readability.
         // Applies to any background; "Top & bottom" keeps the centre clear.
@@ -2158,14 +2186,6 @@ private fun WallpaperScreen(
             supportingContent = { Text(stringResource(R.string.pick_photo_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
             trailingContent = { CheckMark(checked = config.useCustomWallpaper) },
-        )
-
-        SettingsItem(
-            onClick = onSelectTopShelf,
-            headlineContent = { Text(stringResource(R.string.top_shelf)) },
-            supportingContent = { Text(stringResource(R.string.top_shelf_desc)) },
-            leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
-            trailingContent = { CheckMark(checked = config.useTopShelf) },
         )
 
         /* ---------------- VIDEO: built-in aerials + your own video ---------------- */
@@ -2235,6 +2255,182 @@ private fun WallpaperScreen(
                 current = idx,
                 onSelect = { v -> onSetSpeed(v) },
             )
+        }
+    }
+}
+
+@Composable
+private fun AppContentPreviewScreen(
+    config: LauncherConfig,
+    store: ConfigStore,
+    onTogglePreview: () -> Unit,
+    onToggleTrailers: () -> Unit,
+    onToggleMuted: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    var choosingSubtitleLanguage by remember { mutableStateOf(false) }
+    var showPhoneSetup by remember { mutableStateOf(false) }
+    var editingCredential by remember { mutableStateOf(false) }
+    var savingCredential by remember { mutableStateOf(false) }
+    var credentialError by remember { mutableStateOf<Int?>(null) }
+    val trailersEnabled = config.appContentPreviewEnabled && config.appContentPreviewTrailers
+    SettingsPage {
+        SettingsTitle(stringResource(R.string.app_content_preview))
+        val first = initialFocus()
+        SettingsItem(
+            onClick = onTogglePreview,
+            modifier = Modifier.focusRequester(first),
+            headlineContent = { Text(stringResource(R.string.app_content_preview_toggle)) },
+            supportingContent = { Text(stringResource(R.string.app_content_preview_desc)) },
+            leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.appContentPreviewEnabled) },
+        )
+        SettingsItem(
+            enabled = config.appContentPreviewEnabled,
+            onClick = onToggleTrailers,
+            headlineContent = { Text(stringResource(R.string.app_content_preview_trailers)) },
+            leadingContent = { Icon(AppIcons.Play, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.appContentPreviewTrailers) },
+        )
+        SettingsItem(
+            enabled = config.appContentPreviewEnabled && config.appContentPreviewTrailers,
+            onClick = onToggleMuted,
+            headlineContent = { Text(stringResource(R.string.app_content_preview_mute)) },
+            leadingContent = { Icon(AppIcons.Audio, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.appContentPreviewMuted) },
+        )
+        SettingsItem(
+            enabled = trailersEnabled,
+            onClick = {
+                scope.launch { store.update { it.copy(appContentPreviewSubtitles = !it.appContentPreviewSubtitles) } }
+            },
+            headlineContent = { Text(stringResource(R.string.trailer_include_subtitles)) },
+            supportingContent = { Text(stringResource(R.string.trailer_include_subtitles_desc)) },
+            leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.appContentPreviewSubtitles) },
+        )
+        SettingsItem(
+            enabled = trailersEnabled && config.appContentPreviewSubtitles,
+            onClick = { choosingSubtitleLanguage = true },
+            headlineContent = { Text(stringResource(R.string.trailer_subtitles_language)) },
+            leadingContent = { Icon(AppIcons.Language, contentDescription = null) },
+            trailingContent = { Text(languageName(config.appContentPreviewSubtitleLanguage)) },
+        )
+        SettingsItem(
+            enabled = trailersEnabled && config.appContentPreviewTmdbCredential.isNotEmpty(),
+            onClick = {
+                scope.launch { store.update { it.copy(appContentPreviewFallback = !it.appContentPreviewFallback) } }
+            },
+            headlineContent = { Text(stringResource(R.string.trailer_fallback)) },
+            supportingContent = { Text(stringResource(R.string.trailer_fallback_desc)) },
+            leadingContent = { Icon(AppIcons.Link, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.appContentPreviewFallback) },
+        )
+        SettingsItem(
+            onClick = { credentialError = null; editingCredential = true },
+            headlineContent = { Text(stringResource(R.string.trailer_fallback_credential)) },
+            supportingContent = { Text(stringResource(R.string.trailer_fallback_credential_desc)) },
+            leadingContent = { Icon(AppIcons.Lock, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.appContentPreviewTmdbCredential.isNotEmpty()) },
+        )
+        SettingsItem(
+            onClick = { showPhoneSetup = true },
+            headlineContent = { Text(stringResource(R.string.tmdb_phone_setup)) },
+            leadingContent = { Icon(AppIcons.Link, contentDescription = null) },
+        )
+    }
+    if (choosingSubtitleLanguage) {
+        LanguageDropdown(
+            selected = config.appContentPreviewSubtitleLanguage,
+            onChoose = { code ->
+                choosingSubtitleLanguage = false
+                scope.launch { store.update { it.copy(appContentPreviewSubtitleLanguage = code) } }
+            },
+            onDismiss = { choosingSubtitleLanguage = false },
+            titleRes = R.string.trailer_subtitles_language,
+        )
+    }
+    if (showPhoneSetup) {
+        TmdbPhoneSetupDialog(
+            onOpenCredential = {
+                showPhoneSetup = false
+                credentialError = null
+                editingCredential = true
+            },
+            onDismiss = { showPhoneSetup = false },
+        )
+    }
+    if (editingCredential) {
+        TextEntryDialog(
+            title = stringResource(R.string.trailer_fallback_credential),
+            initial = config.appContentPreviewTmdbCredential,
+            onSave = { credential ->
+                savingCredential = true
+                credentialError = null
+                scope.launch {
+                    try {
+                        if (credential.isNotEmpty() && !TrailerFallback.validate(credential)) {
+                            credentialError = R.string.trailer_fallback_credential_failed
+                        } else {
+                            store.update {
+                                it.copy(
+                                    appContentPreviewTmdbCredential = credential,
+                                    appContentPreviewFallback = it.appContentPreviewFallback && credential.isNotEmpty(),
+                                )
+                            }
+                            editingCredential = false
+                        }
+                    } catch (_: java.io.IOException) {
+                        credentialError = R.string.toast_config_save_failed
+                    } finally {
+                        savingCredential = false
+                    }
+                }
+            },
+            onDismiss = { if (!savingCredential) editingCredential = false },
+            allowEmpty = true,
+            busy = savingCredential,
+            status = credentialError,
+            positionAboveKeyboard = true,
+            secretInput = true,
+        )
+    }
+}
+
+
+@Composable
+private fun TmdbPhoneSetupDialog(onOpenCredential: () -> Unit, onDismiss: () -> Unit) {
+    val url = "https://www.themoviedb.org/settings/api"
+    val qr = remember { encodeQrBitmap(url, px = 256) }
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+        ) {
+            Column(
+                Modifier.width(420.dp).padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Text(stringResource(R.string.tmdb_phone_setup), style = MaterialTheme.typography.titleMedium)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Image(qr, contentDescription = url, modifier = Modifier.size(136.dp))
+                    Text(
+                        stringResource(R.string.tmdb_phone_setup_steps),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                val first = initialFocus()
+                Row(horizontalArrangement = Arrangement.spacedBy(SettingsControlGap)) {
+                    SettingsButton(onClick = onOpenCredential, modifier = Modifier.focusRequester(first)) {
+                        Text(stringResource(R.string.trailer_fallback_credential))
+                    }
+                    SettingsButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                }
+            }
         }
     }
 }

@@ -38,6 +38,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -76,8 +77,10 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -317,8 +320,9 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     // The SurfaceView video wallpaper needs a transparent window to show through;
     // every other mode draws an opaque wallpaper, so keep the window opaque then
     // (a transparent window would let whatever is behind the home leak through).
-    val videoWallpaper = !config.useTopShelf &&
-        (config.useBuiltinAerials || (config.useVideoWallpaper && config.videoUri.isNotEmpty()))
+    val videoWallpaper = config.useBuiltinAerials ||
+        (config.useVideoWallpaper && config.videoUri.isNotEmpty()) ||
+        (config.appContentPreviewEnabled && config.appContentPreviewTrailers)
     LaunchedEffect(activity, videoWallpaper) {
         activity?.window?.setBackgroundDrawable(
             if (videoWallpaper) null
@@ -669,20 +673,70 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         aerialError = false
     }
 
-    var shelfFocus by remember { mutableStateOf<Pair<Any, String>?>(null) }
-    val reportShelfFocus = remember {
+    var previewFocus by remember { mutableStateOf<Pair<Any, String>?>(null) }
+    val reportPreviewFocus = remember {
         { token: Any, packageName: String, focused: Boolean ->
-            if (focused) shelfFocus = token to packageName
-            else if (shelfFocus?.first == token) shelfFocus = null
+            if (focused) previewFocus = token to packageName
+            else if (previewFocus?.first == token) previewFocus = null
         }
     }
-    val shelfPackage = if (config.useTopShelf && reorderFrom == null && LocalWindowInfo.current.isWindowFocused) {
-        shelfFocus?.second?.takeUnless(parentalState::isLocked)
+    val previewAllowed = config.appContentPreviewEnabled && !showSettings && reorderFrom == null &&
+        LocalWindowInfo.current.isWindowFocused
+    var immersivePreviewApp by remember { mutableStateOf<String?>(null) }
+    var immersiveTray by remember { mutableStateOf(false) }
+    var dockHasFocus by remember { mutableStateOf(false) }
+    val trayFocus = remember { FocusRequester() }
+    val dockGroup = remember { FocusRequester() }
+    val layoutDirection = LocalLayoutDirection.current
+    val immersivePreview = immersivePreviewApp != null && previewAllowed &&
+        config.layout == LAYOUT_DOCK && !dockExpanded
+    val previewPackage = if (previewAllowed) {
+        (immersivePreviewApp.takeIf { immersivePreview } ?: previewFocus?.second)?.takeUnless(parentalState::isLocked)
     } else null
+    LaunchedEffect(immersivePreview) {
+        if (!immersivePreview) {
+            immersivePreviewApp = null
+            immersiveTray = false
+        }
+    }
+    LaunchedEffect(immersivePreview, immersiveTray) {
+        if (immersivePreview && immersiveTray) {
+            withFrameNanos { }
+            trayFocus.requestFocus()
+        }
+    }
+    fun returnToDock() {
+        if (immersiveTray) dockGroup.requestFocus()
+        immersiveTray = false
+        immersivePreviewApp = null
+    }
 
     val playsAerial = aerialWallpaper != null && net.connected && !aerialCoolingDown
     val playsLocalVideo = config.useVideoWallpaper && config.videoUri.isNotEmpty()
-    val videoBackdropVisible = !config.useTopShelf && (playsAerial || playsLocalVideo)
+    val fallbackCredential = config.appContentPreviewTmdbCredential.takeIf {
+        config.appContentPreviewTrailers && config.appContentPreviewFallback && it.isNotEmpty()
+    }
+    val deck = rememberAppContentPreview(previewPackage, config.appContentPreviewTrailers, fallbackCredential)
+    val currentPreview = deck?.slide
+    val preview = if (immersivePreview && immersiveTray) {
+        currentPreview?.let { AppPreviewSlide(it.artwork) }
+    } else currentPreview
+    val previewArtwork = preview?.artwork
+    var trailerReady by remember(preview?.finished) { mutableStateOf(false) }
+    val trailerVisible = trailerReady
+    val showPreviewDots = immersivePreview && !immersiveTray && !trailerVisible
+    val subtitleLanguage = if (config.appContentPreviewSubtitles) {
+        val selected = config.appContentPreviewSubtitleLanguage.ifEmpty {
+            android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag()
+        }
+        java.util.Locale.forLanguageTag(selected).toLanguageTag()
+    } else null
+    val dockSlide by animateFloatAsState(
+        targetValue = if (immersivePreview) 1f else 0f,
+        animationSpec = tween(320, easing = FastOutSlowInEasing),
+        label = "previewDockSlide",
+    )
+    val videoBackdropVisible = previewArtwork == null && (playsAerial || playsLocalVideo)
     val wallpaperScrim = when (config.scrimMode) {
         4 -> null
         3 -> ScrimFull
@@ -695,12 +749,15 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         animationSpec = tween(1000),
         label = "dockOverlay",
     )
-    val backdropPhoto = wallpaperSharp.takeUnless { config.useTopShelf || videoBackdropVisible }
+    val backdropPhoto = previewArtwork ?: wallpaperSharp.takeUnless { videoBackdropVisible }
     val liquidGlass = resolveGlassStyle(config.glassStyle) == GLASS_STYLE_LIQUID
-    val glassBackdrop = remember(backdropPhoto, presetBrush, wallpaperScrim, config.useTopShelf, videoBackdropVisible, liquidGlass) {
-        LauncherBackdrop(backdropPhoto, presetBrush, wallpaperScrim, videoBackdropVisible, liquidGlass, overlayAlpha)
+    val glassBackdrop = remember(backdropPhoto, presetBrush, wallpaperScrim, videoBackdropVisible, trailerVisible, liquidGlass, previewArtwork != null) {
+        LauncherBackdrop(
+            backdropPhoto, presetBrush, wallpaperScrim, videoBackdropVisible || trailerVisible,
+            liquidGlass, overlayAlpha, fitPhoto = previewArtwork != null,
+        )
     }
-    val videoGlassActive = liquidGlass && reorderFrom == null && LocalWindowInfo.current.isWindowFocused &&
+    val videoGlassActive = liquidGlass && videoBackdropVisible && reorderFrom == null && LocalWindowInfo.current.isWindowFocused &&
         (config.statusBarGlass || (config.layout == LAYOUT_DOCK && !dockExpanded))
 
     val corner: Dp = CORNER_RADII[config.cornerRadius.coerceIn(0, CORNER_RADII.size - 1)]
@@ -710,7 +767,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         LocalHomeArtworkGeneration provides artworkGeneration,
         LocalCornerRadius provides corner,
         LocalLauncherBackdrop provides glassBackdrop,
-        LocalTopShelfFocus provides reportShelfFocus.takeIf { config.useTopShelf },
+        LocalAppContentPreviewFocus provides reportPreviewFocus,
     ) {
     LiteTvTheme(accent = accent) {
         BoxWithConstraints(
@@ -719,18 +776,50 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                 .onPreviewKeyEvent { event ->
                     if (reorderFrom == null && event.type == KeyEventType.KeyDown && event.key == Key.Menu) {
                         showSettings = true
-                        true
-                    } else false
+                        return@onPreviewKeyEvent true
+                    }
+                    if (immersivePreview) {
+                        if (immersiveTray && event.key != Key.DirectionDown) return@onPreviewKeyEvent false
+                        if (event.type == KeyEventType.KeyDown) {
+                            when (event.key) {
+                                Key.DirectionUp -> if (event.nativeKeyEvent.repeatCount == 0) immersiveTray = true
+                                Key.DirectionDown -> if (event.nativeKeyEvent.repeatCount == 0) returnToDock()
+                                Key.DirectionLeft, Key.DirectionRight -> {
+                                    val forward = (event.key == Key.DirectionRight) == (layoutDirection == LayoutDirection.Ltr)
+                                    deck?.move(if (forward) 1 else -1)
+                                }
+                                Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> Unit
+                                else -> return@onPreviewKeyEvent false
+                            }
+                        }
+                        return@onPreviewKeyEvent event.key in listOf(
+                            Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight,
+                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter,
+                        )
+                    }
+                    if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionUp &&
+                        event.nativeKeyEvent.repeatCount == 0 && config.layout == LAYOUT_DOCK &&
+                        dockHasFocus && !dockExpanded && preview != null
+                    ) {
+                        immersivePreviewApp = previewPackage
+                        return@onPreviewKeyEvent true
+                    }
+                    false
                 }
         ) {
             val cardWidth = iconCardWidth(config.iconScale, config.layout, maxWidth, gap)
             // Wallpaper + readability scrim.
-            // Top Shelf fades over its gradient fallback. Other wallpaper modes are exclusive.
             val videoSpeed = VIDEO_SPEEDS[config.videoSpeed.coerceIn(0, VIDEO_SPEEDS.size - 1)]
             val aerial = aerialWallpaper
-            if (config.useTopShelf) {
-                Box(Modifier.fillMaxSize().background(presetBrush))
-                TopShelfWallpaper(shelfPackage, glassBackdrop)
+            if (preview != null) {
+                key(previewPackage) {
+                    AppContentPreviewWallpaper(
+                        preview, config.appContentPreviewMuted, presetBrush,
+                        subtitleLanguage = subtitleLanguage,
+                    ) {
+                        trailerReady = true
+                    }
+                }
             } else if (aerial != null && playsAerial) {
                 VideoWallpaper(
                     uri = aerial,
@@ -777,8 +866,8 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
             // Dock-expanded overlay: cheap pseudo-blur (tiny bitmap upscaled)
             // + dim, crossfaded. Works identically on every Android version.
             val dim = overlayAlpha.value
-            if (dim > 0.01f) {
-                if (wallpaperBlurred != null) {
+            if (dim > 0.01f && !trailerVisible) {
+                if (wallpaperBlurred != null && previewArtwork == null) {
                     Image(
                         bitmap = wallpaperBlurred,
                         contentDescription = null,
@@ -793,7 +882,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                         .background(Color.Black.copy(alpha = 0.45f))
                 )
             }
-            wallpaperScrim?.let { Box(Modifier.fillMaxSize().background(it)) }
+            if (!trailerVisible) wallpaperScrim?.let { Box(Modifier.fillMaxSize().background(it)) }
 
             // Launch entrance: after the boot logo, wait a beat, then the glass
             // panels slide in (status bar from the top, dock from the bottom) and
@@ -853,9 +942,15 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                 val firstCarousel = key(categorized.firstOrNull()?.first?.id) { rememberLazyListState() }
                 var resetHomeFocus by remember { mutableStateOf(false) }
                 val isDock = config.layout == LAYOUT_DOCK
-                BackHandler(enabled = (isDock && dockExpanded) || (!firstAppFocused && categorized.isNotEmpty())) {
+                BackHandler(enabled = immersivePreview || trailerVisible || (isDock && dockExpanded) ||
+                    (!firstAppFocused && categorized.isNotEmpty())) {
+                    if (trailerVisible || immersivePreview) currentPreview?.finished?.complete(true)
+                    if (immersivePreview) {
+                        returnToDock()
+                        return@BackHandler
+                    }
                     if (isDock && dockExpanded) dockExpanded = false
-                    else resetHomeFocus = true
+                    else if (!firstAppFocused) resetHomeFocus = true
                 }
                 LaunchedEffect(resetHomeFocus) {
                     if (!resetHomeFocus) return@LaunchedEffect
@@ -874,13 +969,14 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                     }
                 }
                 val statusBarHeight by animateDpAsState(
-                    targetValue = if (config.showStatusBar || statusBarFocused || updatePrompt?.available != null) 80.dp else 4.dp,
+                    targetValue = if (immersiveTray || trailerVisible || config.showStatusBar || statusBarFocused || updatePrompt?.available != null) 80.dp else 4.dp,
                     label = "statusBarHeight",
                 )
                 Box(
                     Modifier
                         .fillMaxWidth()
                         .height(statusBarHeight)
+                        .drawWithContent { if (!trailerVisible && (!immersivePreview || immersiveTray)) drawContent() }
                         .clipToBounds()
                         .onFocusChanged { statusBarFocused = it.hasFocus }
                         .focusGroup()
@@ -911,11 +1007,18 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                         onWeatherClick = { if (weather != null) onWeatherClick() else openWeatherSettings() },
                         onWeatherLongClick = { openWeatherSettings(suppressRelease = true) },
                         onUpdateClick = updatePrompt?.takeIf { it.available != null }?.let { it::open },
+                        settingsFocus = trayFocus,
                     )
                 }
                 when (config.layout) {
                     LAYOUT_DOCK -> DockArea(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        modifier = Modifier.weight(1f).fillMaxWidth()
+                            .focusRequester(dockGroup)
+                            .focusRestorer { firstAppFocus }
+                            .onFocusChanged { dockHasFocus = it.hasFocus }
+                            .focusGroup()
+                            .graphicsLayer { translationY = dockSlide * size.height }
+                            .drawWithContent { if (!trailerVisible) drawContent() },
                         apps = dockApps,
                         config = config,
                         accent = accent,
@@ -978,8 +1081,10 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                                     .then(if (resetHomeFocus) Modifier else Modifier.focusRestorer())
                                     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                                     .drawWithContent {
-                                        drawContent()
-                                        drawRect(brush = fadeBrush, blendMode = BlendMode.DstIn)
+                                        if (!trailerVisible) {
+                                            drawContent()
+                                            drawRect(brush = fadeBrush, blendMode = BlendMode.DstIn)
+                                        }
                                     },
                                 contentPadding = PaddingValues(
                                     top = with(density) { pivotPx.toDp() },
@@ -1042,6 +1147,10 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                         }
                     }
                 }
+            }
+
+            if (showPreviewDots && deck != null && deck.count > 0) {
+                PreviewPageDots(deck.index, deck.count, Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp))
             }
 
             // ----- dialogs -----
@@ -1421,6 +1530,22 @@ private fun GridSection(
     }
 }
 
+@Composable
+private fun PreviewPageDots(index: Int, count: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier.launcherGlass(14.dp, GlassPanel.PreviewDots)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        repeat(count) { position ->
+            val selected = position == index
+            Box(Modifier.size(if (selected) 8.dp else 6.dp)
+                .background(Color.White.copy(alpha = if (selected) 1f else 0.55f), CircleShape))
+        }
+    }
+}
+
 /* ----- dock: floating glass panel with one row; Down = full grid over blurred bg ----- */
 
 @Composable
@@ -1706,13 +1831,17 @@ private val aerialHttpClient: okhttp3.OkHttpClient by lazy {
  */
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-private fun VideoWallpaper(
+internal fun VideoWallpaper(
     uri: String,
     nextUri: String? = null,
     speed: Float = 1f,
     loop: Boolean = true,
     coverBrush: Brush,
     glassActive: Boolean,
+    coverArtwork: ImageBitmap? = null,
+    playOnce: Boolean = false,
+    muted: Boolean = true,
+    subtitleLanguage: String? = null,
     useGpuGlass: Boolean = false,
     remoteCache: Boolean = false,
     onEnded: () -> Unit = {},
@@ -1724,6 +1853,9 @@ private fun VideoWallpaper(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val playerScope = rememberCoroutineScope()
     var firstFrameGen by remember { mutableIntStateOf(0) }
+    var captions by remember(uri, subtitleLanguage) {
+        mutableStateOf<List<androidx.media3.common.text.Cue>>(emptyList())
+    }
 
     // The ExoPlayer — and its hardware video decoder, surface and buffers — is
     // kept while Home is still visible (STARTED), including system overlays that
@@ -1732,12 +1864,16 @@ private fun VideoWallpaper(
     var player by remember { mutableStateOf<androidx.media3.exoplayer.ExoPlayer?>(null) }
     var prepareStartedAt by remember(player) { mutableStateOf(0L) }
     var awaitingFrameAt by remember(player) { mutableStateOf<Int?>(null) }
+    var trailerRebuffering by remember(player) { mutableStateOf(false) }
+    var useHlsTrailer by remember(uri, playOnce) {
+        mutableStateOf(playOnce && android.net.Uri.parse(uri).lastPathSegment?.endsWith(".m3u8", ignoreCase = true) == true)
+    }
     val latestOnReady by androidx.compose.runtime.rememberUpdatedState(onReady)
     val latestOnError by androidx.compose.runtime.rememberUpdatedState(onError)
     val latestOnEnded by androidx.compose.runtime.rememberUpdatedState(onEnded)
     val latestOnAdvanced by androidx.compose.runtime.rememberUpdatedState(onAdvanced)
     val latestNextUri by androidx.compose.runtime.rememberUpdatedState(nextUri)
-    DisposableEffect(lifecycleOwner, remoteCache) {
+    DisposableEffect(lifecycleOwner, remoteCache, playOnce, muted, subtitleLanguage) {
         fun build(): androidx.media3.exoplayer.ExoPlayer {
             val renderers = androidx.media3.exoplayer.DefaultRenderersFactory(context)
                 .setEnableDecoderFallback(true) // fall back to SW decoder on odd clips
@@ -1763,7 +1899,15 @@ private fun VideoWallpaper(
                 .build().apply {
                     repeatMode = if (loop) androidx.media3.common.Player.REPEAT_MODE_ONE
                         else androidx.media3.common.Player.REPEAT_MODE_OFF
-                    volume = 0f
+                    if (playOnce) {
+                        setAudioAttributes(androidx.media3.common.AudioAttributes.DEFAULT, !muted)
+                        trackSelectionParameters = trackSelectionParameters.buildUpon()
+                            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_AUDIO, muted)
+                            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, subtitleLanguage == null)
+                            .setPreferredTextLanguage(subtitleLanguage)
+                            .build()
+                    }
+                    volume = if (muted) 0f else 1f
                     videoScalingMode =
                         androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                     playWhenReady = true
@@ -1804,6 +1948,7 @@ private fun VideoWallpaper(
     fun playbackFailed() {
         // Stop the watchdog for this attempt and uncover the gradient before the next clip.
         awaitingFrameAt = null
+        trailerRebuffering = false
         playerScope.launch {
             transitionVeil.snapTo(0f)
             alpha.snapTo(0f)
@@ -1816,6 +1961,9 @@ private fun VideoWallpaper(
     DisposableEffect(activePlayer) {
         val p = activePlayer ?: return@DisposableEffect onDispose { }
         val listener = object : androidx.media3.common.Player.Listener {
+            override fun onCues(cueGroup: androidx.media3.common.text.CueGroup) {
+                if (subtitleLanguage != null) captions = cueGroup.cues
+            }
             override fun onRenderedFirstFrame() {
                 firstFrameGen++
                 awaitingFrameAt = null
@@ -1828,10 +1976,12 @@ private fun VideoWallpaper(
                 }
             }
             override fun onPlaybackStateChanged(state: Int) {
+                trailerRebuffering = playOnce && firstFrameGen > 0 &&
+                    state == androidx.media3.common.Player.STATE_BUFFERING
                 // Fallback for a one-item queue or an exhausted source list.
                 if (state == androidx.media3.common.Player.STATE_ENDED) {
                     latestOnEnded()
-                    if (latestNextUri == null) {
+                    if (!playOnce && latestNextUri == null) {
                         p.seekToDefaultPosition()
                         p.prepare()
                         p.playWhenReady = true
@@ -1848,8 +1998,20 @@ private fun VideoWallpaper(
                 latestOnAdvanced()
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                val activeUri = p.currentMediaItem?.localConfiguration?.uri ?: uri
-                android.util.Log.w("LiteTV", "wallpaper play error ${error.errorCodeName}: $activeUri")
+                if (playOnce && !useHlsTrailer && firstFrameGen == 0 &&
+                    error.cause is androidx.media3.exoplayer.source.UnrecognizedInputFormatException
+                ) {
+                    // A publisher can use an opaque URI for an HLS playlist.
+                    // Retry it natively once when the progressive extractor rejects it.
+                    useHlsTrailer = true
+                    return
+                }
+                if (playOnce) {
+                    android.util.Log.w("CouchyPreview", "Trailer playback failed: ${error.errorCodeName}")
+                } else {
+                    val activeUri = p.currentMediaItem?.localConfiguration?.uri ?: uri
+                    android.util.Log.w("LiteTV", "wallpaper play error ${error.errorCodeName}: $activeUri")
+                }
                 playbackFailed()
             }
         }
@@ -1858,10 +2020,13 @@ private fun VideoWallpaper(
     }
     // Load (or reload, after a rebuild on return) the current clip. Keyed on the
     // player too, so coming back from the background re-prepares on the fresh one.
-    LaunchedEffect(activePlayer, uri, nextUri) {
+    LaunchedEffect(activePlayer, uri, nextUri, useHlsTrailer) {
         val p = activePlayer ?: return@LaunchedEffect
-        val playingUri = p.currentMediaItem?.localConfiguration?.uri?.toString()
-        if (playingUri == uri && p.mediaItemCount > 0 && p.playerError == null) {
+        val mimeType = if (useHlsTrailer) androidx.media3.common.MimeTypes.APPLICATION_M3U8 else null
+        val currentItem = p.currentMediaItem?.localConfiguration
+        if (currentItem?.uri?.toString() == uri && currentItem.mimeType == mimeType &&
+            p.mediaItemCount > 0 && p.playerError == null
+        ) {
             // The queued item is already playing. Keep its decoded frame, discard
             // playlist history, and append exactly one fresh successor.
             val currentIndex = p.currentMediaItemIndex
@@ -1875,7 +2040,7 @@ private fun VideoWallpaper(
         awaitingFrameAt = firstFrameGen
         runCatching {
             val queue = buildList {
-                add(androidx.media3.common.MediaItem.fromUri(uri))
+                add(androidx.media3.common.MediaItem.Builder().setUri(uri).setMimeType(mimeType).build())
                 nextUri?.let { add(androidx.media3.common.MediaItem.fromUri(it)) }
             }
             p.setMediaItems(queue)
@@ -1891,8 +2056,23 @@ private fun VideoWallpaper(
         lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
             if (firstFrameGen != expected) return@repeatOnLifecycle
             delay(20_000L)
-            if (firstFrameGen == expected && awaitingFrameAt == expected && !p.isPlaying) {
-                android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 20s), skipping: $uri")
+            if (firstFrameGen == expected && awaitingFrameAt == expected) {
+                if (playOnce) {
+                    android.util.Log.w("CouchyPreview", "Trailer stalled before the first frame")
+                } else {
+                    android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 20s), skipping: $uri")
+                }
+                playbackFailed()
+            }
+        }
+    }
+    LaunchedEffect(activePlayer, trailerRebuffering) {
+        val p = activePlayer ?: return@LaunchedEffect
+        if (!trailerRebuffering) return@LaunchedEffect
+        lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+            delay(20_000L)
+            if (p.playbackState == androidx.media3.common.Player.STATE_BUFFERING) {
+                android.util.Log.w("CouchyPreview", "Trailer stalled during playback")
                 playbackFailed()
             }
         }
@@ -1914,7 +2094,9 @@ private fun VideoWallpaper(
     }
     // The new clip's first frame is on screen → fade it in slowly.
     LaunchedEffect(firstFrameGen) {
-        if (firstFrameGen > 0) alpha.animateTo(1f, tween(1100))
+        if (firstFrameGen > 0) {
+            if (playOnce) alpha.snapTo(1f) else alpha.animateTo(1f, tween(1100))
+        }
     }
     Box(Modifier.fillMaxSize()) {
         VideoGlassSurface(
@@ -1922,12 +2104,15 @@ private fun VideoWallpaper(
             useFilter = useGpuGlass,
             filterActive = glassActive && firstFrameGen > 0,
         )
-        Box(
-            Modifier
-                .fillMaxSize()
-                .graphicsLayer { this.alpha = 1f - alpha.value }
-                .background(coverBrush)
-        )
+        if (firstFrameGen > 0 && captions.isNotEmpty()) {
+            TrailerCaptions(captions)
+        }
+        val cover = Modifier.fillMaxSize().graphicsLayer { this.alpha = 1f - alpha.value }
+        if (coverArtwork == null) {
+            Box(cover.background(coverBrush))
+        } else {
+            AppPreviewArtwork(coverArtwork, coverBrush, cover)
+        }
         Box(
             Modifier
                 .fillMaxSize()

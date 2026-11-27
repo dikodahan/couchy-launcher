@@ -5,6 +5,31 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CompatibilityTest {
+    @Test
+    fun appContentPreviewAndWallpaperAreBackedUpIndependently() {
+        val chosenWallpaper = LauncherConfig(useBuiltinAerials = true, builtinSource = 2)
+        for (enabled in listOf(false, true)) {
+            val original = chosenWallpaper.copy(
+                appContentPreviewEnabled = enabled,
+                appContentPreviewTrailers = enabled,
+                appContentPreviewMuted = !enabled,
+            )
+            val restored = ConfigBackup.read(ConfigBackup.encode(original).byteInputStream())
+            assertEquals(original, restored)
+        }
+    }
+
+    @Test
+    fun legacyBackupsPreserveTopShelfAndDefaultMissingPreviewToOff() {
+        val categories = """ "categories":[{"id":"apps","name":"Apps"}] """
+        val legacy = ConfigBackup.decode("""{$categories,"useTopShelf":true,"wallpaper":3}""")
+        assertTrue(legacy.appContentPreviewEnabled)
+        assertFalse(legacy.appContentPreviewTrailers)
+        assertTrue(legacy.appContentPreviewMuted)
+        assertEquals(3, legacy.wallpaper)
+        assertEquals(false, ConfigBackup.decode("""{$categories}""").appContentPreviewEnabled)
+    }
+
     @Test fun freshSectionsMatchOfficeDefaultsAndStayLocalizableThroughBackup() {
         val fresh = newInstallDefaults()
         assertEquals(listOf("streaming", "games", "music", "apps", "settings"), fresh.categories.map { it.id })

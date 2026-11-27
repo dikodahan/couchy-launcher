@@ -263,7 +263,12 @@ private fun LanguageFlag(code: String) {
 }
 
 @Composable
-private fun LanguageDropdown(selected: String, onChoose: (String) -> Unit, onDismiss: () -> Unit) {
+internal fun LanguageDropdown(
+    selected: String,
+    onChoose: (String) -> Unit,
+    titleRes: Int = R.string.item_language,
+    onDismiss: () -> Unit,
+) {
     val current = selected.takeIf { it in LANGUAGES }.orEmpty()
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -271,7 +276,7 @@ private fun LanguageDropdown(selected: String, onChoose: (String) -> Unit, onDis
             colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(Modifier.width(390.dp).padding(16.dp)) {
-                Title(stringResource(R.string.item_language))
+                Title(stringResource(titleRes))
                 val focus = initialFocus()
                 LazyColumn(
                     state = rememberLazyListState(initialFirstVisibleItemIndex = LANGUAGES.indexOf(current)),

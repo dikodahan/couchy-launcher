@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -51,7 +52,14 @@ data class LauncherConfig(
     val knownApps: Set<String> = emptySet(),
     val wallpaper: Int = 1, // Aurora
     val useCustomWallpaper: Boolean = false,
-    val useTopShelf: Boolean = false,
+    @SerialName("useTopShelf") // Preserve existing settings and backups.
+    val appContentPreviewEnabled: Boolean = false,
+    val appContentPreviewTrailers: Boolean = false,
+    val appContentPreviewMuted: Boolean = true,
+    val appContentPreviewSubtitles: Boolean = false,
+    val appContentPreviewSubtitleLanguage: String = "",
+    val appContentPreviewFallback: Boolean = false,
+    val appContentPreviewTmdbCredential: String = "",
     /** video wallpaper: persisted content-URI of a local video, looped muted */
     val videoUri: String = "",
     val useVideoWallpaper: Boolean = false,
