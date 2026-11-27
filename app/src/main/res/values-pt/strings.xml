@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Mostra imagens de filmes e séries compartilhadas pelo app em destaque. O papel de parede escolhido continua visível quando não há prévia.</string>
     <string name="app_content_preview_trailers">Reproduzir trailers</string>
     <string name="app_content_preview_mute">Silenciar trailers</string>
+    <string name="app_content_preview_mute_desc">Silencia os trailers reproduzidos automaticamente. Os trailers iniciados com OK são reproduzidos com som.</string>
     <string name="trailer_press_ok">Pressione OK para reproduzir o trailer</string>
     <string name="trailer_include_subtitles">Mostrar legendas nos trailers</string>
     <string name="trailer_include_subtitles_desc">Alguns vídeos do YouTube podem mostrar legendas mesmo com esta opção desativada.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Confirmar localização</string>
     <string name="wizard_weather_locating">Buscando sua localização aproximada…</string>
     <string name="wizard_weather_ip_missing">Não foi possível localizar você pelo IP. Escolha Buscar por cidade.</string>
+    <string name="restore_permissions_title">Permissões necessárias após a restauração</string>
+    <string name="restore_permissions_body">Algumas configurações restauradas exigem permissões adicionais do Android. Selecione OK para abrir as solicitações do sistema uma por vez.</string>
+    <string name="restore_permission_tv_listings">Acesso às listas de programas de TV</string>
 </resources>

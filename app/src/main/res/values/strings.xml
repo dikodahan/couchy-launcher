@@ -337,11 +337,12 @@
     <string name="weather_icons_mono">Monochrome</string>
     <string name="weather_icons_color">Colored</string>
     <string name="weather_icons_animated">Animated</string>
-    <string name="app_content_preview">App Content Preview</string>
+    <string name="app_content_preview">App content preview</string>
     <string name="app_content_preview_toggle">Enable app content preview</string>
     <string name="app_content_preview_desc">Show movie and TV artwork shared by the highlighted app. Your selected wallpaper stays visible when no preview is available.</string>
     <string name="app_content_preview_trailers">Play trailers</string>
     <string name="app_content_preview_mute">Mute trailers</string>
+    <string name="app_content_preview_mute_desc">Mutes trailers that play automatically. Trailers you start with OK play with sound.</string>
     <string name="trailer_press_ok">Press OK to play trailer</string>
     <string name="trailer_include_subtitles">Include subtitles for trailers</string>
     <string name="trailer_include_subtitles_desc">Some YouTube videos may still show subtitles when this setting is off.</string>
@@ -354,7 +355,7 @@
     <string name="tmdb_phone_setup_steps">Scan to open TMDB and copy the value labeled API Key. The API Read Access Token is a separate field. Then open the TMDB API key field on the TV and paste using the paired Google TV phone remote.</string>
     <string name="trailer_fallback_credential_failed">Could not verify the credential with TMDB. Check the value and your connection.</string>
     <string name="tmdb_attribution" translatable="false">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
-    <string name="app_content_preview_need_permission">Allow TV listings access to use App Content Preview.</string>
+    <string name="app_content_preview_need_permission">Allow TV listings access to use App content preview.</string>
     <string name="menu_close_cache">Close &amp; clear cache</string>
     <string name="close_cache_complete">App stopped and cache cleared.</string>
     <string name="close_cache_partial">App stopped. Clear its cache in App info.</string>
@@ -441,4 +442,7 @@
     <string name="wizard_weather_confirm">Confirm location</string>
     <string name="wizard_weather_locating">Finding your approximate location…</string>
     <string name="wizard_weather_ip_missing">Could not locate you from your IP. Choose Find by city.</string>
+    <string name="restore_permissions_title">Permissions needed after restore</string>
+    <string name="restore_permissions_body">Some restored settings need additional Android permissions. Select OK to open each system prompt in turn.</string>
+    <string name="restore_permission_tv_listings">Access to TV listings</string>
 </resources>

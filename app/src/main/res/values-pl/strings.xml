@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Pokazuje grafiki filmów i seriali udostępnione przez podświetloną aplikację. Jeśli podgląd jest niedostępny, wyświetlana jest wybrana tapeta.</string>
     <string name="app_content_preview_trailers">Odtwarzaj zwiastuny</string>
     <string name="app_content_preview_mute">Wycisz zwiastuny</string>
+    <string name="app_content_preview_mute_desc">Wycisza automatycznie odtwarzane zwiastuny. Zwiastuny uruchomione przyciskiem OK są odtwarzane z dźwiękiem.</string>
     <string name="trailer_press_ok">Naciśnij OK, aby odtworzyć zwiastun</string>
     <string name="trailer_include_subtitles">Wyświetlaj napisy w zwiastunach</string>
     <string name="trailer_include_subtitles_desc">Niektóre filmy z YouTube mogą wyświetlać napisy mimo wyłączenia tej opcji.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Potwierdź lokalizację</string>
     <string name="wizard_weather_locating">Wyszukiwanie przybliżonej lokalizacji…</string>
     <string name="wizard_weather_ip_missing">Nie udało się ustalić lokalizacji na podstawie IP. Wybierz wyszukiwanie według miasta.</string>
+    <string name="restore_permissions_title">Uprawnienia wymagane po przywróceniu</string>
+    <string name="restore_permissions_body">Niektóre przywrócone ustawienia wymagają dodatkowych uprawnień Androida. Wybierz OK, aby otworzyć kolejno prośby systemu o uprawnienia.</string>
+    <string name="restore_permission_tv_listings">Dostęp do list programów telewizyjnych</string>
 </resources>

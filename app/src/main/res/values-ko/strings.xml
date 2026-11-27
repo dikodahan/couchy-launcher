@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">강조 표시된 앱이 제공하는 영화와 TV 프로그램 이미지를 표시합니다. 미리보기가 없으면 선택한 배경화면이 유지됩니다.</string>
     <string name="app_content_preview_trailers">예고편 재생</string>
     <string name="app_content_preview_mute">예고편 음소거</string>
+    <string name="app_content_preview_mute_desc">자동 재생되는 예고편의 소리를 끕니다. 확인 버튼으로 시작한 예고편은 소리와 함께 재생됩니다.</string>
     <string name="trailer_press_ok">확인 버튼을 눌러 예고편 재생</string>
     <string name="trailer_include_subtitles">예고편 자막 표시</string>
     <string name="trailer_include_subtitles_desc">이 설정을 꺼도 일부 YouTube 동영상에 자막이 표시될 수 있습니다.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">위치 확인</string>
     <string name="wizard_weather_locating">대략적인 위치를 찾는 중…</string>
     <string name="wizard_weather_ip_missing">IP 주소로 위치를 찾을 수 없습니다. 도시로 검색하세요.</string>
+    <string name="restore_permissions_title">복원 후 필요한 권한</string>
+    <string name="restore_permissions_body">복원된 일부 설정에는 추가 Android 권한이 필요합니다. 확인을 선택하면 시스템 권한 요청이 순서대로 표시됩니다.</string>
+    <string name="restore_permission_tv_listings">TV 프로그램 목록에 대한 액세스</string>
 </resources>

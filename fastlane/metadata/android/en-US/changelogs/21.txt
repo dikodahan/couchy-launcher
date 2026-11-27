@@ -1,0 +1,2 @@
+Trailers started with OK play with sound. The mute setting applies to autoplay.
+Backup restore checks for missing Android permissions and guides you through granting them.

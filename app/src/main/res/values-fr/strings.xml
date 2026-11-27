@@ -277,6 +277,7 @@
     <string name="app_content_preview_desc">Affiche les images de films et de séries partagées par l’application sélectionnée. Le fond d’écran choisi reste visible en l’absence d’aperçu.</string>
     <string name="app_content_preview_trailers">Lire les bandes-annonces</string>
     <string name="app_content_preview_mute">Couper le son des bandes-annonces</string>
+    <string name="app_content_preview_mute_desc">Coupe le son des bandes-annonces lancées automatiquement. Celles que vous lancez avec OK sont lues avec le son.</string>
     <string name="trailer_press_ok">Appuyez sur OK pour lancer la bande-annonce</string>
     <string name="trailer_include_subtitles">Afficher les sous-titres des bandes-annonces</string>
     <string name="trailer_include_subtitles_desc">Certaines vidéos YouTube peuvent afficher des sous-titres même si ce réglage est désactivé.</string>
@@ -437,4 +438,7 @@
     <string name="wizard_weather_confirm">Confirmer la localisation</string>
     <string name="wizard_weather_locating">Recherche de votre position approximative…</string>
     <string name="wizard_weather_ip_missing">Impossible de vous localiser par IP. Choisissez Rechercher par ville.</string>
+    <string name="restore_permissions_title">Autorisations requises après la restauration</string>
+    <string name="restore_permissions_body">Certains paramètres restaurés nécessitent des autorisations Android supplémentaires. Sélectionnez OK pour ouvrir les demandes du système une par une.</string>
+    <string name="restore_permission_tv_listings">Accès aux listes de programmes TV</string>
 </resources>

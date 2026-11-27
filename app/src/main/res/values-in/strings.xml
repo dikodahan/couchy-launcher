@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Tampilkan gambar film dan acara TV dari aplikasi yang disorot. Wallpaper pilihan tetap terlihat jika pratinjau tidak tersedia.</string>
     <string name="app_content_preview_trailers">Putar trailer</string>
     <string name="app_content_preview_mute">Bisukan trailer</string>
+    <string name="app_content_preview_mute_desc">Membisukan cuplikan yang diputar otomatis. Cuplikan yang Anda mulai dengan OK diputar dengan suara.</string>
     <string name="trailer_press_ok">Tekan OK untuk memutar trailer</string>
     <string name="trailer_include_subtitles">Tampilkan takarir untuk trailer</string>
     <string name="trailer_include_subtitles_desc">Sebagian video YouTube masih dapat menampilkan takarir saat setelan ini dinonaktifkan.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Konfirmasi lokasi</string>
     <string name="wizard_weather_locating">Mencari perkiraan lokasi Anda…</string>
     <string name="wizard_weather_ip_missing">Lokasi tidak dapat ditentukan dari IP. Pilih Cari berdasarkan kota.</string>
+    <string name="restore_permissions_title">Izin diperlukan setelah pemulihan</string>
+    <string name="restore_permissions_body">Beberapa setelan yang dipulihkan memerlukan izin Android tambahan. Pilih OK untuk membuka setiap permintaan sistem secara bergantian.</string>
+    <string name="restore_permission_tv_listings">Akses ke daftar acara TV</string>
 </resources>

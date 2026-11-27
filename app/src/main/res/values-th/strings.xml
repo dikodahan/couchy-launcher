@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">แสดงภาพภาพยนตร์และรายการทีวีที่แอปที่ไฮไลต์แชร์ไว้ หากไม่มีตัวอย่าง ระบบจะแสดงวอลเปเปอร์ที่เลือกไว้</string>
     <string name="app_content_preview_trailers">เล่นตัวอย่างภาพยนตร์</string>
     <string name="app_content_preview_mute">ปิดเสียงตัวอย่าง</string>
+    <string name="app_content_preview_mute_desc">ปิดเสียงตัวอย่างที่เล่นอัตโนมัติ ตัวอย่างที่เริ่มเล่นด้วยปุ่มตกลงจะเล่นพร้อมเสียง</string>
     <string name="trailer_press_ok">กด OK เพื่อเล่นตัวอย่าง</string>
     <string name="trailer_include_subtitles">แสดงคำบรรยายในตัวอย่าง</string>
     <string name="trailer_include_subtitles_desc">วิดีโอ YouTube บางรายการอาจยังแสดงคำบรรยายแม้จะปิดการตั้งค่านี้</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">ยืนยันตำแหน่ง</string>
     <string name="wizard_weather_locating">กำลังค้นหาตำแหน่งโดยประมาณ…</string>
     <string name="wizard_weather_ip_missing">ไม่พบตำแหน่งจาก IP โปรดเลือกค้นหาตามเมือง</string>
+    <string name="restore_permissions_title">สิทธิ์ที่จำเป็นหลังการกู้คืน</string>
+    <string name="restore_permissions_body">การตั้งค่าที่กู้คืนบางรายการต้องใช้สิทธิ์เพิ่มเติมของ Android เลือกตกลงเพื่อเปิดคำขอสิทธิ์ของระบบทีละรายการ</string>
+    <string name="restore_permission_tv_listings">เข้าถึงข้อมูลรายการทีวี</string>
 </resources>

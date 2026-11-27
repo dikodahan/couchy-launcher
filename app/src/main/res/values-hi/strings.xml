@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">हाइलाइट किए गए ऐप की साझा की गई फ़िल्मों और टीवी शो की तस्वीरें दिखाएँ। पूर्वावलोकन उपलब्ध न होने पर चुना गया वॉलपेपर दिखता रहेगा।</string>
     <string name="app_content_preview_trailers">ट्रेलर चलाएँ</string>
     <string name="app_content_preview_mute">ट्रेलर की आवाज़ बंद करें</string>
+    <string name="app_content_preview_mute_desc">अपने आप चलने वाले ट्रेलर म्यूट हो जाते हैं। ठीक है दबाकर शुरू किए गए ट्रेलर आवाज़ के साथ चलते हैं।</string>
     <string name="trailer_press_ok">ट्रेलर चलाने के लिए OK दबाएँ</string>
     <string name="trailer_include_subtitles">ट्रेलर के लिए उपशीर्षक दिखाएँ</string>
     <string name="trailer_include_subtitles_desc">इस सेटिंग के बंद होने पर भी कुछ YouTube वीडियो उपशीर्षक दिखा सकते हैं।</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">स्थान की पुष्टि करें</string>
     <string name="wizard_weather_locating">आपका अनुमानित स्थान खोजा जा रहा है…</string>
     <string name="wizard_weather_ip_missing">IP से आपका स्थान नहीं मिल सका। शहर से खोजें।</string>
+    <string name="restore_permissions_title">बहाली के बाद ज़रूरी अनुमतियाँ</string>
+    <string name="restore_permissions_body">बहाल की गई कुछ सेटिंग के लिए Android की अतिरिक्त अनुमतियाँ चाहिए। सिस्टम के अनुरोध एक-एक करके खोलने के लिए ठीक है चुनें।</string>
+    <string name="restore_permission_tv_listings">टीवी कार्यक्रमों की सूची का ऐक्सेस</string>
 </resources>

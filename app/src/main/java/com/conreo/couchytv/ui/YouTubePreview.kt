@@ -139,7 +139,7 @@ private fun embedPage(origin: String, videoId: String, muted: Boolean, subtitleL
     require(youtubeIdPattern.matches(videoId))
     val captions = subtitleLanguage.takeIf { it != null && Regex("[A-Za-z0-9-]{2,35}").matches(it) }
         ?.let { "&amp;cc_load_policy=1&amp;cc_lang_pref=$it" }.orEmpty()
-    val audio = if (muted) "player.mute();" else ""
+    val audio = if (muted) "player.mute();" else "player.unMute();"
     return """
         <!doctype html>
         <meta name="referrer" content="strict-origin-when-cross-origin">

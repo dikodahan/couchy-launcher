@@ -41,6 +41,10 @@ These keep their own licenses, all compatible with GPLv3:
 | TDLib (via `tdlib-kmp`) | optional Telegram Saved Messages backup | Boost 1.0 |
 | kotlinx.serialization | config persistence | Apache-2.0 |
 
+## Icon pack preview artwork
+
+The Icon pack menu bundles thumbnails to identify the packs. The installable packs are downloaded from their publishers. Artwork sources are [Minimalist](https://github.com/hqn-scl/android-tv-minimalist-icon-pack), [Projectivy via Appteka](https://appteka.store/), [Arcticons](https://github.com/Arcticons-Team/Arcticons), and [CoreBuildsApp](https://github.com/brevityA/CoreBuildsApps).
+
 ## Content that is *not* distributed
 
 The built-in **aerial wallpapers** stream video owned by **Apple, Amazon** and

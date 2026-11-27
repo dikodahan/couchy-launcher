@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.annotation.DrawableRes
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -44,6 +45,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -266,12 +268,15 @@ internal fun RecommendedAppRow(
     repository: RecommendedApps,
     actions: RecommendedDownloadActions,
     downloadFocus: FocusRequester = remember { FocusRequester() },
+    @DrawableRes localIcon: Int? = null,
 ) {
     val enabled = entry.key !in actions.pending
     val download = actions.downloads[entry.key] ?: if (!enabled) RecommendedDownload.Active(null) else null
-    val bitmap by produceState<ImageBitmap?>(initialValue = null, entry.iconUrl) {
-        value = (entry.iconUrl?.let { repository.icon(it) } ?: repository.fallbackIcon(entry))?.asImageBitmap()
-    }
+    val bitmap = if (localIcon == null) {
+        produceState<ImageBitmap?>(initialValue = null, repository, entry) {
+            value = (entry.iconUrl?.let { repository.icon(it) } ?: repository.fallbackIcon(entry))?.asImageBitmap()
+        }.value
+    } else null
     val ready = download == RecommendedDownload.Ready
     val active = download as? RecommendedDownload.Active
     Row(
@@ -279,9 +284,12 @@ internal fun RecommendedAppRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        val icon = bitmap
-        if (icon != null) Image(icon, contentDescription = null, modifier = Modifier.size(38.dp))
-        else Icon(AppIcons.Apps, contentDescription = null, modifier = Modifier.size(38.dp))
+        val iconSize = Modifier.size(38.dp)
+        when {
+            localIcon != null -> Image(painterResource(localIcon), contentDescription = null, modifier = iconSize)
+            bitmap != null -> Image(bitmap, contentDescription = null, modifier = iconSize)
+            else -> Icon(AppIcons.Apps, contentDescription = null, modifier = iconSize)
+        }
         Column(Modifier.weight(1f)) {
             Text(entry.name, style = MaterialTheme.typography.titleSmall)
             if (download == RecommendedDownload.Failed) {

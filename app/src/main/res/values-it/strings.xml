@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Mostra immagini di film e serie condivise dall’app evidenziata. Se manca un’anteprima, resta visibile lo sfondo scelto.</string>
     <string name="app_content_preview_trailers">Riproduci i trailer</string>
     <string name="app_content_preview_mute">Disattiva l’audio dei trailer</string>
+    <string name="app_content_preview_mute_desc">Disattiva l’audio dei trailer riprodotti automaticamente. I trailer avviati con OK vengono riprodotti con l’audio.</string>
     <string name="trailer_press_ok">Premi OK per riprodurre il trailer</string>
     <string name="trailer_include_subtitles">Mostra i sottotitoli dei trailer</string>
     <string name="trailer_include_subtitles_desc">Alcuni video di YouTube possono mostrare i sottotitoli anche con questa impostazione disattivata.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Conferma posizione</string>
     <string name="wizard_weather_locating">Ricerca della posizione approssimativa…</string>
     <string name="wizard_weather_ip_missing">Impossibile determinare la posizione tramite IP. Seleziona Cerca per città.</string>
+    <string name="restore_permissions_title">Autorizzazioni necessarie dopo il ripristino</string>
+    <string name="restore_permissions_body">Alcune impostazioni ripristinate richiedono autorizzazioni Android aggiuntive. Seleziona OK per aprire le richieste di sistema una alla volta.</string>
+    <string name="restore_permission_tv_listings">Accesso agli elenchi dei programmi TV</string>
 </resources>

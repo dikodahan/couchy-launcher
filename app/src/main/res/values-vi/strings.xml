@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Hiển thị ảnh phim và chương trình TV do ứng dụng đang được tô sáng chia sẻ. Hình nền đã chọn vẫn hiển thị khi không có nội dung xem trước.</string>
     <string name="app_content_preview_trailers">Phát đoạn giới thiệu</string>
     <string name="app_content_preview_mute">Tắt tiếng đoạn giới thiệu</string>
+    <string name="app_content_preview_mute_desc">Tắt tiếng đoạn giới thiệu tự động phát. Đoạn giới thiệu bạn mở bằng nút OK sẽ phát có tiếng.</string>
     <string name="trailer_press_ok">Nhấn OK để phát đoạn giới thiệu</string>
     <string name="trailer_include_subtitles">Hiện phụ đề cho đoạn giới thiệu</string>
     <string name="trailer_include_subtitles_desc">Một số video YouTube vẫn có thể hiện phụ đề khi tắt cài đặt này.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Xác nhận vị trí</string>
     <string name="wizard_weather_locating">Đang tìm vị trí gần đúng của bạn…</string>
     <string name="wizard_weather_ip_missing">Không xác định được vị trí của bạn từ IP. Hãy chọn Tìm theo thành phố.</string>
+    <string name="restore_permissions_title">Quyền cần thiết sau khi khôi phục</string>
+    <string name="restore_permissions_body">Một số cài đặt đã khôi phục cần thêm quyền Android. Chọn OK để lần lượt mở từng yêu cầu của hệ thống.</string>
+    <string name="restore_permission_tv_listings">Quyền truy cập danh sách chương trình TV</string>
 </resources>

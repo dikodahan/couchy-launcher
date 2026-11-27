@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">選択中のアプリが提供する映画やテレビ番組の画像を表示します。プレビューがない場合は、選択した壁紙を表示します。</string>
     <string name="app_content_preview_trailers">予告編を再生</string>
     <string name="app_content_preview_mute">予告編をミュート</string>
+    <string name="app_content_preview_mute_desc">自動再生される予告編をミュートします。OK ボタンで再生した予告編は音声付きで再生されます。</string>
     <string name="trailer_press_ok">OK を押して予告編を再生</string>
     <string name="trailer_include_subtitles">予告編に字幕を表示</string>
     <string name="trailer_include_subtitles_desc">この設定をオフにしても、一部の YouTube 動画では字幕が表示されることがあります。</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">位置を確定</string>
     <string name="wizard_weather_locating">おおよその位置を検索中…</string>
     <string name="wizard_weather_ip_missing">IPアドレスから位置を特定できませんでした。都市名で検索してください。</string>
+    <string name="restore_permissions_title">復元後に必要な権限</string>
+    <string name="restore_permissions_body">復元した設定の一部には追加の Android 権限が必要です。OK を選択すると、システムの権限リクエストが順番に表示されます。</string>
+    <string name="restore_permission_tv_listings">テレビ番組一覧へのアクセス</string>
 </resources>

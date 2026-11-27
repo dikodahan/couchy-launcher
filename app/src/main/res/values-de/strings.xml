@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Zeigt Film- und Serienbilder der markierten App. Ohne Vorschau bleibt das gewählte Hintergrundbild sichtbar.</string>
     <string name="app_content_preview_trailers">Trailer abspielen</string>
     <string name="app_content_preview_mute">Trailer stummschalten</string>
+    <string name="app_content_preview_mute_desc">Schaltet automatisch abgespielte Trailer stumm. Mit OK gestartete Trailer werden mit Ton abgespielt.</string>
     <string name="trailer_press_ok">Drücke OK, um den Trailer abzuspielen</string>
     <string name="trailer_include_subtitles">Untertitel für Trailer anzeigen</string>
     <string name="trailer_include_subtitles_desc">Einige YouTube-Videos können auch bei ausgeschalteter Einstellung Untertitel anzeigen.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Standort bestätigen</string>
     <string name="wizard_weather_locating">Ungefährer Standort wird gesucht…</string>
     <string name="wizard_weather_ip_missing">Der Standort konnte nicht per IP ermittelt werden. Wähle die Stadtsuche.</string>
+    <string name="restore_permissions_title">Berechtigungen nach der Wiederherstellung erforderlich</string>
+    <string name="restore_permissions_body">Einige wiederhergestellte Einstellungen benötigen zusätzliche Android-Berechtigungen. Wähle OK, um die Systemabfragen nacheinander zu öffnen.</string>
+    <string name="restore_permission_tv_listings">Zugriff auf TV-Programmlisten</string>
 </resources>

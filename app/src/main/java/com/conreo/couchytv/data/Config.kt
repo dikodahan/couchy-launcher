@@ -220,11 +220,13 @@ private val KEY_CONFIG = stringPreferencesKey("config")
 private val KEY_INITIAL_WEATHER_UNIT_PENDING = booleanPreferencesKey("initial_weather_unit_pending")
 private val KEY_INITIAL_WEATHER_LOCATION_PENDING = booleanPreferencesKey("initial_weather_location_pending")
 private val KEY_RESTORE_REVISION = longPreferencesKey("restore_revision")
+private val KEY_PENDING_RESTORE_PERMISSION_REVIEW = longPreferencesKey("pending_restore_permission_review")
 
 internal data class StoredConfig(
     val config: LauncherConfig,
     val restoreRevision: Long,
     val useInitialIpLocation: Boolean,
+    val pendingRestorePermissionReview: Long?,
 )
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -235,6 +237,7 @@ class ConfigStore(private val context: Context) {
             decodeConfig(prefs[KEY_CONFIG]),
             prefs[KEY_RESTORE_REVISION] ?: 0L,
             prefs[KEY_INITIAL_WEATHER_LOCATION_PENDING] == true,
+            prefs[KEY_PENDING_RESTORE_PERMISSION_REVIEW],
         )
     }
 
@@ -300,7 +303,17 @@ class ConfigStore(private val context: Context) {
             prefs.remove(KEY_INITIAL_WEATHER_UNIT_PENDING)
             prefs.remove(KEY_INITIAL_WEATHER_LOCATION_PENDING)
             // A restore must refresh runtime state even when the settings are identical.
-            prefs[KEY_RESTORE_REVISION] = (prefs[KEY_RESTORE_REVISION] ?: 0L) + 1L
+            val revision = (prefs[KEY_RESTORE_REVISION] ?: 0L) + 1L
+            prefs[KEY_RESTORE_REVISION] = revision
+            prefs[KEY_PENDING_RESTORE_PERMISSION_REVIEW] = revision
+        }
+    }
+
+    internal suspend fun finishRestorePermissionReview(revision: Long) {
+        context.dataStore.edit { prefs ->
+            if (prefs[KEY_PENDING_RESTORE_PERMISSION_REVIEW] == revision) {
+                prefs.remove(KEY_PENDING_RESTORE_PERMISSION_REVIEW)
+            }
         }
     }
 

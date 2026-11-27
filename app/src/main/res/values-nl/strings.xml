@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Toont beelden van films en series die de gemarkeerde app deelt. Zonder voorbeeld blijft de gekozen achtergrond zichtbaar.</string>
     <string name="app_content_preview_trailers">Trailers afspelen</string>
     <string name="app_content_preview_mute">Trailergeluid dempen</string>
+    <string name="app_content_preview_mute_desc">Dempt trailers die automatisch worden afgespeeld. Trailers die je met OK start, worden met geluid afgespeeld.</string>
     <string name="trailer_press_ok">Druk op OK om de trailer af te spelen</string>
     <string name="trailer_include_subtitles">Ondertiteling bij trailers tonen</string>
     <string name="trailer_include_subtitles_desc">Sommige YouTube-video’s kunnen ondertiteling tonen als deze instelling uitstaat.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Locatie bevestigen</string>
     <string name="wizard_weather_locating">Je geschatte locatie wordt gezocht…</string>
     <string name="wizard_weather_ip_missing">Je locatie kon niet via IP worden bepaald. Kies Zoeken op stad.</string>
+    <string name="restore_permissions_title">Machtigingen nodig na herstel</string>
+    <string name="restore_permissions_body">Voor sommige herstelde instellingen zijn extra Android-machtigingen nodig. Kies OK om de systeemverzoeken één voor één te openen.</string>
+    <string name="restore_permission_tv_listings">Toegang tot tv-programmalijsten</string>
 </resources>

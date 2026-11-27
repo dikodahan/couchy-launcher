@@ -50,6 +50,7 @@ internal data class AppPreviewSlide(
     val youtubeId: String? = null,
     val finished: CompletableDeferred<Boolean>? = null,
     val manualTrailerAvailable: Boolean = false,
+    val manualPlayback: Boolean = false,
 )
 
 internal class AppPreviewDeck {
@@ -153,7 +154,9 @@ internal fun rememberAppContentPreview(
                                 deck.slide = still
                                 suspend fun play(uri: Uri? = null, youtubeId: String? = null): Boolean {
                                     val finished = CompletableDeferred<Boolean>()
-                                    deck.slide = still.copy(trailer = uri, youtubeId = youtubeId, finished = finished)
+                                    deck.slide = still.copy(
+                                        trailer = uri, youtubeId = youtubeId, finished = finished, manualPlayback = manual,
+                                    )
                                     val completed = finished.await()
                                     deck.slide = still
                                     return completed
@@ -202,11 +205,12 @@ internal fun rememberAppContentPreview(
 @Composable
 internal fun AppContentPreviewWallpaper(
     slide: AppPreviewSlide,
-    muted: Boolean,
+    muteAutoplay: Boolean,
     coverBrush: Brush,
     subtitleLanguage: String?,
     onTrailerReady: () -> Unit,
 ) {
+    val muted = muteAutoplay && !slide.manualPlayback
     val youtubeId = slide.youtubeId
     if (youtubeId != null) {
         key(slide.finished) {

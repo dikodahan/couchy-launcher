@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Показывает изображения фильмов и сериалов, которыми делится выделенное приложение. Если предпросмотра нет, остаются выбранные обои.</string>
     <string name="app_content_preview_trailers">Воспроизводить трейлеры</string>
     <string name="app_content_preview_mute">Отключить звук трейлеров</string>
+    <string name="app_content_preview_mute_desc">Отключает звук при автоматическом воспроизведении трейлеров. Трейлеры, запущенные кнопкой OK, воспроизводятся со звуком.</string>
     <string name="trailer_press_ok">Нажмите OK, чтобы запустить трейлер</string>
     <string name="trailer_include_subtitles">Показывать субтитры в трейлерах</string>
     <string name="trailer_include_subtitles_desc">В некоторых видео YouTube субтитры могут отображаться даже при выключенной настройке.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Подтвердить местоположение</string>
     <string name="wizard_weather_locating">Поиск приблизительного местоположения…</string>
     <string name="wizard_weather_ip_missing">Не удалось определить местоположение по IP. Выберите поиск по городу.</string>
+    <string name="restore_permissions_title">Разрешения, необходимые после восстановления</string>
+    <string name="restore_permissions_body">Некоторым восстановленным настройкам нужны дополнительные разрешения Android. Выберите OK, чтобы по очереди открыть системные запросы.</string>
+    <string name="restore_permission_tv_listings">Доступ к спискам телепрограмм</string>
 </resources>

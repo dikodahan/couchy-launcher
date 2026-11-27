@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Vurgulanan uygulamanın paylaştığı film ve dizi görsellerini gösterir. Önizleme yoksa seçtiğiniz duvar kâğıdı görünür.</string>
     <string name="app_content_preview_trailers">Fragmanları oynat</string>
     <string name="app_content_preview_mute">Fragmanların sesini kapat</string>
+    <string name="app_content_preview_mute_desc">Otomatik oynatılan fragmanların sesini kapatır. Tamam düğmesiyle başlattığınız fragmanlar sesli oynatılır.</string>
     <string name="trailer_press_ok">Fragmanı oynatmak için OK tuşuna basın</string>
     <string name="trailer_include_subtitles">Fragmanlarda altyazıları göster</string>
     <string name="trailer_include_subtitles_desc">Bu ayar kapalı olsa bile bazı YouTube videoları altyazı gösterebilir.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">Konumu onayla</string>
     <string name="wizard_weather_locating">Yaklaşık konumunuz aranıyor…</string>
     <string name="wizard_weather_ip_missing">IP adresinizden konumunuz belirlenemedi. Şehre göre aramayı seçin.</string>
+    <string name="restore_permissions_title">Geri yüklemeden sonra gerekli izinler</string>
+    <string name="restore_permissions_body">Geri yüklenen bazı ayarlar ek Android izinleri gerektirir. Sistem isteklerini sırayla açmak için Tamam’ı seçin.</string>
+    <string name="restore_permission_tv_listings">TV programı listelerine erişim</string>
 </resources>

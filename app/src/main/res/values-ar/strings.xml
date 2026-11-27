@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">عرض صور الأفلام والمسلسلات التي يشاركها التطبيق المحدد. تظل الخلفية المختارة ظاهرة عند عدم توفر معاينة.</string>
     <string name="app_content_preview_trailers">تشغيل المقاطع الدعائية</string>
     <string name="app_content_preview_mute">كتم صوت المقاطع الدعائية</string>
+    <string name="app_content_preview_mute_desc">يكتم صوت المقاطع الدعائية التي تبدأ تلقائيًا. تُشغَّل المقاطع التي تبدأها بزر موافق بالصوت.</string>
     <string name="trailer_press_ok">اضغط على موافق لتشغيل المقطع الدعائي</string>
     <string name="trailer_include_subtitles">عرض الترجمة للمقاطع الدعائية</string>
     <string name="trailer_include_subtitles_desc">قد تعرض بعض فيديوهات YouTube الترجمة حتى عند إيقاف هذا الإعداد.</string>
@@ -423,4 +424,7 @@
     <string name="wizard_weather_confirm">تأكيد الموقع</string>
     <string name="wizard_weather_locating">جارٍ البحث عن موقعك التقريبي…</string>
     <string name="wizard_weather_ip_missing">تعذّر تحديد موقعك من عنوان IP. اختر البحث حسب المدينة.</string>
+    <string name="restore_permissions_title">الأذونات المطلوبة بعد الاستعادة</string>
+    <string name="restore_permissions_body">تتطلب بعض الإعدادات المستعادة أذونات إضافية من Android. اختر موافق لعرض طلبات النظام واحدًا تلو الآخر.</string>
+    <string name="restore_permission_tv_listings">الوصول إلى قوائم برامج التلفزيون</string>
 </resources>

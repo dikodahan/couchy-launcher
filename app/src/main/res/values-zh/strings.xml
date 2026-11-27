@@ -277,6 +277,7 @@
     <string name="app_content_preview_desc">显示当前高亮应用分享的影视图片。没有预览时，仍显示所选壁纸。</string>
     <string name="app_content_preview_trailers">播放预告片</string>
     <string name="app_content_preview_mute">将预告片静音</string>
+    <string name="app_content_preview_mute_desc">将自动播放的预告片静音。按确定键手动播放的预告片会有声音。</string>
     <string name="trailer_press_ok">按 OK 播放预告片</string>
     <string name="trailer_include_subtitles">显示预告片字幕</string>
     <string name="trailer_include_subtitles_desc">关闭此设置后，某些 YouTube 视频仍可能显示字幕。</string>
@@ -437,4 +438,7 @@
     <string name="wizard_weather_confirm">确认位置</string>
     <string name="wizard_weather_locating">正在查找你的大致位置…</string>
     <string name="wizard_weather_ip_missing">无法根据 IP 地址确定你的位置。请选择按城市查找。</string>
+    <string name="restore_permissions_title">恢复后需要授予权限</string>
+    <string name="restore_permissions_body">部分已恢复的设置需要额外的 Android 权限。选择确定以依次打开系统授权提示。</string>
+    <string name="restore_permission_tv_listings">访问电视节目列表</string>
 </resources>

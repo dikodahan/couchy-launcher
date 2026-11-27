@@ -286,7 +286,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         LoadingScreen()
         return
     }
-    val (config, restoreRevision, useInitialIpLocation) = storedConfig ?: run {
+    val (config, restoreRevision, useInitialIpLocation, pendingRestorePermissionReview) = storedConfig ?: run {
         LoadingScreen()
         return
     }
@@ -820,7 +820,9 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
             if (preview != null) {
                 key(previewPackage) {
                     AppContentPreviewWallpaper(
-                        preview, config.appContentPreviewMuted, presetBrush,
+                        slide = preview,
+                        muteAutoplay = config.appContentPreviewMuted,
+                        coverBrush = presetBrush,
                         subtitleLanguage = subtitleLanguage,
                     ) {
                         trailerReady = true
@@ -1387,6 +1389,16 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
             pinPrompt?.let { PinDialog(it) { pinPrompt = null } }
             updatePrompt?.let { AppUpdateDialog(it) }
             if (showSetupHomePrompt) PressHomeDialog(waitForHome = true) {}
+            if (pendingRestorePermissionReview != null &&
+                (activity as? com.conreo.couchytv.MainActivity)?.attachedLanguage == config.language
+            ) {
+                key(pendingRestorePermissionReview) {
+                    RestorePermissionReview(
+                        config = config,
+                        onFinished = { store.finishRestorePermissionReview(pendingRestorePermissionReview) },
+                    )
+                }
+            }
 
             if (showForecast) {
                 weather?.let {

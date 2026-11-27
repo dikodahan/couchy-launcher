@@ -2088,10 +2088,11 @@ private fun IconPackScreen(
         }
         if (BuildConfig.GITHUB_UPDATES && !BuildConfig.DEBUG) {
             val repository = remember(context) { RecommendedApps(context, BUILTIN_ICON_PACK_CATALOG) }
-            val actions = rememberRecommendedDownloadActions(repository, BUILTIN_ICON_PACKS)
+            val catalogEntries = remember { BUILTIN_ICON_PACKS.keys.toList() }
+            val actions = rememberRecommendedDownloadActions(repository, catalogEntries)
             SettingsSectionLabel(stringResource(R.string.icon_pack_available))
-            BUILTIN_ICON_PACKS.forEach { entry ->
-                RecommendedAppRow(entry, repository, actions)
+            BUILTIN_ICON_PACKS.forEach { (entry, icon) ->
+                RecommendedAppRow(entry, repository, actions, localIcon = icon)
             }
         } else if (packs.isEmpty()) {
             Text(
@@ -2295,6 +2296,7 @@ private fun AppContentPreviewScreen(
             enabled = config.appContentPreviewEnabled,
             onClick = onToggleMuted,
             headlineContent = { Text(stringResource(R.string.app_content_preview_mute)) },
+            supportingContent = { Text(stringResource(R.string.app_content_preview_mute_desc)) },
             leadingContent = { Icon(AppIcons.Audio, contentDescription = null) },
             trailingContent = { CheckMark(checked = config.appContentPreviewMuted) },
         )
