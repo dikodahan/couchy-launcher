@@ -49,11 +49,12 @@ internal data class AppPreviewSlide(
     val trailer: Uri? = null,
     val youtubeId: String? = null,
     val finished: CompletableDeferred<Boolean>? = null,
+    val manualTrailerAvailable: Boolean = false,
 )
 
 internal class AppPreviewDeck {
     private var requestId = 0
-    internal data class Selection(val index: Int, val requestId: Int)
+    internal data class Selection(val index: Int, val requestId: Int, val playTrailer: Boolean = false)
 
     internal val selection = MutableStateFlow(Selection(0, requestId))
     var slide by mutableStateOf<AppPreviewSlide?>(null)
@@ -67,6 +68,18 @@ internal class AppPreviewDeck {
         if (count < 2) return
         index = (index + delta).mod(count)
         // Dispose the active native or web player even if artwork is still loading.
+        slide = slide?.let { AppPreviewSlide(it.artwork) }
+        selection.value = Selection(index, ++requestId)
+    }
+
+    fun playCurrentTrailer() {
+        val current = slide?.takeIf { it.manualTrailerAvailable } ?: return
+        slide = current.copy(manualTrailerAvailable = false)
+        selection.value = Selection(index, ++requestId, playTrailer = true)
+    }
+
+    fun stopManualTrailer() {
+        if (!selection.value.playTrailer) return
         slide = slide?.let { AppPreviewSlide(it.artwork) }
         selection.value = Selection(index, ++requestId)
     }
@@ -102,7 +115,7 @@ internal fun rememberAppContentPreview(
                     delay(400)
                     val programs = withContext(Dispatchers.IO) {
                         readPreview {
-                            TopShelf.programs(context, packageName, playTrailers, fallbackCredential != null)
+                            TopShelf.programs(context, packageName, includeTrailers = true, includeFallback = fallbackCredential != null)
                         }
                     }
                     val slides = programs.orEmpty().toMutableList()
@@ -131,11 +144,13 @@ internal fun rememberAppContentPreview(
                                     if (index == slides.size) index = 0
                                     continue
                                 }
-                                val still = AppPreviewSlide(image)
-                                deck.index = index
-                                deck.slide = still
                                 val trailer = program.trailer
                                 val lookup = program.fallback
+                                val hasTrailer = trailer != null || lookup != null
+                                val manual = selection.playTrailer
+                                val still = AppPreviewSlide(image, manualTrailerAvailable = !playTrailers && !manual && hasTrailer)
+                                deck.index = index
+                                deck.slide = still
                                 suspend fun play(uri: Uri? = null, youtubeId: String? = null): Boolean {
                                     val finished = CompletableDeferred<Boolean>()
                                     deck.slide = still.copy(trailer = uri, youtubeId = youtubeId, finished = finished)
@@ -143,21 +158,29 @@ internal fun rememberAppContentPreview(
                                     deck.slide = still
                                     return completed
                                 }
-                                if (trailer != null || lookup != null) delay(2_500)
-                                val publisherId = trailer?.let { publisherYouTubeId(it.toString()) }
-                                var played = when {
-                                    publisherId != null -> play(youtubeId = publisherId)
-                                    trailer != null -> play(uri = trailer)
-                                    else -> false
-                                }
-                                if (!played && lookup != null && fallbackCredential != null) {
-                                    val ids = readPreview { TrailerFallback.youtubeTrailers(lookup, fallbackCredential) }.orEmpty()
-                                    Log.d("CouchyPreview", "$packageName: ${ids.size} TMDB trailer matches")
-                                    for (id in ids) {
-                                        if (id == publisherId) continue
-                                        played = play(youtubeId = id)
-                                        if (played) break
+                                var played = false
+                                if (hasTrailer && (playTrailers || manual)) {
+                                    if (!manual) delay(2_500)
+                                    val publisherId = trailer?.let { publisherYouTubeId(it.toString()) }
+                                    played = when {
+                                        publisherId != null -> play(youtubeId = publisherId)
+                                        trailer != null -> play(uri = trailer)
+                                        else -> false
                                     }
+                                    if (!played && lookup != null && fallbackCredential != null) {
+                                        val ids = readPreview { TrailerFallback.youtubeTrailers(lookup, fallbackCredential) }.orEmpty()
+                                        Log.d("CouchyPreview", "$packageName: ${ids.size} TMDB trailer matches")
+                                        for (id in ids) {
+                                            if (id == publisherId) continue
+                                            played = play(youtubeId = id)
+                                            if (played) break
+                                        }
+                                    }
+                                }
+                                if (manual) {
+                                    deck.slide = still.copy(manualTrailerAvailable = played)
+                                    // Return to the same poster after a deliberate play.
+                                    awaitCancellation()
                                 }
                                 if (slides.size == 1) break
                                 delay(if (played) 1_000 else 7_000)

@@ -66,6 +66,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -322,7 +323,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     // (a transparent window would let whatever is behind the home leak through).
     val videoWallpaper = config.useBuiltinAerials ||
         (config.useVideoWallpaper && config.videoUri.isNotEmpty()) ||
-        (config.appContentPreviewEnabled && config.appContentPreviewTrailers)
+        config.appContentPreviewEnabled
     LaunchedEffect(activity, videoWallpaper) {
         activity?.window?.setBackgroundDrawable(
             if (videoWallpaper) null
@@ -705,18 +706,18 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
             trayFocus.requestFocus()
         }
     }
+    val playsAerial = aerialWallpaper != null && net.connected && !aerialCoolingDown
+    val playsLocalVideo = config.useVideoWallpaper && config.videoUri.isNotEmpty()
+    val fallbackCredential = config.appContentPreviewTmdbCredential.takeIf {
+        config.appContentPreviewFallback && it.isNotEmpty()
+    }
+    val deck = rememberAppContentPreview(previewPackage, config.appContentPreviewTrailers, fallbackCredential)
     fun returnToDock() {
+        deck?.stopManualTrailer()
         if (immersiveTray) dockGroup.requestFocus()
         immersiveTray = false
         immersivePreviewApp = null
     }
-
-    val playsAerial = aerialWallpaper != null && net.connected && !aerialCoolingDown
-    val playsLocalVideo = config.useVideoWallpaper && config.videoUri.isNotEmpty()
-    val fallbackCredential = config.appContentPreviewTmdbCredential.takeIf {
-        config.appContentPreviewTrailers && config.appContentPreviewFallback && it.isNotEmpty()
-    }
-    val deck = rememberAppContentPreview(previewPackage, config.appContentPreviewTrailers, fallbackCredential)
     val currentPreview = deck?.slide
     val preview = if (immersivePreview && immersiveTray) {
         currentPreview?.let { AppPreviewSlide(it.artwork) }
@@ -782,13 +783,18 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                         if (immersiveTray && event.key != Key.DirectionDown) return@onPreviewKeyEvent false
                         if (event.type == KeyEventType.KeyDown) {
                             when (event.key) {
-                                Key.DirectionUp -> if (event.nativeKeyEvent.repeatCount == 0) immersiveTray = true
+                                Key.DirectionUp -> if (event.nativeKeyEvent.repeatCount == 0) {
+                                    deck?.stopManualTrailer()
+                                    immersiveTray = true
+                                }
                                 Key.DirectionDown -> if (event.nativeKeyEvent.repeatCount == 0) returnToDock()
                                 Key.DirectionLeft, Key.DirectionRight -> {
                                     val forward = (event.key == Key.DirectionRight) == (layoutDirection == LayoutDirection.Ltr)
                                     deck?.move(if (forward) 1 else -1)
                                 }
-                                Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> Unit
+                                Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> if (event.nativeKeyEvent.repeatCount == 0) {
+                                    deck?.playCurrentTrailer()
+                                }
                                 else -> return@onPreviewKeyEvent false
                             }
                         }
@@ -969,14 +975,14 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                     }
                 }
                 val statusBarHeight by animateDpAsState(
-                    targetValue = if (immersiveTray || trailerVisible || config.showStatusBar || statusBarFocused || updatePrompt?.available != null) 80.dp else 4.dp,
+                    targetValue = if (immersivePreview || trailerVisible || config.showStatusBar || statusBarFocused || updatePrompt?.available != null) 80.dp else 4.dp,
                     label = "statusBarHeight",
                 )
                 Box(
                     Modifier
                         .fillMaxWidth()
                         .height(statusBarHeight)
-                        .drawWithContent { if (!trailerVisible && (!immersivePreview || immersiveTray)) drawContent() }
+                        .drawWithContent { if (!trailerVisible) drawContent() }
                         .clipToBounds()
                         .onFocusChanged { statusBarFocused = it.hasFocus }
                         .focusGroup()
@@ -1147,6 +1153,18 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                         }
                     }
                 }
+            }
+
+            if (immersivePreview && !immersiveTray && preview?.manualTrailerAvailable == true) {
+                Text(
+                    text = stringResource(R.string.trailer_press_ok),
+                    modifier = Modifier.align(Alignment.TopStart)
+                        .padding(start = 40.dp, top = 18.dp)
+                        .launcherGlass(LocalCornerRadius.current, GlassPanel.PreviewHint)
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium.copy(shadow = Shadow(Color.Black, blurRadius = 5f)),
+                )
             }
 
             if (showPreviewDots && deck != null && deck.count > 0) {

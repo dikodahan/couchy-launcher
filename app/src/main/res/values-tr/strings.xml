@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Vurgulanan uygulamanın paylaştığı film ve dizi görsellerini gösterir. Önizleme yoksa seçtiğiniz duvar kâğıdı görünür.</string>
     <string name="app_content_preview_trailers">Fragmanları oynat</string>
     <string name="app_content_preview_mute">Fragmanların sesini kapat</string>
+    <string name="trailer_press_ok">Fragmanı oynatmak için OK tuşuna basın</string>
     <string name="trailer_include_subtitles">Fragmanlarda altyazıları göster</string>
     <string name="trailer_include_subtitles_desc">Bu ayar kapalı olsa bile bazı YouTube videoları altyazı gösterebilir.</string>
     <string name="trailer_subtitles_language">Altyazı dili</string>

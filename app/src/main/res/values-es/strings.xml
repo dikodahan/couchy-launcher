@@ -243,6 +243,7 @@
     <string name="app_content_preview_desc">Muestra imágenes de películas y series que comparte la app resaltada. Si no hay vista previa, se mantiene el fondo elegido.</string>
     <string name="app_content_preview_trailers">Reproducir tráilers</string>
     <string name="app_content_preview_mute">Silenciar tráilers</string>
+    <string name="trailer_press_ok">Pulsa OK para ver el tráiler</string>
     <string name="trailer_include_subtitles">Mostrar subtítulos en los tráileres</string>
     <string name="trailer_include_subtitles_desc">Algunos vídeos de YouTube pueden mostrar subtítulos aunque este ajuste esté desactivado.</string>
     <string name="trailer_subtitles_language">Idioma de los subtítulos</string>

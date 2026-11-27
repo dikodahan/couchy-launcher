@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Показывает изображения фильмов и сериалов, которыми делится выделенное приложение. Если предпросмотра нет, остаются выбранные обои.</string>
     <string name="app_content_preview_trailers">Воспроизводить трейлеры</string>
     <string name="app_content_preview_mute">Отключить звук трейлеров</string>
+    <string name="trailer_press_ok">Нажмите OK, чтобы запустить трейлер</string>
     <string name="trailer_include_subtitles">Показывать субтитры в трейлерах</string>
     <string name="trailer_include_subtitles_desc">В некоторых видео YouTube субтитры могут отображаться даже при выключенной настройке.</string>
     <string name="trailer_subtitles_language">Язык субтитров</string>

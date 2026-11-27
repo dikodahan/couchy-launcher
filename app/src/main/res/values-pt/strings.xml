@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Mostra imagens de filmes e séries compartilhadas pelo app em destaque. O papel de parede escolhido continua visível quando não há prévia.</string>
     <string name="app_content_preview_trailers">Reproduzir trailers</string>
     <string name="app_content_preview_mute">Silenciar trailers</string>
+    <string name="trailer_press_ok">Pressione OK para reproduzir o trailer</string>
     <string name="trailer_include_subtitles">Mostrar legendas nos trailers</string>
     <string name="trailer_include_subtitles_desc">Alguns vídeos do YouTube podem mostrar legendas mesmo com esta opção desativada.</string>
     <string name="trailer_subtitles_language">Idioma das legendas</string>

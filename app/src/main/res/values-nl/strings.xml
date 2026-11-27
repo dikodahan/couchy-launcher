@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Toont beelden van films en series die de gemarkeerde app deelt. Zonder voorbeeld blijft de gekozen achtergrond zichtbaar.</string>
     <string name="app_content_preview_trailers">Trailers afspelen</string>
     <string name="app_content_preview_mute">Trailergeluid dempen</string>
+    <string name="trailer_press_ok">Druk op OK om de trailer af te spelen</string>
     <string name="trailer_include_subtitles">Ondertiteling bij trailers tonen</string>
     <string name="trailer_include_subtitles_desc">Sommige YouTube-video’s kunnen ondertiteling tonen als deze instelling uitstaat.</string>
     <string name="trailer_subtitles_language">Taal van de ondertiteling</string>

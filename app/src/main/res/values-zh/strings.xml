@@ -277,6 +277,7 @@
     <string name="app_content_preview_desc">显示当前高亮应用分享的影视图片。没有预览时，仍显示所选壁纸。</string>
     <string name="app_content_preview_trailers">播放预告片</string>
     <string name="app_content_preview_mute">将预告片静音</string>
+    <string name="trailer_press_ok">按 OK 播放预告片</string>
     <string name="trailer_include_subtitles">显示预告片字幕</string>
     <string name="trailer_include_subtitles_desc">关闭此设置后，某些 YouTube 视频仍可能显示字幕。</string>
     <string name="trailer_subtitles_language">字幕语言</string>

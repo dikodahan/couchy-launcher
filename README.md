@@ -12,7 +12,11 @@
 
 [Install](#install) · [Contributing](CONTRIBUTING.md) · [Licensing](LICENSING.md)
 
-https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
+<a href="docs/media/couchy-demo.mp4"><img src="docs/media/couchy-demo-poster.jpg" width="800" alt="Watch the Couchy Launcher demo" /></a>
+
+[Watch the demo (MP4)](docs/media/couchy-demo.mp4)
+
+<sub>Big Buck Bunny excerpt and poster frame © 2008 Blender Foundation / www.bigbuckbunny.org. [Trailer source](https://commons.wikimedia.org/wiki/File:Big_Buck_Bunny_Trailer_1080p.ogv) · [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).</sub>
 
 </div>
 
@@ -69,11 +73,11 @@ Enable **Play trailers** to start an available trailer about 2.5 seconds after i
 
 Turn on **Include subtitles for trailers** to show captions when a trailer provides them. **Subtitle language** defaults to the system language, and you can choose a different preferred language. Both settings are included in backups. YouTube may briefly display its own title, pause indicator, or recommendations. Some YouTube trailers may still show captions when Couchy’s subtitle setting is off. Any subtitles burned into the video also remain visible.
 
-In Dock mode, highlight an app with a preview and press **Up** to slide the collapsed dock off screen. **Left** and **Right** switch preview items, including during playback. The glass dots show the item count while artwork is visible. Press **Up** again to access the top tray, or press **Down** or **Back** to return to the dock.
+In Dock mode, highlight an app with a preview and press **Up** to slide the collapsed dock off screen. **Left** and **Right** switch preview items, including during playback. The glass dots show the item count while artwork is visible. The tray stays visible over full-screen posters. When **Play trailers** is off, a glass hint across from the tray shows when **OK** can play the selected trailer. Playback returns to the same poster when it ends. Press **Up** again to focus the tray, or press **Down** or **Back** to return to the dock.
 
 ### Find missing trailers with TMDB
 
-In **App Content Preview**, turn on **Play trailers**, then open **TMDB API key**. Copy the value labeled **API Key** (the v3 key) from your TMDB API settings. The **API Read Access Token** is a separate field. Save the API key, then switch on **Find missing trailers**. [Open TMDB API settings](https://www.themoviedb.org/settings/api). The fallback runs when a listing has no playable publisher trailer. It can use a recognized MyKo or TMDB ID, an IMDb ID, or an exact movie or series title. When the listing supplies a release year, Couchy also verifies that it matches. Ambiguous matches are skipped. Couchy keeps the artwork visible while preparing the player and returns to it if a trailer fails. Apps that share no eligible Android TV listings continue to show the selected wallpaper. YouTube trailers fill the player area with standard playback controls hidden. The video can still include its own black bars or branding.
+In **App Content Preview**, open **TMDB API key**. Copy the value labeled **API Key** (the v3 key) from your TMDB API settings. The **API Read Access Token** is a separate field. Save the API key, then switch on **Find missing trailers**. [Open TMDB API settings](https://www.themoviedb.org/settings/api). The fallback runs when a listing has no playable publisher trailer. It can use a recognized MyKo or TMDB ID, an IMDb ID, or an exact movie or series title. When the listing supplies a release year, Couchy also verifies that it matches. Ambiguous matches are skipped. Couchy keeps the artwork visible while preparing the player and returns to it if a trailer fails. Apps that share no eligible Android TV listings continue to show the selected wallpaper. YouTube trailers fill the player area with standard playback controls hidden. The video can still include its own black bars or branding.
 
 Choose **Set up TMDB with your phone** to scan a QR code that opens the official TMDB API settings page. On compatible TVs, use the paired [Google TV phone remote](https://support.google.com/googletv/answer/11136134) to paste the copied API key into Couchy. The QR code contains only the TMDB page URL.
 
@@ -88,7 +92,7 @@ App Content Preview reads the standard Android TV home-screen feeds. A streaming
 3. Publish only items intended for home-screen discovery. Couchy uses entries marked searchable and browsable. It prioritizes Preview entries by weight, then fills the remaining slots with Watch Next entries by most recent engagement. It shows up to four images in a rotation and ignores private or unreadable artwork.
 4. Test on an Android TV or Google TV device with Couchy’s App Content Preview and TV listings permission enabled. Highlight your app tile without pressing OK. Check that artwork appears, rotates if multiple images are available, and clears when focus moves to a different app.
 
-Include any title or logo you want displayed in the preview artwork. Publish the optional trailer in `preview_video_uri`. For the trailer, use a direct HTTPS MP4 or HLS stream, a readable URI owned by your app, or an embeddable HTTPS YouTube link. Couchy uses its native player for direct streams and files. Couchy uses the published stream when trailers are enabled and keeps the artwork if the video cannot be played. The app tile still launches the app normally. A TV’s provider determines which listings it shares with third-party launchers. Private in-app catalogs and proprietary launcher feeds require the app developer to publish compatible entries before Couchy can display them.
+Include any title or logo you want displayed in the preview artwork. Publish the optional trailer in `preview_video_uri`. For the trailer, use a direct HTTPS MP4 or HLS stream, a readable URI owned by your app, or an embeddable HTTPS YouTube link. Couchy uses its native player for direct streams and files. Couchy plays the published stream automatically or when the viewer presses OK in full-screen preview. If the video cannot be played, the artwork remains visible. The app tile still launches the app normally. A TV’s provider determines which listings it shares with third-party launchers. Private in-app catalogs and proprietary launcher feeds require the app developer to publish compatible entries before Couchy can display them.
 
 ## Install
 
@@ -233,6 +237,13 @@ Dependency versions and checksums are pinned. See [the dependency risk review](d
 
 <details>
 <summary>Click to expand</summary>
+
+**v1.2.8**
+
+- Press **OK** to play a trailer from a full-screen poster while autoplay is off. The hint uses the selected glass style and appears across from the tray.
+- Adjust mute, subtitles, subtitle language, and TMDB settings with trailer autoplay off.
+- App Content Preview has its own screen-and-play icon in Settings.
+- The updated demo shows on-demand trailers, the Spanish settings, and the update bell.
 
 **v1.2.7**
 

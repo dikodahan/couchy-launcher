@@ -311,6 +311,7 @@
     <string name="app_content_preview_desc">הצגת תמונות של סרטים וסדרות שהאפליקציה המסומנת משתפת. כשאין תצוגה מקדימה, הרקע שנבחר נשאר גלוי.</string>
     <string name="app_content_preview_trailers">ניגון קדימונים</string>
     <string name="app_content_preview_mute">השתקת קדימונים</string>
+    <string name="trailer_press_ok">לחצו על אישור להפעלת הקדימון</string>
     <string name="trailer_include_subtitles">הצגת כתוביות בקדימונים</string>
     <string name="trailer_include_subtitles_desc">חלק מסרטוני YouTube עשויים להציג כתוביות גם כשההגדרה כבויה.</string>
     <string name="trailer_subtitles_language">שפת הכתוביות</string>

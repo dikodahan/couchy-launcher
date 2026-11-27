@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Pokazuje grafiki filmów i seriali udostępnione przez podświetloną aplikację. Jeśli podgląd jest niedostępny, wyświetlana jest wybrana tapeta.</string>
     <string name="app_content_preview_trailers">Odtwarzaj zwiastuny</string>
     <string name="app_content_preview_mute">Wycisz zwiastuny</string>
+    <string name="trailer_press_ok">Naciśnij OK, aby odtworzyć zwiastun</string>
     <string name="trailer_include_subtitles">Wyświetlaj napisy w zwiastunach</string>
     <string name="trailer_include_subtitles_desc">Niektóre filmy z YouTube mogą wyświetlać napisy mimo wyłączenia tej opcji.</string>
     <string name="trailer_subtitles_language">Język napisów</string>

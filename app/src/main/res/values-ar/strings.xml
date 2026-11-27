@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">عرض صور الأفلام والمسلسلات التي يشاركها التطبيق المحدد. تظل الخلفية المختارة ظاهرة عند عدم توفر معاينة.</string>
     <string name="app_content_preview_trailers">تشغيل المقاطع الدعائية</string>
     <string name="app_content_preview_mute">كتم صوت المقاطع الدعائية</string>
+    <string name="trailer_press_ok">اضغط على موافق لتشغيل المقطع الدعائي</string>
     <string name="trailer_include_subtitles">عرض الترجمة للمقاطع الدعائية</string>
     <string name="trailer_include_subtitles_desc">قد تعرض بعض فيديوهات YouTube الترجمة حتى عند إيقاف هذا الإعداد.</string>
     <string name="trailer_subtitles_language">لغة الترجمة</string>

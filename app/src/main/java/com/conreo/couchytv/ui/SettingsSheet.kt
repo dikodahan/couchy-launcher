@@ -522,7 +522,7 @@ private fun MainScreen(
             modifier = focusFor(SettingsScreen.AppContentPreview),
             headlineContent = { Text(stringResource(R.string.app_content_preview)) },
             supportingContent = { Text(stringResource(R.string.app_content_preview_desc)) },
-            leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
+            leadingContent = { Icon(AppIcons.ContentPreview, contentDescription = null) },
         )
         SettingsItem(
             onClick = onStatusBar,
@@ -2273,7 +2273,6 @@ private fun AppContentPreviewScreen(
     var editingCredential by remember { mutableStateOf(false) }
     var savingCredential by remember { mutableStateOf(false) }
     var credentialError by remember { mutableStateOf<Int?>(null) }
-    val trailersEnabled = config.appContentPreviewEnabled && config.appContentPreviewTrailers
     SettingsPage {
         SettingsTitle(stringResource(R.string.app_content_preview))
         val first = initialFocus()
@@ -2293,14 +2292,14 @@ private fun AppContentPreviewScreen(
             trailingContent = { CheckMark(checked = config.appContentPreviewTrailers) },
         )
         SettingsItem(
-            enabled = config.appContentPreviewEnabled && config.appContentPreviewTrailers,
+            enabled = config.appContentPreviewEnabled,
             onClick = onToggleMuted,
             headlineContent = { Text(stringResource(R.string.app_content_preview_mute)) },
             leadingContent = { Icon(AppIcons.Audio, contentDescription = null) },
             trailingContent = { CheckMark(checked = config.appContentPreviewMuted) },
         )
         SettingsItem(
-            enabled = trailersEnabled,
+            enabled = config.appContentPreviewEnabled,
             onClick = {
                 scope.launch { store.update { it.copy(appContentPreviewSubtitles = !it.appContentPreviewSubtitles) } }
             },
@@ -2310,16 +2309,21 @@ private fun AppContentPreviewScreen(
             trailingContent = { CheckMark(checked = config.appContentPreviewSubtitles) },
         )
         SettingsItem(
-            enabled = trailersEnabled && config.appContentPreviewSubtitles,
+            enabled = config.appContentPreviewEnabled,
             onClick = { choosingSubtitleLanguage = true },
             headlineContent = { Text(stringResource(R.string.trailer_subtitles_language)) },
             leadingContent = { Icon(AppIcons.Language, contentDescription = null) },
             trailingContent = { Text(languageName(config.appContentPreviewSubtitleLanguage)) },
         )
         SettingsItem(
-            enabled = trailersEnabled && config.appContentPreviewTmdbCredential.isNotEmpty(),
+            enabled = config.appContentPreviewEnabled,
             onClick = {
-                scope.launch { store.update { it.copy(appContentPreviewFallback = !it.appContentPreviewFallback) } }
+                if (config.appContentPreviewTmdbCredential.isEmpty()) {
+                    credentialError = null
+                    editingCredential = true
+                } else {
+                    scope.launch { store.update { it.copy(appContentPreviewFallback = !it.appContentPreviewFallback) } }
+                }
             },
             headlineContent = { Text(stringResource(R.string.trailer_fallback)) },
             supportingContent = { Text(stringResource(R.string.trailer_fallback_desc)) },

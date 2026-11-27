@@ -22,7 +22,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 
-internal enum class GlassPanel { Status, Dock, PreviewDots }
+internal enum class GlassPanel { Status, Dock, PreviewDots, PreviewHint }
 
 internal data class GlassLens(val bounds: Rect, val radius: Float, val falloff: Float, val displacement: Float)
 

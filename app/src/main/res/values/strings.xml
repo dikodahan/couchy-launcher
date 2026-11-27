@@ -342,6 +342,7 @@
     <string name="app_content_preview_desc">Show movie and TV artwork shared by the highlighted app. Your selected wallpaper stays visible when no preview is available.</string>
     <string name="app_content_preview_trailers">Play trailers</string>
     <string name="app_content_preview_mute">Mute trailers</string>
+    <string name="trailer_press_ok">Press OK to play trailer</string>
     <string name="trailer_include_subtitles">Include subtitles for trailers</string>
     <string name="trailer_include_subtitles_desc">Some YouTube videos may still show subtitles when this setting is off.</string>
     <string name="trailer_subtitles_language">Subtitle language</string>

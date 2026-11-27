@@ -229,6 +229,7 @@
     <string name="app_content_preview_desc">Tampilkan gambar film dan acara TV dari aplikasi yang disorot. Wallpaper pilihan tetap terlihat jika pratinjau tidak tersedia.</string>
     <string name="app_content_preview_trailers">Putar trailer</string>
     <string name="app_content_preview_mute">Bisukan trailer</string>
+    <string name="trailer_press_ok">Tekan OK untuk memutar trailer</string>
     <string name="trailer_include_subtitles">Tampilkan takarir untuk trailer</string>
     <string name="trailer_include_subtitles_desc">Sebagian video YouTube masih dapat menampilkan takarir saat setelan ini dinonaktifkan.</string>
     <string name="trailer_subtitles_language">Bahasa takarir</string>

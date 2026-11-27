@@ -1,0 +1,4 @@
+Play trailers on demand from full-screen posters when autoplay is off.
+The glass hint appears across from the Home tray.
+Mute, subtitles, and TMDB options stay available with autoplay off.
+App Content Preview has a new Settings icon.
