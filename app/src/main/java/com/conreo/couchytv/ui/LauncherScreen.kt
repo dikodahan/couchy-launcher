@@ -99,6 +99,8 @@ import com.conreo.couchytv.data.AppRepository
 import com.conreo.couchytv.data.AerialVideoCache
 import com.conreo.couchytv.data.AerialLoadErrorPolicy
 import com.conreo.couchytv.data.BetaDiagnostics
+import com.conreo.couchytv.data.hasLocalVideoWallpaper
+import com.conreo.couchytv.data.localWallpaperVideos
 import com.conreo.couchytv.data.isBetaBuild
 import com.conreo.couchytv.data.BuiltinAerials
 import com.conreo.couchytv.data.StoredConfig
@@ -332,7 +334,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     // every other mode draws an opaque wallpaper, so keep the window opaque then
     // (a transparent window would let whatever is behind the home leak through).
     val videoWallpaper = config.useBuiltinAerials ||
-        (config.useVideoWallpaper && config.videoUri.isNotEmpty()) ||
+        config.hasLocalVideoWallpaper ||
         config.appContentPreviewEnabled
     LaunchedEffect(activity, videoWallpaper) {
         activity?.window?.setBackgroundDrawable(
@@ -634,62 +636,71 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         WALLPAPERS[config.wallpaper.coerceIn(0, WALLPAPERS.size - 1)].brush()
     }
 
-    // ----- Built-in aerial videos: keep a shuffled queue so ExoPlayer can
-    // prepare the successor before the current clip reaches its last frame. -----
-    val aerialPlaylist by key(config.useBuiltinAerials, config.builtinSource, config.aerialQuality, wallpaperVersion, restoreRevision, aerialRestart) {
+    // Keep one shuffled queue for either source. The player preloads the next clip.
+    val videoPlaylist by key(
+        config.useBuiltinAerials, config.builtinSource, config.aerialQuality, config.useVideoWallpaper,
+        config.videoUri, config.videoUris, config.videoFolderUri, wallpaperVersion, restoreRevision, aerialRestart,
+    ) {
         produceState<List<String>>(initialValue = emptyList()) {
-            if (!config.useBuiltinAerials) return@produceState
             value = withContext(Dispatchers.IO) {
-                AerialVideoCache.warm(context.applicationContext)
-                BuiltinAerials.load(context, config.builtinSource, config.aerialQuality).shuffled()
+                when {
+                    config.useBuiltinAerials -> {
+                        AerialVideoCache.warm(context.applicationContext)
+                        BuiltinAerials.load(context, config.builtinSource, config.aerialQuality).shuffled()
+                    }
+                    config.hasLocalVideoWallpaper -> try {
+                        config.localWallpaperVideos(context).shuffled()
+                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                        throw cancelled
+                    } catch (error: Exception) {
+                        BetaDiagnostics.failure("Local wallpaper playlist", error)
+                        emptyList()
+                    }
+                    else -> emptyList()
+                }
             }
+            BetaDiagnostics.event("Video wallpaper queue size=${value.size} aerial=${config.useBuiltinAerials}")
         }
     }
-    var aerialPosition by remember(aerialPlaylist) { mutableIntStateOf(0) }
-    val aerialWallpaper = if (aerialPlaylist.isEmpty()) null
-        else aerialPlaylist[aerialPosition.mod(aerialPlaylist.size)]
-    val nextAerialWallpaper = if (aerialPlaylist.size < 2) null
-        else aerialPlaylist[(aerialPosition + 1).mod(aerialPlaylist.size)]
-
-    // Keep the player and its surface during a quick skip. Repeated failures
-    // fall back to the gradient briefly before trying the next clip.
-    // Give a restored wallpaper the same fresh playback state as a newly selected source.
-    var aerialError by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected, aerialRestart) {
+    val videoAvailable = !config.useBuiltinAerials || net.connected
+    var videoPosition by remember(videoPlaylist) { mutableIntStateOf(0) }
+    val wallpaperVideo = videoPlaylist.takeIf { it.isNotEmpty() }?.let { it[videoPosition.mod(it.size)] }
+    val nextWallpaperVideo = videoPlaylist.takeIf { it.size > 1 }?.let { it[(videoPosition + 1).mod(it.size)] }
+    var videoError by remember(videoPlaylist, videoAvailable, wallpaperVersion, restoreRevision, aerialRestart) {
         mutableStateOf(false)
     }
-    var aerialFailureStreak by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected, aerialRestart) {
+    var failureStreak by remember(videoPlaylist, videoAvailable, wallpaperVersion, restoreRevision, aerialRestart) {
         mutableIntStateOf(0)
     }
-    var aerialCoolingDown by remember(restoreRevision, config.useBuiltinAerials, config.builtinSource, config.aerialQuality, net.connected, aerialRestart) {
+    var coolingDown by remember(videoPlaylist, videoAvailable, wallpaperVersion, restoreRevision, aerialRestart) {
         mutableStateOf(false)
     }
-    fun recordAerialFailure() {
-        if (aerialError || aerialCoolingDown) return
-        aerialFailureStreak++
-        BetaDiagnostics.event("Aerial recovery triggered failures=$aerialFailureStreak")
-        if (aerialFailureStreak >= 6 || aerialPlaylist.size < 2) {
-            aerialCoolingDown = true
+    fun advanceWallpaperVideo() {
+        videoPosition = (videoPosition + 1).mod(videoPlaylist.size.coerceAtLeast(1))
+    }
+    fun recordVideoFailure() {
+        if (videoError || coolingDown) return
+        failureStreak++
+        BetaDiagnostics.event("Video wallpaper recovery triggered failures=$failureStreak aerial=${config.useBuiltinAerials}")
+        val retryLimit = if (config.useBuiltinAerials) 6 else videoPlaylist.size
+        if (failureStreak >= retryLimit || videoPlaylist.size < 2) {
+            coolingDown = true
         } else {
-            aerialError = true
+            videoError = true
         }
     }
-    fun recordAerialReady(firstFrameMs: Long) {
-        BetaDiagnostics.event("Aerial first frame elapsedMs=$firstFrameMs")
-        aerialFailureStreak = 0
-        android.util.Log.d("Couchy", "Aerial ready in ${firstFrameMs}ms; cache=${AerialVideoCache.bytesUsed()}")
-    }
-    LaunchedEffect(aerialCoolingDown, restoreRevision) {
-        if (!aerialCoolingDown) return@LaunchedEffect
+    LaunchedEffect(coolingDown, videoPlaylist, videoAvailable, restoreRevision) {
+        if (!coolingDown || !videoAvailable) return@LaunchedEffect
         delay(30_000L)
-        aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size.coerceAtLeast(1))
-        aerialFailureStreak = 0
-        aerialCoolingDown = false
+        advanceWallpaperVideo()
+        failureStreak = 0
+        coolingDown = false
     }
-    LaunchedEffect(aerialError, net.connected, aerialPlaylist, restoreRevision) {
-        if (!aerialError || !net.connected || aerialPlaylist.isEmpty()) return@LaunchedEffect
+    LaunchedEffect(videoError, videoPlaylist, videoAvailable, restoreRevision) {
+        if (!videoError || !videoAvailable || videoPlaylist.isEmpty()) return@LaunchedEffect
         delay(200L)
-        aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size)
-        aerialError = false
+        advanceWallpaperVideo()
+        videoError = false
     }
 
     var previewFocus by remember { mutableStateOf<Pair<Any, String>?>(null) }
@@ -724,8 +735,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
             trayFocus.requestFocus()
         }
     }
-    val playsAerial = aerialWallpaper != null && net.connected && !aerialCoolingDown
-    val playsLocalVideo = config.useVideoWallpaper && config.videoUri.isNotEmpty()
+    val playsWallpaperVideo = wallpaperVideo != null && videoAvailable && !coolingDown
     val fallbackCredential = config.appContentPreviewTmdbCredential.takeIf {
         config.appContentPreviewFallback && it.isNotEmpty()
     }
@@ -755,7 +765,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         animationSpec = tween(320, easing = FastOutSlowInEasing),
         label = "previewDockSlide",
     )
-    val videoBackdropVisible = previewArtwork == null && (playsAerial || playsLocalVideo)
+    val videoBackdropVisible = previewArtwork == null && playsWallpaperVideo
     val wallpaperScrim = when (config.scrimMode) {
         4 -> null
         3 -> ScrimFull
@@ -783,7 +793,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         val wallpaperKind = when {
             trailerVisible -> "trailer"
             previewArtwork != null -> "preview"
-            videoBackdropVisible -> if (playsAerial) "aerial" else "local-video"
+            videoBackdropVisible -> if (config.useBuiltinAerials) "aerial" else "local-video"
             wallpaperSharp != null -> "photo"
             else -> "gradient"
         }
@@ -848,7 +858,6 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
             val cardWidth = iconCardWidth(config.iconScale, config.layout, maxWidth, gap)
             // Wallpaper + readability scrim.
             val videoSpeed = VIDEO_SPEEDS[config.videoSpeed.coerceIn(0, VIDEO_SPEEDS.size - 1)]
-            val aerial = aerialWallpaper
             if (preview != null) {
                 key(previewPackage) {
                     AppContentPreviewWallpaper(
@@ -860,38 +869,30 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                         trailerReady = true
                     }
                 }
-            } else if (aerial != null && playsAerial) {
+            } else if (wallpaperVideo != null && playsWallpaperVideo) {
                 VideoWallpaper(
-                    uri = aerial,
-                    nextUri = nextAerialWallpaper,
+                    uri = wallpaperVideo,
+                    nextUri = nextWallpaperVideo,
                     speed = videoSpeed,
-                    loop = false, // play once, then shuffle to the next aerial
+                    loop = nextWallpaperVideo == null && !config.useBuiltinAerials,
                     coverBrush = presetBrush,
                     glassActive = videoGlassActive,
-                    useGpuGlass = liquidGlass && (config.statusBarGlass || config.layout == LAYOUT_DOCK),
-                    remoteCache = true,
-                    onAdvanced = {
-                        aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size)
-                    },
+                    useGpuGlass = config.useBuiltinAerials && liquidGlass &&
+                        (config.statusBarGlass || config.layout == LAYOUT_DOCK),
+                    remoteCache = config.useBuiltinAerials,
+                    onAdvanced = ::advanceWallpaperVideo,
                     onEnded = {
-                        if (aerialPlaylist.size > 1) {
-                            aerialPosition = (aerialPosition + 1).mod(aerialPlaylist.size)
-                        } else {
-                            // A one-item source has no automatic transition to
-                            // drive a recomposition, so explicitly reload it.
-                            wallpaperVersion++
+                        if (videoPlaylist.size > 1) advanceWallpaperVideo()
+                        else if (config.useBuiltinAerials) wallpaperVersion++
+                    },
+                    onReady = { firstFrameMs ->
+                        failureStreak = 0
+                        BetaDiagnostics.event("Video wallpaper first frame elapsedMs=$firstFrameMs aerial=${config.useBuiltinAerials}")
+                        if (config.useBuiltinAerials) {
+                            android.util.Log.d("Couchy", "Aerial ready in ${firstFrameMs}ms; cache=${AerialVideoCache.bytesUsed()}")
                         }
                     },
-                    onReady = ::recordAerialReady,
-                    onError = ::recordAerialFailure,
-                )
-            } else if (playsLocalVideo) {
-                VideoWallpaper(
-                    uri = config.videoUri,
-                    speed = videoSpeed,
-                    loop = true,
-                    coverBrush = presetBrush,
-                    glassActive = videoGlassActive,
+                    onError = ::recordVideoFailure,
                 )
             } else if (wallpaperSharp != null) {
                 Image(
@@ -1130,7 +1131,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                                     top = with(density) { pivotPx.toDp() },
                                     bottom = with(density) { peekPx.toDp() } + 16.dp,
                                 ),
-                                verticalArrangement = Arrangement.spacedBy(18.dp),
+                                verticalArrangement = Arrangement.spacedBy(gap),
                             ) {
                         items(categorized.size, key = { categorized[it].first.id }) { rowIndex ->
                             val (cat, catApps) = categorized[rowIndex]
@@ -1497,7 +1498,7 @@ private fun CarouselSection(
     ) {
         LazyRow(
             state = state,
-            contentPadding = PaddingValues(horizontal = GroupedAppsSideInset, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = GroupedAppsSideInset),
             horizontalArrangement = Arrangement.spacedBy(gap),
         ) {
             items(catApps.size, key = { catApps[it].pkg }) { i ->
@@ -1535,14 +1536,10 @@ private fun GridSection(
     onMenu: (AppEntry) -> Unit,
 ) {
     BoxWithConstraints(
-        Modifier.fillMaxWidth().padding(horizontal = GroupedAppsSideInset, vertical = 8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = GroupedAppsSideInset),
         contentAlignment = Alignment.TopStart,
     ) {
-        // fitRow only decides how MANY columns fit; the gap is then expanded so the
-        // row fills the width exactly — left margin == right margin (both 44dp) for
-        // any icon size / spacing, and every section lines up column-for-column.
-        val (cols, _) = fitRow(maxWidth, cardWidth, gap)
-        val gapUsed = if (cols > 1) (maxWidth - cardWidth * cols) / (cols - 1) else 0.dp
+        val (cols, gapUsed) = fitRow(maxWidth, cardWidth, gap)
         val blockWidth = cardWidth * cols + gapUsed * (cols - 1)
         val rows = catApps.chunked(cols)
         // Launch entrance: icons bloom out from the section's centre — the middle
@@ -1661,7 +1658,7 @@ private fun DockArea(
         // row-0 spot (bottom): the grid slides straight out of / back into the
         // dock icons, so the same icons read as one set rising and sinking.
         val dockRisePx = with(androidx.compose.ui.platform.LocalDensity.current) {
-            (maxHeight - peekH - cardHeight - 52.dp).toPx()
+            (maxHeight - peekH - cardHeight - 42.dp - gap).toPx()
         }.toInt().coerceAtLeast(0)
         // Row spacing morphs from a wide "dock" gap down to the tight grid gap as
         // it opens (rows start far apart, like the dock, then draw together), and
@@ -1677,7 +1674,7 @@ private fun DockArea(
             // frosted panel slides DOWN and fades out; the icons fade and drift
             // UP (toward the grid), while the grid rises them into position.
             Box(
-                Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                Modifier.fillMaxWidth().padding(bottom = gap),
                 contentAlignment = Alignment.Center,
             ) {
                 DockGlassPanel(
@@ -1935,7 +1932,7 @@ internal fun VideoWallpaper(
     val latestOnEnded by androidx.compose.runtime.rememberUpdatedState(onEnded)
     val latestOnAdvanced by androidx.compose.runtime.rememberUpdatedState(onAdvanced)
     val latestNextUri by androidx.compose.runtime.rememberUpdatedState(nextUri)
-    DisposableEffect(lifecycleOwner, remoteCache, playOnce, muted, subtitleLanguage) {
+    DisposableEffect(lifecycleOwner, loop, remoteCache, playOnce, muted, subtitleLanguage) {
         fun build(): androidx.media3.exoplayer.ExoPlayer {
             val renderers = androidx.media3.exoplayer.DefaultRenderersFactory(context)
                 .setEnableDecoderFallback(true) // fall back to SW decoder on odd clips

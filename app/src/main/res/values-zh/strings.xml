@@ -172,7 +172,11 @@
     <string name="color_gradient">颜色渐变</string>
     <string name="preset_label">颜色预设</string>
     <string name="pick_video">选择视频…</string>
-    <string name="pick_video_sub">在图标后静音循环播放。与 AerialViews 合集中的 Apple 航拍文件（USB 或下载）配合效果最佳。</string>
+    <string name="pick_video_sub">选择一个或多个视频，静音随机播放。</string>
+    <string name="pick_video_folder">选择文件夹…</string>
+    <string name="pick_video_folder_sub">静音随机播放此文件夹中的视频。</string>
+    <string name="wallpaper_folder_no_videos">此文件夹没有受支持的视频。</string>
+    <string name="wallpaper_video_access_failed">Couchy 无法访问所选视频。</string>
     <string name="pick_photo">选择照片…</string>
     <string name="pick_photo_sub">从 USB 驱动器或下载中选择</string>
     <string name="screensaver_section">屏保</string>

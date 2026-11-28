@@ -129,7 +129,11 @@
     <string name="color_gradient">Gradient kolorów</string>
     <string name="preset_label">Ustawienie koloru</string>
     <string name="pick_video">Wybierz wideo…</string>
-    <string name="pick_video_sub">Odtwarza w pętli bez dźwięku za ikonami. Świetnie działa z plikami Apple Aerial z kolekcji AerialViews (USB lub pobrane).</string>
+    <string name="pick_video_sub">Wybierz co najmniej jeden film do odtwarzania bez dźwięku w losowej kolejności.</string>
+    <string name="pick_video_folder">Wybierz folder…</string>
+    <string name="pick_video_folder_sub">Odtwarza filmy z tego folderu bez dźwięku w losowej kolejności.</string>
+    <string name="wallpaper_folder_no_videos">Ten folder nie zawiera obsługiwanych filmów.</string>
+    <string name="wallpaper_video_access_failed">Couchy nie mógł uzyskać dostępu do wybranych filmów.</string>
     <string name="pick_photo">Wybierz zdjęcie…</string>
     <string name="pick_photo_sub">Z USB lub pobranych</string>
     <string name="screensaver_section">Wygaszacz</string>

@@ -129,7 +129,11 @@
     <string name="color_gradient">تدرج لوني</string>
     <string name="preset_label">إعداد مسبق للون</string>
     <string name="pick_video">اختيار فيديو…</string>
-    <string name="pick_video_sub">يعيد التشغيل بصمت خلف الأيقونات. يعمل بشكل رائع مع ملفات Apple الجوية من مجموعة AerialViews (USB أو التنزيلات).</string>
+    <string name="pick_video_sub">اختر فيديو واحدًا أو أكثر لتشغيلها بصمت وبترتيب عشوائي.</string>
+    <string name="pick_video_folder">اختيار مجلد…</string>
+    <string name="pick_video_folder_sub">لتشغيل فيديوهات هذا المجلد بصمت وبترتيب عشوائي.</string>
+    <string name="wallpaper_folder_no_videos">لا يحتوي هذا المجلد على فيديوهات مدعومة.</string>
+    <string name="wallpaper_video_access_failed">تعذّر على Couchy الوصول إلى الفيديوهات المحددة.</string>
     <string name="pick_photo">اختيار صورة…</string>
     <string name="pick_photo_sub">من USB أو التنزيلات</string>
     <string name="screensaver_section">شاشة التوقف</string>

@@ -163,7 +163,11 @@
     <string name="color_gradient">מעבר צבעים</string>
     <string name="preset_label">ערכת צבעים מוכנה</string>
     <string name="pick_video">בחירת סרטון…</string>
-    <string name="pick_video_sub">הסרטון מתנגן שוב ושוב ללא קול מאחורי הסמלים. אפשר לבחור סרטון של Apple מאוסף AerialViews בהורדות או בכונן USB.</string>
+    <string name="pick_video_sub">בחרו סרטון אחד או יותר להפעלה ללא קול ובסדר אקראי.</string>
+    <string name="pick_video_folder">בחירת תיקייה…</string>
+    <string name="pick_video_folder_sub">הפעלת סרטונים מהתיקייה ללא קול ובסדר אקראי.</string>
+    <string name="wallpaper_folder_no_videos">אין בתיקייה הזו סרטונים נתמכים.</string>
+    <string name="wallpaper_video_access_failed">ל-Couchy לא הייתה גישה לסרטונים שנבחרו.</string>
     <string name="pick_photo">בחירת תמונה…</string>
     <string name="pick_photo_sub">מכונן USB או מתיקיית ההורדות</string>
     <string name="screensaver_section">שומר מסך</string>

@@ -61,9 +61,11 @@ data class LauncherConfig(
     val appContentPreviewSubtitleLanguage: String = "",
     val appContentPreviewFallback: Boolean = false,
     val appContentPreviewTmdbCredential: String = "",
-    /** video wallpaper: persisted content-URI of a local video, looped muted */
+    /** Original single-file selection, kept for older settings and backups. */
     val videoUri: String = "",
     val useVideoWallpaper: Boolean = false,
+    val videoUris: List<String> = emptyList(),
+    val videoFolderUri: String = "",
     /** built-in aerials source */
     val useBuiltinAerials: Boolean = false,
     /** which built-in collection (index into BuiltinAerials.SOURCES; 0 = all) */

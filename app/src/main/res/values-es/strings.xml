@@ -140,7 +140,11 @@
     <string name="color_gradient">Degradado de color</string>
     <string name="preset_label">Preajuste de color</string>
     <string name="pick_video">Elegir un video…</string>
-    <string name="pick_video_sub">Se reproduce en bucle silencioso detrás de los iconos. Ideal con archivos aéreos de Apple de la colección AerialViews (USB o descargas).</string>
+    <string name="pick_video_sub">Elige uno o más videos para reproducirlos sin sonido y en orden aleatorio.</string>
+    <string name="pick_video_folder">Elegir una carpeta…</string>
+    <string name="pick_video_folder_sub">Reproduce los videos de esta carpeta sin sonido y en orden aleatorio.</string>
+    <string name="wallpaper_folder_no_videos">Esta carpeta no contiene videos compatibles.</string>
+    <string name="wallpaper_video_access_failed">Couchy no pudo acceder a los videos seleccionados.</string>
     <string name="pick_photo">Elegir una foto…</string>
     <string name="pick_photo_sub">Desde USB o descargas</string>
     <string name="screensaver_section">Salvapantallas</string>

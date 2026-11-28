@@ -178,7 +178,11 @@
     <string name="color_gradient">Dégradé de couleur</string>
     <string name="preset_label">Préréglage de couleur</string>
     <string name="pick_video">Choisir une vidéo…</string>
-    <string name="pick_video_sub">Boucle en silencieux derrière les icônes. Idéal avec les fichiers aériens Apple de la collection AerialViews (USB ou téléchargements).</string>
+    <string name="pick_video_sub">Choisissez une ou plusieurs vidéos pour les lire sans son dans un ordre aléatoire.</string>
+    <string name="pick_video_folder">Choisir un dossier…</string>
+    <string name="pick_video_folder_sub">Lit les vidéos de ce dossier sans son dans un ordre aléatoire.</string>
+    <string name="wallpaper_folder_no_videos">Ce dossier ne contient aucune vidéo compatible.</string>
+    <string name="wallpaper_video_access_failed">Couchy n’a pas pu accéder aux vidéos sélectionnées.</string>
     <string name="pick_photo">Choisir une photo…</string>
     <string name="pick_photo_sub">Depuis une clé USB ou les téléchargements</string>
     <string name="screensaver_section">Écran de veille</string>

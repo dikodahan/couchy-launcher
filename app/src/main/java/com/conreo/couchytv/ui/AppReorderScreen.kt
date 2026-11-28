@@ -206,10 +206,11 @@ internal fun AppReorderScreen(
             }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
-                modifier = if (dockMode) Modifier.width(gridWidth).align(Alignment.CenterHorizontally)
-                else Modifier.fillMaxSize(),
+                modifier = Modifier.width(gridWidth)
+                    .align(if (dockMode) Alignment.CenterHorizontally else Alignment.Start)
+                    .weight(1f),
                 state = grid,
-                contentPadding = PaddingValues(top = 8.dp, bottom = 28.dp),
+                contentPadding = PaddingValues(top = if (dockMode) 0.dp else 8.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(gap),
                 horizontalArrangement = Arrangement.spacedBy(columnGap),
             ) {

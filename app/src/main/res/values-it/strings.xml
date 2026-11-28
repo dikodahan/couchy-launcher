@@ -129,7 +129,11 @@
     <string name="color_gradient">Gradiente di colore</string>
     <string name="preset_label">Preimpostazione colore</string>
     <string name="pick_video">Scegli un video…</string>
-    <string name="pick_video_sub">Riproduce in loop silenzioso dietro le icone. Funziona benissimo con i file aerei Apple della collezione AerialViews (USB o download).</string>
+    <string name="pick_video_sub">Scegli uno o più video da riprodurre senza audio in ordine casuale.</string>
+    <string name="pick_video_folder">Scegli una cartella…</string>
+    <string name="pick_video_folder_sub">Riproduce i video della cartella senza audio in ordine casuale.</string>
+    <string name="wallpaper_folder_no_videos">Questa cartella non contiene video supportati.</string>
+    <string name="wallpaper_video_access_failed">Couchy non ha potuto accedere ai video selezionati.</string>
     <string name="pick_photo">Scegli una foto…</string>
     <string name="pick_photo_sub">Da chiavetta USB o download</string>
     <string name="screensaver_section">Screensaver</string>

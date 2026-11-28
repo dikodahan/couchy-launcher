@@ -129,7 +129,11 @@
     <string name="color_gradient">색상 그라데이션</string>
     <string name="preset_label">색상 프리셋</string>
     <string name="pick_video">동영상 선택…</string>
-    <string name="pick_video_sub">아이콘 뒤에서 무음 반복 재생됩니다. AerialViews 컬렉션의 Apple 항공 파일(USB 또는 다운로드)과 잘 어울립니다.</string>
+    <string name="pick_video_sub">하나 이상의 동영상을 선택하면 소리 없이 무작위로 재생합니다.</string>
+    <string name="pick_video_folder">폴더 선택…</string>
+    <string name="pick_video_folder_sub">이 폴더의 동영상을 소리 없이 무작위로 재생합니다.</string>
+    <string name="wallpaper_folder_no_videos">이 폴더에 지원되는 동영상이 없습니다.</string>
+    <string name="wallpaper_video_access_failed">Couchy가 선택한 동영상에 접근할 수 없습니다.</string>
     <string name="pick_photo">사진 선택…</string>
     <string name="pick_photo_sub">USB 드라이브 또는 다운로드에서</string>
     <string name="screensaver_section">화면 보호기</string>

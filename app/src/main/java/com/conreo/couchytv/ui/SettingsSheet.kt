@@ -87,6 +87,8 @@ import com.conreo.couchytv.data.UpdateChannel
 import com.conreo.couchytv.data.ConfigBackup
 import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.isBetaBuild
+import com.conreo.couchytv.data.keepWallpaperAccess
+import com.conreo.couchytv.data.wallpaperFolderVideos
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.DATE_FORMATS
 import com.conreo.couchytv.data.IconPack
@@ -217,28 +219,44 @@ internal fun SettingsSheet(
         }
     }
 
-    // Video wallpaper: keep a persistable read grant and stream in place —
-    // aerial files are hundreds of MB, never copied.
-    val videoPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(
-                    uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            }
-            scope.launch {
+    fun setLocalVideos(files: List<android.net.Uri>, folder: android.net.Uri? = null) {
+        if (files.isEmpty() && folder == null) return
+        scope.launch {
+            try {
+                val selected = withContext(Dispatchers.IO) {
+                    if (folder != null && context.wallpaperFolderVideos(folder).isEmpty()) return@withContext false
+                    (listOfNotNull(folder) + files).distinct().forEach(context::keepWallpaperAccess)
+                    true
+                }
+                if (!selected) {
+                    Actions.toast(context, context.getString(R.string.wallpaper_folder_no_videos))
+                    return@launch
+                }
                 store.update {
                     it.copy(
-                        videoUri = uri.toString(),
+                        videoUri = "",
+                        videoUris = files.map { file -> file.toString() }.distinct(),
+                        videoFolderUri = folder?.toString().orEmpty(),
                         useVideoWallpaper = true,
                         useCustomWallpaper = false,
                         useBuiltinAerials = false,
                     )
                 }
+                onWallpaperChanged()
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                BetaDiagnostics.failure("Local wallpaper selection", error)
+                Actions.toast(context, context.getString(R.string.wallpaper_video_access_failed))
             }
         }
+    }
+
+    val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) {
+        setLocalVideos(it)
+    }
+    val videoFolderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { folder ->
+        if (folder != null) setLocalVideos(emptyList(), folder)
     }
 
     Dialog(
@@ -351,6 +369,10 @@ internal fun SettingsSheet(
                         },
                         onPickVideo = {
                             runCatching { videoPicker.launch(arrayOf("video/*")) }
+                                .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
+                        },
+                        onPickVideoFolder = {
+                            runCatching { videoFolderPicker.launch(null) }
                                 .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
                         },
                     )
@@ -2167,6 +2189,7 @@ private fun WallpaperScreen(
     onPreset: (Int) -> Unit,
     onPickPhoto: () -> Unit,
     onPickVideo: () -> Unit,
+    onPickVideoFolder: () -> Unit,
 ) {
     SettingsPage {
         SettingsTitle(stringResource(R.string.item_wallpaper))
@@ -2280,13 +2303,19 @@ private fun WallpaperScreen(
             )
         }
 
-        // A video file of your own
         SettingsItem(
             onClick = onPickVideo,
             headlineContent = { Text(stringResource(R.string.pick_video)) },
             supportingContent = { Text(stringResource(R.string.pick_video_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
-            trailingContent = { CheckMark(checked = config.useVideoWallpaper) },
+            trailingContent = { CheckMark(checked = config.useVideoWallpaper && config.videoFolderUri.isEmpty()) },
+        )
+        SettingsItem(
+            onClick = onPickVideoFolder,
+            headlineContent = { Text(stringResource(R.string.pick_video_folder)) },
+            supportingContent = { Text(stringResource(R.string.pick_video_folder_sub)) },
+            leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.useVideoWallpaper && config.videoFolderUri.isNotEmpty()) },
         )
 
         // Playback speed — applies to aerials and your own video.

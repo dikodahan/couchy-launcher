@@ -186,7 +186,11 @@
     <string name="color_gradient">Color gradient</string>
     <string name="preset_label">Color preset</string>
     <string name="pick_video">Pick a video…</string>
-    <string name="pick_video_sub">Loops muted behind the icons. Works great with the Apple aerial files from the AerialViews collection (USB or downloads).</string>
+    <string name="pick_video_sub">Choose one or more videos for muted, shuffled playback.</string>
+    <string name="pick_video_folder">Pick a folder…</string>
+    <string name="pick_video_folder_sub">Shuffle and play videos from this folder with sound off.</string>
+    <string name="wallpaper_folder_no_videos">This folder has no supported videos.</string>
+    <string name="wallpaper_video_access_failed">Couchy could not access the selected videos.</string>
     <string name="pick_photo">Pick a photo…</string>
     <string name="pick_photo_sub">From USB drive or downloads</string>
     <string name="screensaver_section">Screensaver</string>

@@ -129,7 +129,11 @@
     <string name="color_gradient">Dải màu</string>
     <string name="preset_label">Màu đặt trước</string>
     <string name="pick_video">Chọn video…</string>
-    <string name="pick_video_sub">Phát lặp im lặng phía sau biểu tượng. Hoạt động tốt với tệp Apple trên không từ bộ sưu tập AerialViews (USB hoặc tải xuống).</string>
+    <string name="pick_video_sub">Chọn một hoặc nhiều video để phát ngẫu nhiên và không có tiếng.</string>
+    <string name="pick_video_folder">Chọn thư mục…</string>
+    <string name="pick_video_folder_sub">Phát ngẫu nhiên các video trong thư mục này và tắt tiếng.</string>
+    <string name="wallpaper_folder_no_videos">Thư mục này không có video được hỗ trợ.</string>
+    <string name="wallpaper_video_access_failed">Couchy không thể truy cập các video đã chọn.</string>
     <string name="pick_photo">Chọn ảnh…</string>
     <string name="pick_photo_sub">Từ USB hoặc tải xuống</string>
     <string name="screensaver_section">Trình bảo vệ màn hình</string>

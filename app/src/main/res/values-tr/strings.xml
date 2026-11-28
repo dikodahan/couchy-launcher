@@ -129,7 +129,11 @@
     <string name="color_gradient">Renk geçişi</string>
     <string name="preset_label">Renk ön ayarı</string>
     <string name="pick_video">Video seç…</string>
-    <string name="pick_video_sub">Simgelerin arkasında sessiz döngüde oynar. AerialViews koleksiyonundaki Apple hava dosyalarıyla (USB veya indirmeler) harika çalışır.</string>
+    <string name="pick_video_sub">Sessiz ve karışık oynatmak için bir veya daha fazla video seçin.</string>
+    <string name="pick_video_folder">Klasör seç…</string>
+    <string name="pick_video_folder_sub">Bu klasördeki videoları sessiz ve karışık oynatır.</string>
+    <string name="wallpaper_folder_no_videos">Bu klasörde desteklenen video yok.</string>
+    <string name="wallpaper_video_access_failed">Couchy seçilen videolara erişemedi.</string>
     <string name="pick_photo">Fotoğraf seç…</string>
     <string name="pick_photo_sub">USB sürücüden veya indirmelerden</string>
     <string name="screensaver_section">Ekran koruyucu</string>

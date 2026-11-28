@@ -129,7 +129,11 @@
     <string name="color_gradient">Цветовой градиент</string>
     <string name="preset_label">Предустановка цвета</string>
     <string name="pick_video">Выбрать видео…</string>
-    <string name="pick_video_sub">Беззвучный цикл за значками. Отлично работает с файлами Apple Aerial из коллекции AerialViews (USB или загрузки).</string>
+    <string name="pick_video_sub">Выберите одно или несколько видео для воспроизведения без звука в случайном порядке.</string>
+    <string name="pick_video_folder">Выбрать папку…</string>
+    <string name="pick_video_folder_sub">Воспроизводит видео из этой папки без звука в случайном порядке.</string>
+    <string name="wallpaper_folder_no_videos">В этой папке нет поддерживаемых видео.</string>
+    <string name="wallpaper_video_access_failed">Couchy не удалось открыть выбранные видео.</string>
     <string name="pick_photo">Выбрать фото…</string>
     <string name="pick_photo_sub">С USB-накопителя или загрузок</string>
     <string name="screensaver_section">Заставка</string>

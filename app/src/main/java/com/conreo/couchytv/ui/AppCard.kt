@@ -1,5 +1,6 @@
 package com.conreo.couchytv.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -23,8 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -215,6 +221,33 @@ fun AppCard(
                         .background(Color.Black.copy(alpha = 0.6f))
                 )
             }
+            if (isMoving) ReorderChevrons(Modifier.fillMaxSize())
+        }
+    }
+}
+
+@Composable
+private fun ReorderChevrons(modifier: Modifier) {
+    Canvas(modifier) {
+        val arm = (size.minDimension * 0.065f).coerceIn(5.dp.toPx(), 9.dp.toPx())
+        val inset = arm + 4.dp.toPx()
+        val chevrons = listOf(
+            Offset(center.x, inset) to Offset(0f, -1f),
+            Offset(size.width - inset, center.y) to Offset(1f, 0f),
+            Offset(center.x, size.height - inset) to Offset(0f, 1f),
+            Offset(inset, center.y) to Offset(-1f, 0f),
+        )
+        for ((tip, direction) in chevrons) {
+            val wing = Offset(-direction.y, direction.x) * arm
+            val base = tip - direction * arm
+            val path = Path().apply {
+                moveTo(base.x + wing.x, base.y + wing.y)
+                lineTo(tip.x, tip.y)
+                lineTo(base.x - wing.x, base.y - wing.y)
+            }
+            val stroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+            drawPath(path, Color.Black.copy(alpha = 0.8f), style = Stroke(width = 6.dp.toPx(), cap = stroke.cap, join = stroke.join))
+            drawPath(path, Color.White, style = stroke)
         }
     }
 }

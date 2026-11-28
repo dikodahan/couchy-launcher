@@ -129,7 +129,11 @@
     <string name="color_gradient">Kleurverloop</string>
     <string name="preset_label">Kleurvoorinstelling</string>
     <string name="pick_video">Kies een video…</string>
-    <string name="pick_video_sub">Speelt gedempt af in een lus achter de pictogrammen. Werkt geweldig met Apple-luchtbestanden uit de AerialViews-collectie (USB of downloads).</string>
+    <string name="pick_video_sub">Kies een of meer video’s om ze zonder geluid in willekeurige volgorde af te spelen.</string>
+    <string name="pick_video_folder">Kies een map…</string>
+    <string name="pick_video_folder_sub">Speelt video’s uit deze map zonder geluid in willekeurige volgorde af.</string>
+    <string name="wallpaper_folder_no_videos">Deze map bevat geen ondersteunde video’s.</string>
+    <string name="wallpaper_video_access_failed">Couchy kon de geselecteerde video’s niet openen.</string>
     <string name="pick_photo">Kies een foto…</string>
     <string name="pick_photo_sub">Van USB-station of downloads</string>
     <string name="screensaver_section">Schermbeveiliging</string>

@@ -129,7 +129,11 @@
     <string name="color_gradient">การไล่ระดับสี</string>
     <string name="preset_label">ค่าสีที่ตั้งไว้</string>
     <string name="pick_video">เลือกวิดีโอ…</string>
-    <string name="pick_video_sub">เล่นวนแบบไม่มีเสียงอยู่หลังไอคอน ทำงานได้ดีกับไฟล์ Apple aerial จากคอลเล็กชัน AerialViews (USB หรือดาวน์โหลด)</string>
+    <string name="pick_video_sub">เลือกวิดีโอหนึ่งรายการขึ้นไปเพื่อเล่นแบบสุ่มโดยไม่มีเสียง</string>
+    <string name="pick_video_folder">เลือกโฟลเดอร์…</string>
+    <string name="pick_video_folder_sub">เล่นวิดีโอจากโฟลเดอร์นี้แบบสุ่มโดยไม่มีเสียง</string>
+    <string name="wallpaper_folder_no_videos">โฟลเดอร์นี้ไม่มีวิดีโอที่รองรับ</string>
+    <string name="wallpaper_video_access_failed">Couchy ไม่สามารถเข้าถึงวิดีโอที่เลือกได้</string>
     <string name="pick_photo">เลือกรูปภาพ…</string>
     <string name="pick_photo_sub">จากไดรฟ์ USB หรือดาวน์โหลด</string>
     <string name="screensaver_section">โปรแกรมรักษาหน้าจอ</string>

@@ -129,7 +129,11 @@
     <string name="color_gradient">Gradien warna</string>
     <string name="preset_label">Prasetel warna</string>
     <string name="pick_video">Pilih video…</string>
-    <string name="pick_video_sub">Diputar senyap di belakang ikon. Sangat cocok dengan file aerial Apple dari koleksi AerialViews (USB atau unduhan).</string>
+    <string name="pick_video_sub">Pilih satu atau beberapa video untuk diputar secara acak tanpa suara.</string>
+    <string name="pick_video_folder">Pilih folder…</string>
+    <string name="pick_video_folder_sub">Putar video dari folder ini secara acak tanpa suara.</string>
+    <string name="wallpaper_folder_no_videos">Tidak ada video yang didukung di folder ini.</string>
+    <string name="wallpaper_video_access_failed">Couchy tidak dapat mengakses video yang dipilih.</string>
     <string name="pick_photo">Pilih foto…</string>
     <string name="pick_photo_sub">Dari drive USB atau unduhan</string>
     <string name="screensaver_section">Screensaver</string>

@@ -129,7 +129,11 @@
     <string name="color_gradient">Farbverlauf</string>
     <string name="preset_label">Farbvorgabe</string>
     <string name="pick_video">Video auswählen…</string>
-    <string name="pick_video_sub">Läuft stumm in Schleife hinter den Symbolen. Ideal mit Apple-Luftdateien aus der AerialViews-Sammlung (USB oder Downloads).</string>
+    <string name="pick_video_sub">Wähle ein oder mehrere Videos zur stummen Wiedergabe in zufälliger Reihenfolge.</string>
+    <string name="pick_video_folder">Ordner auswählen…</string>
+    <string name="pick_video_folder_sub">Spielt Videos aus diesem Ordner stumm und in zufälliger Reihenfolge ab.</string>
+    <string name="wallpaper_folder_no_videos">Dieser Ordner enthält keine unterstützten Videos.</string>
+    <string name="wallpaper_video_access_failed">Couchy konnte nicht auf die ausgewählten Videos zugreifen.</string>
     <string name="pick_photo">Foto auswählen…</string>
     <string name="pick_photo_sub">Von USB-Laufwerk oder Downloads</string>
     <string name="screensaver_section">Bildschirmschoner</string>
