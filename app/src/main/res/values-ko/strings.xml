@@ -132,6 +132,8 @@
     <string name="pick_video_sub">하나 이상의 동영상을 선택하면 소리 없이 무작위로 재생합니다.</string>
     <string name="pick_video_folder">폴더 선택…</string>
     <string name="pick_video_folder_sub">이 폴더의 동영상을 소리 없이 무작위로 재생합니다.</string>
+    <string name="wallpaper_folder_access">동영상 접근 허용</string>
+    <string name="wallpaper_folders_empty">미디어 라이브러리에 등록된 동영상 폴더가 없습니다.</string>
     <string name="wallpaper_folder_no_videos">이 폴더에 지원되는 동영상이 없습니다.</string>
     <string name="wallpaper_video_access_failed">Couchy가 선택한 동영상에 접근할 수 없습니다.</string>
     <string name="pick_photo">사진 선택…</string>

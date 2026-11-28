@@ -132,6 +132,8 @@
     <string name="pick_video_sub">Pilih satu atau beberapa video untuk diputar secara acak tanpa suara.</string>
     <string name="pick_video_folder">Pilih folder…</string>
     <string name="pick_video_folder_sub">Putar video dari folder ini secara acak tanpa suara.</string>
+    <string name="wallpaper_folder_access">Izinkan akses video</string>
+    <string name="wallpaper_folders_empty">Tidak ditemukan folder berisi video yang terindeks.</string>
     <string name="wallpaper_folder_no_videos">Tidak ada video yang didukung di folder ini.</string>
     <string name="wallpaper_video_access_failed">Couchy tidak dapat mengakses video yang dipilih.</string>
     <string name="pick_photo">Pilih foto…</string>

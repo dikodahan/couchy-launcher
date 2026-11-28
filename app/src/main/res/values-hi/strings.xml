@@ -132,6 +132,8 @@
     <string name="pick_video_sub">बिना आवाज़ के बेतरतीब क्रम में चलाने के लिए एक या ज़्यादा वीडियो चुनें।</string>
     <string name="pick_video_folder">फ़ोल्डर चुनें…</string>
     <string name="pick_video_folder_sub">इस फ़ोल्डर के वीडियो बिना आवाज़ के बेतरतीब क्रम में चलाएँ।</string>
+    <string name="wallpaper_folder_access">वीडियो का ऐक्सेस दें</string>
+    <string name="wallpaper_folders_empty">इंडेक्स किए गए वीडियो वाला कोई फ़ोल्डर नहीं मिला।</string>
     <string name="wallpaper_folder_no_videos">इस फ़ोल्डर में कोई समर्थित वीडियो नहीं है।</string>
     <string name="wallpaper_video_access_failed">Couchy चुने गए वीडियो ऐक्सेस नहीं कर सका।</string>
     <string name="pick_photo">फ़ोटो चुनें…</string>

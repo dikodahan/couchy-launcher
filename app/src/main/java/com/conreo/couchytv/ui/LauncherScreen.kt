@@ -100,6 +100,8 @@ import com.conreo.couchytv.data.AerialVideoCache
 import com.conreo.couchytv.data.AerialLoadErrorPolicy
 import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.hasLocalVideoWallpaper
+import com.conreo.couchytv.data.hasWallpaperVideoAccess
+import com.conreo.couchytv.data.isIndexedWallpaperFolder
 import com.conreo.couchytv.data.localWallpaperVideos
 import com.conreo.couchytv.data.isBetaBuild
 import com.conreo.couchytv.data.BuiltinAerials
@@ -636,10 +638,13 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         WALLPAPERS[config.wallpaper.coerceIn(0, WALLPAPERS.size - 1)].brush()
     }
 
+    val indexedVideoAccess = remember(config.videoFolderUri, resumeTick) {
+        isIndexedWallpaperFolder(config.videoFolderUri) && context.hasWallpaperVideoAccess()
+    }
     // Keep one shuffled queue for either source. The player preloads the next clip.
     val videoPlaylist by key(
         config.useBuiltinAerials, config.builtinSource, config.aerialQuality, config.useVideoWallpaper,
-        config.videoUri, config.videoUris, config.videoFolderUri, wallpaperVersion, restoreRevision, aerialRestart,
+        config.videoUri, config.videoUris, config.videoFolderUri, indexedVideoAccess, wallpaperVersion, restoreRevision, aerialRestart,
     ) {
         produceState<List<String>>(initialValue = emptyList()) {
             value = withContext(Dispatchers.IO) {

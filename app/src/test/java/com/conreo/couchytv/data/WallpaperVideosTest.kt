@@ -26,7 +26,10 @@ class WallpaperVideosTest {
 
         val files = legacy.copy(videoUri = "", videoUris = listOf("content://test/one", "content://test/two"))
         val folder = files.copy(videoUris = emptyList(), videoFolderUri = "content://test/tree/movies")
-        for (selection in listOf(files, folder)) {
+        val indexed = folder.copy(videoFolderUri = "couchy-video-folder://external_primary/Movies%2FAerial%2F")
+        assertTrue(isIndexedWallpaperFolder(indexed.videoFolderUri))
+        assertFalse(isIndexedWallpaperFolder(folder.videoFolderUri))
+        for (selection in listOf(files, folder, indexed)) {
             val restored = ConfigBackup.decode(ConfigBackup.encode(selection))
             assertEquals(selection, restored)
             assertTrue(restored.hasLocalVideoWallpaper)

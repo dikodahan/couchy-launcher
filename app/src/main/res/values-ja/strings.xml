@@ -132,6 +132,8 @@
     <string name="pick_video_sub">1 本以上の動画を選択して、音声なしでシャッフル再生します。</string>
     <string name="pick_video_folder">フォルダを選択…</string>
     <string name="pick_video_folder_sub">このフォルダの動画を音声なしでシャッフル再生します。</string>
+    <string name="wallpaper_folder_access">動画へのアクセスを許可</string>
+    <string name="wallpaper_folders_empty">メディアライブラリに登録された動画のフォルダが見つかりませんでした。</string>
     <string name="wallpaper_folder_no_videos">このフォルダに対応する動画がありません。</string>
     <string name="wallpaper_video_access_failed">選択した動画に Couchy がアクセスできませんでした。</string>
     <string name="pick_photo">写真を選択…</string>

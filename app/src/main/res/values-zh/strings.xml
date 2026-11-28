@@ -175,6 +175,8 @@
     <string name="pick_video_sub">选择一个或多个视频，静音随机播放。</string>
     <string name="pick_video_folder">选择文件夹…</string>
     <string name="pick_video_folder_sub">静音随机播放此文件夹中的视频。</string>
+    <string name="wallpaper_folder_access">允许访问视频</string>
+    <string name="wallpaper_folders_empty">未找到包含已编入媒体库的视频的文件夹。</string>
     <string name="wallpaper_folder_no_videos">此文件夹没有受支持的视频。</string>
     <string name="wallpaper_video_access_failed">Couchy 无法访问所选视频。</string>
     <string name="pick_photo">选择照片…</string>

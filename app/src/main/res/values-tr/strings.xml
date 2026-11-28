@@ -132,6 +132,8 @@
     <string name="pick_video_sub">Sessiz ve karışık oynatmak için bir veya daha fazla video seçin.</string>
     <string name="pick_video_folder">Klasör seç…</string>
     <string name="pick_video_folder_sub">Bu klasördeki videoları sessiz ve karışık oynatır.</string>
+    <string name="wallpaper_folder_access">Video erişimine izin ver</string>
+    <string name="wallpaper_folders_empty">Dizinlenmiş video içeren klasör bulunamadı.</string>
     <string name="wallpaper_folder_no_videos">Bu klasörde desteklenen video yok.</string>
     <string name="wallpaper_video_access_failed">Couchy seçilen videolara erişemedi.</string>
     <string name="pick_photo">Fotoğraf seç…</string>

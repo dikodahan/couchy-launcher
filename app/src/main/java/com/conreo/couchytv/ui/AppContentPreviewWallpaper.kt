@@ -29,11 +29,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.conreo.couchytv.data.AppPreviewProgram
 import com.conreo.couchytv.data.TopShelf
 import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.TrailerFallback
 import com.conreo.couchytv.data.publisherYouTubeId
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -127,21 +129,26 @@ internal fun rememberAppContentPreview(
                         "${slides.count { it.trailer != null }} publisher trailers, " +
                         "${slides.count { it.fallback != null }} TMDB candidates")
                     coroutineScope {
-                        // Keep artwork loads independent of page changes. A fast
-                        // remote press can switch to an already prepared image.
-                        val artwork = slides.associateWith { program ->
-                            async(Dispatchers.IO) {
+                        // Preload one upcoming image. Keep earlier images in the
+                        // bounded cache so a larger deck never pins all its bitmaps.
+                        var pending: Pair<AppPreviewProgram, Deferred<ImageBitmap?>>? = null
+                        fun loadArtwork(program: AppPreviewProgram): Deferred<ImageBitmap?> {
+                            pending?.takeIf { it.first == program }?.let { return it.second }
+                            pending?.second?.cancel()
+                            val load = async(Dispatchers.IO) {
                                 val key = packageName to program.images.first()
                                 cache.get(key) ?: program.images.firstNotNullOfOrNull { loadPreview(context, it) }
                                     ?.also { cache.put(key, it) }
                             }
+                            pending = program to load
+                            return load
                         }
                         deck.count = slides.size
                         deck.selection.collectLatest { selection ->
                             var index = selection.index.coerceAtMost((slides.size - 1).coerceAtLeast(0))
                             while (slides.isNotEmpty()) {
                                 val program = slides[index]
-                                val image = artwork.getValue(program).await()
+                                val image = loadArtwork(program).await()
                                 if (image == null) {
                                     slides.removeAt(index)
                                     deck.count = slides.size
@@ -155,6 +162,7 @@ internal fun rememberAppContentPreview(
                                 val still = AppPreviewSlide(image, manualTrailerAvailable = !playTrailers && !manual && hasTrailer)
                                 deck.index = index
                                 deck.slide = still
+                                if (slides.size > 1) loadArtwork(slides[(index + 1) % slides.size])
                                 suspend fun play(uri: Uri? = null, youtubeId: String? = null): Boolean {
                                     val finished = CompletableDeferred<Boolean>()
                                     deck.slide = still.copy(

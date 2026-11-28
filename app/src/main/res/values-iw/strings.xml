@@ -166,6 +166,8 @@
     <string name="pick_video_sub">בחרו סרטון אחד או יותר להפעלה ללא קול ובסדר אקראי.</string>
     <string name="pick_video_folder">בחירת תיקייה…</string>
     <string name="pick_video_folder_sub">הפעלת סרטונים מהתיקייה ללא קול ובסדר אקראי.</string>
+    <string name="wallpaper_folder_access">מתן גישה לסרטונים</string>
+    <string name="wallpaper_folders_empty">לא נמצאו תיקיות עם סרטונים שמופיעים בספריית המדיה.</string>
     <string name="wallpaper_folder_no_videos">אין בתיקייה הזו סרטונים נתמכים.</string>
     <string name="wallpaper_video_access_failed">ל-Couchy לא הייתה גישה לסרטונים שנבחרו.</string>
     <string name="pick_photo">בחירת תמונה…</string>

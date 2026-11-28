@@ -132,6 +132,8 @@
     <string name="pick_video_sub">Scegli uno o più video da riprodurre senza audio in ordine casuale.</string>
     <string name="pick_video_folder">Scegli una cartella…</string>
     <string name="pick_video_folder_sub">Riproduce i video della cartella senza audio in ordine casuale.</string>
+    <string name="wallpaper_folder_access">Consenti l’accesso ai video</string>
+    <string name="wallpaper_folders_empty">Non sono state trovate cartelle con video indicizzati.</string>
     <string name="wallpaper_folder_no_videos">Questa cartella non contiene video supportati.</string>
     <string name="wallpaper_video_access_failed">Couchy non ha potuto accedere ai video selezionati.</string>
     <string name="pick_photo">Scegli una foto…</string>

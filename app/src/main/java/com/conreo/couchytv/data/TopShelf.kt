@@ -18,7 +18,7 @@ import javax.net.ssl.HttpsURLConnection
 import kotlin.math.roundToInt
 
 internal const val READ_TV_LISTINGS = "android.permission.READ_TV_LISTINGS"
-private const val MAX_SLIDES = 4
+private const val MAX_SLIDES = 10
 private const val MAX_ART_BYTES = 8 * 1024 * 1024
 
 internal data class AppPreviewProgram(

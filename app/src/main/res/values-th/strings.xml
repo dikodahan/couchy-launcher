@@ -132,6 +132,8 @@
     <string name="pick_video_sub">เลือกวิดีโอหนึ่งรายการขึ้นไปเพื่อเล่นแบบสุ่มโดยไม่มีเสียง</string>
     <string name="pick_video_folder">เลือกโฟลเดอร์…</string>
     <string name="pick_video_folder_sub">เล่นวิดีโอจากโฟลเดอร์นี้แบบสุ่มโดยไม่มีเสียง</string>
+    <string name="wallpaper_folder_access">อนุญาตให้เข้าถึงวิดีโอ</string>
+    <string name="wallpaper_folders_empty">ไม่พบโฟลเดอร์ที่มีวิดีโอในคลังสื่อ</string>
     <string name="wallpaper_folder_no_videos">โฟลเดอร์นี้ไม่มีวิดีโอที่รองรับ</string>
     <string name="wallpaper_video_access_failed">Couchy ไม่สามารถเข้าถึงวิดีโอที่เลือกได้</string>
     <string name="pick_photo">เลือกรูปภาพ…</string>

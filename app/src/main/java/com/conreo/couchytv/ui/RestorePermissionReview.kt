@@ -28,15 +28,24 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.conreo.couchytv.BuildConfig
 import com.conreo.couchytv.R
 import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.LauncherConfig
 import com.conreo.couchytv.data.READ_TV_LISTINGS
+import com.conreo.couchytv.data.hasWallpaperVideoAccess
+import com.conreo.couchytv.data.isIndexedWallpaperFolder
+import com.conreo.couchytv.data.wallpaperVideoPermission
+import com.conreo.couchytv.data.wallpaperVideoPermissions
 
 private data class RestoredRuntimePermission(
     val name: String,
     @StringRes val label: Int,
     val required: (LauncherConfig) -> Boolean,
+    val request: () -> Array<String> = { arrayOf(name) },
+    val granted: (android.content.Context) -> Boolean = {
+        it.checkSelfPermission(name) == PackageManager.PERMISSION_GRANTED
+    },
 )
 
 // Add a rule here when an enabled backup setting requires another runtime permission.
@@ -45,6 +54,13 @@ private val restoredRuntimePermissions = listOf(
         READ_TV_LISTINGS,
         R.string.restore_permission_tv_listings,
         LauncherConfig::appContentPreviewEnabled,
+    ),
+    RestoredRuntimePermission(
+        wallpaperVideoPermission,
+        R.string.wallpaper_folder_access,
+        { BuildConfig.GITHUB_UPDATES && it.useVideoWallpaper && isIndexedWallpaperFolder(it.videoFolderUri) },
+        request = ::wallpaperVideoPermissions,
+        granted = { it.hasWallpaperVideoAccess() },
     ),
 )
 
@@ -56,16 +72,15 @@ internal fun RestorePermissionReview(config: LauncherConfig, onFinished: suspend
     var approved by rememberSaveable { mutableStateOf(false) }
     var attempted by rememberSaveable { mutableStateOf(arrayListOf<String>()) }
     var inFlight by rememberSaveable { mutableStateOf<String?>(null) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
         inFlight?.let {
-            BetaDiagnostics.event("Restore permission result permission=$it granted=$granted")
+            BetaDiagnostics.event("Restore permission result permission=$it granted=${results.values.any { granted -> granted }}")
             attempted = ArrayList(attempted + it)
         }
         inFlight = null
     }
     val missing = restoredRuntimePermissions.filter {
-        it.required(config) && it.name !in attempted &&
-            context.checkSelfPermission(it.name) != PackageManager.PERMISSION_GRANTED
+        it.required(config) && it.name !in attempted && !it.granted(context)
     }
     val next = missing.firstOrNull()
 
@@ -76,7 +91,7 @@ internal fun RestorePermissionReview(config: LauncherConfig, onFinished: suspend
         } else if (approved) {
             inFlight = next.name
             BetaDiagnostics.event("Restore permission requested permission=${next.name}")
-            launcher.launch(next.name)
+            launcher.launch(next.request())
         }
     }
 

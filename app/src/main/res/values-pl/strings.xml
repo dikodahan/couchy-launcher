@@ -132,6 +132,8 @@
     <string name="pick_video_sub">Wybierz co najmniej jeden film do odtwarzania bez dźwięku w losowej kolejności.</string>
     <string name="pick_video_folder">Wybierz folder…</string>
     <string name="pick_video_folder_sub">Odtwarza filmy z tego folderu bez dźwięku w losowej kolejności.</string>
+    <string name="wallpaper_folder_access">Zezwól na dostęp do filmów</string>
+    <string name="wallpaper_folders_empty">Nie znaleziono folderów z filmami w bibliotece multimediów.</string>
     <string name="wallpaper_folder_no_videos">Ten folder nie zawiera obsługiwanych filmów.</string>
     <string name="wallpaper_video_access_failed">Couchy nie mógł uzyskać dostępu do wybranych filmów.</string>
     <string name="pick_photo">Wybierz zdjęcie…</string>

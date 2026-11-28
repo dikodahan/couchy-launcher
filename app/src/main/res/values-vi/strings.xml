@@ -132,6 +132,8 @@
     <string name="pick_video_sub">Chọn một hoặc nhiều video để phát ngẫu nhiên và không có tiếng.</string>
     <string name="pick_video_folder">Chọn thư mục…</string>
     <string name="pick_video_folder_sub">Phát ngẫu nhiên các video trong thư mục này và tắt tiếng.</string>
+    <string name="wallpaper_folder_access">Cho phép truy cập video</string>
+    <string name="wallpaper_folders_empty">Không tìm thấy thư mục chứa video trong thư viện phương tiện.</string>
     <string name="wallpaper_folder_no_videos">Thư mục này không có video được hỗ trợ.</string>
     <string name="wallpaper_video_access_failed">Couchy không thể truy cập các video đã chọn.</string>
     <string name="pick_photo">Chọn ảnh…</string>

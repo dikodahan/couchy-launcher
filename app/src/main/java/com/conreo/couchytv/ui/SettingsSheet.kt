@@ -87,6 +87,7 @@ import com.conreo.couchytv.data.UpdateChannel
 import com.conreo.couchytv.data.ConfigBackup
 import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.isBetaBuild
+import com.conreo.couchytv.data.indexedWallpaperVideos
 import com.conreo.couchytv.data.keepWallpaperAccess
 import com.conreo.couchytv.data.wallpaperFolderVideos
 import com.conreo.couchytv.data.ConfigStore
@@ -219,12 +220,17 @@ internal fun SettingsSheet(
         }
     }
 
-    fun setLocalVideos(files: List<android.net.Uri>, folder: android.net.Uri? = null) {
-        if (files.isEmpty() && folder == null) return
+    fun setLocalVideos(
+        files: List<android.net.Uri> = emptyList(),
+        folder: android.net.Uri? = null,
+        indexedFolder: String? = null,
+    ) {
+        if (files.isEmpty() && folder == null && indexedFolder == null) return
         scope.launch {
             try {
                 val selected = withContext(Dispatchers.IO) {
                     if (folder != null && context.wallpaperFolderVideos(folder).isEmpty()) return@withContext false
+                    if (indexedFolder != null && context.indexedWallpaperVideos(indexedFolder).isEmpty()) return@withContext false
                     (listOfNotNull(folder) + files).distinct().forEach(context::keepWallpaperAccess)
                     true
                 }
@@ -236,7 +242,7 @@ internal fun SettingsSheet(
                     it.copy(
                         videoUri = "",
                         videoUris = files.map { file -> file.toString() }.distinct(),
-                        videoFolderUri = folder?.toString().orEmpty(),
+                        videoFolderUri = indexedFolder ?: folder?.toString().orEmpty(),
                         useVideoWallpaper = true,
                         useCustomWallpaper = false,
                         useBuiltinAerials = false,
@@ -256,7 +262,27 @@ internal fun SettingsSheet(
         setLocalVideos(it)
     }
     val videoFolderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { folder ->
-        if (folder != null) setLocalVideos(emptyList(), folder)
+        if (folder != null) setLocalVideos(folder = folder)
+    }
+
+    var showIndexedFolderPicker by remember { mutableStateOf(false) }
+    fun openVideoFolderPicker() {
+        val action = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE)
+        val systemPickerAvailable = context.packageManager.queryIntentActivities(
+            action, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY,
+        ).any { it.activityInfo?.packageName != "com.android.tv.frameworkpackagestubs" }
+        if (systemPickerAvailable && runCatching { videoFolderPicker.launch(null) }.isSuccess) return
+        if (BuildConfig.GITHUB_UPDATES) showIndexedFolderPicker = true
+        else Actions.toast(context, context.getString(R.string.toast_no_picker))
+    }
+    if (showIndexedFolderPicker) {
+        IndexedVideoFolderPicker(
+            onSelect = { source ->
+                showIndexedFolderPicker = false
+                setLocalVideos(indexedFolder = source)
+            },
+            onDismiss = { showIndexedFolderPicker = false },
+        )
     }
 
     Dialog(
@@ -371,10 +397,7 @@ internal fun SettingsSheet(
                             runCatching { videoPicker.launch(arrayOf("video/*")) }
                                 .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
                         },
-                        onPickVideoFolder = {
-                            runCatching { videoFolderPicker.launch(null) }
-                                .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
-                        },
+                        onPickVideoFolder = ::openVideoFolderPicker,
                     )
                     SettingsScreen.AppContentPreview -> AppContentPreviewScreen(
                         config = config,

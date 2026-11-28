@@ -132,6 +132,8 @@
     <string name="pick_video_sub">Escolha um ou mais vídeos para reprodução sem som e em ordem aleatória.</string>
     <string name="pick_video_folder">Escolher uma pasta…</string>
     <string name="pick_video_folder_sub">Reproduz vídeos desta pasta sem som e em ordem aleatória.</string>
+    <string name="wallpaper_folder_access">Permitir acesso a vídeos</string>
+    <string name="wallpaper_folders_empty">Não foram encontradas pastas com vídeos indexados.</string>
     <string name="wallpaper_folder_no_videos">Esta pasta não contém vídeos compatíveis.</string>
     <string name="wallpaper_video_access_failed">O Couchy não pôde acessar os vídeos selecionados.</string>
     <string name="pick_photo">Escolher uma foto…</string>

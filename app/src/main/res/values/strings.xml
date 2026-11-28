@@ -189,6 +189,8 @@
     <string name="pick_video_sub">Choose one or more videos for muted, shuffled playback.</string>
     <string name="pick_video_folder">Pick a folder…</string>
     <string name="pick_video_folder_sub">Shuffle and play videos from this folder with sound off.</string>
+    <string name="wallpaper_folder_access">Allow video access</string>
+    <string name="wallpaper_folders_empty">No folders with indexed videos were found.</string>
     <string name="wallpaper_folder_no_videos">This folder has no supported videos.</string>
     <string name="wallpaper_video_access_failed">Couchy could not access the selected videos.</string>
     <string name="pick_photo">Pick a photo…</string>

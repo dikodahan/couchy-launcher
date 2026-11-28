@@ -132,6 +132,8 @@
     <string name="pick_video_sub">Kies een of meer video’s om ze zonder geluid in willekeurige volgorde af te spelen.</string>
     <string name="pick_video_folder">Kies een map…</string>
     <string name="pick_video_folder_sub">Speelt video’s uit deze map zonder geluid in willekeurige volgorde af.</string>
+    <string name="wallpaper_folder_access">Toegang tot video’s toestaan</string>
+    <string name="wallpaper_folders_empty">Er zijn geen mappen met geïndexeerde video’s gevonden.</string>
     <string name="wallpaper_folder_no_videos">Deze map bevat geen ondersteunde video’s.</string>
     <string name="wallpaper_video_access_failed">Couchy kon de geselecteerde video’s niet openen.</string>
     <string name="pick_photo">Kies een foto…</string>

@@ -45,6 +45,7 @@ internal suspend fun Context.wallpaperFolderVideos(tree: Uri): List<String> {
 }
 
 internal suspend fun LauncherConfig.localWallpaperVideos(context: Context): List<String> = when {
+    isIndexedWallpaperFolder(videoFolderUri) -> context.indexedWallpaperVideos(videoFolderUri)
     videoFolderUri.isNotEmpty() -> context.wallpaperFolderVideos(Uri.parse(videoFolderUri))
     videoUris.isNotEmpty() -> videoUris.filter { Uri.parse(it).scheme == "content" }.distinct()
     videoUri.isNotEmpty() -> listOf(videoUri)

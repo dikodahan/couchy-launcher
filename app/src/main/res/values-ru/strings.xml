@@ -132,6 +132,8 @@
     <string name="pick_video_sub">Выберите одно или несколько видео для воспроизведения без звука в случайном порядке.</string>
     <string name="pick_video_folder">Выбрать папку…</string>
     <string name="pick_video_folder_sub">Воспроизводит видео из этой папки без звука в случайном порядке.</string>
+    <string name="wallpaper_folder_access">Разрешить доступ к видео</string>
+    <string name="wallpaper_folders_empty">Папки с видео из медиатеки не найдены.</string>
     <string name="wallpaper_folder_no_videos">В этой папке нет поддерживаемых видео.</string>
     <string name="wallpaper_video_access_failed">Couchy не удалось открыть выбранные видео.</string>
     <string name="pick_photo">Выбрать фото…</string>
