@@ -34,6 +34,7 @@ import androidx.tv.material3.*
 import com.conreo.couchytv.Actions
 import com.conreo.couchytv.R
 import com.conreo.couchytv.data.HomeChoice
+import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.HomeDiagnostics
 import com.conreo.couchytv.data.HomeLauncherManager
 import com.conreo.couchytv.data.HomeStatus
@@ -125,18 +126,21 @@ internal fun HomeLauncherControls(
         scope.launch {
             busy = true
             message = context.getString(R.string.home_connecting)
+            BetaDiagnostics.event("Home switch requested targetCouchy=${choice?.component?.packageName == context.packageName}")
             try {
                 val target = choice?.component?.flattenToShortString() ?: "stock recovery"
                 HomeDiagnostics.record(context, "Home action; target=$target; previous=${status?.currentPackage}")
                 action()
                 refreshStatus()
                 HomeDiagnostics.record(context, "Home action verified; active=${status?.currentPackage}; paused=${status?.pausedPackages}")
+                BetaDiagnostics.event("Home switch completed couchyIsHome=${status?.currentPackage == context.packageName}")
                 message = context.getString(R.string.home_change_done)
                 if (choice?.component?.packageName == context.packageName &&
                     status?.currentPackage == context.packageName
                 ) couchyIsHome()
             } catch (override: StockHomeStillActive) {
                 refreshStatus()
+                BetaDiagnostics.event("Home switch blocked: stock launcher is still active")
                 HomeDiagnostics.record(context, "Stock Home still active: ${override.activeHome.flattenToShortString()}")
                 if (onFirstHomeSetup != null) {
                     message = null
@@ -146,19 +150,23 @@ internal fun HomeLauncherControls(
                     message = context.getString(R.string.home_stock_still_active)
                 }
             } catch (unavailable: ConnectException) {
+                BetaDiagnostics.failure("Home switch ADB connection", unavailable)
                 HomeDiagnostics.record(context, "Local ADB connection failed", unavailable)
                 message = context.getString(R.string.adb_enable_required)
                 refreshStatus()
             } catch (timedOut: TimeoutCancellationException) {
+                BetaDiagnostics.failure("Home switch timeout", timedOut)
                 HomeDiagnostics.record(context, "Home action timed out", timedOut)
                 message = context.getString(R.string.home_connection_timeout)
                 refreshStatus()
             } catch (failed: IOException) {
+                BetaDiagnostics.failure("Home switch ADB connection", failed)
                 HomeDiagnostics.record(context, "Local ADB connection failed", failed)
                 message = context.getString(R.string.adb_enable_required)
                 refreshStatus()
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) {
+                BetaDiagnostics.failure("Home switch", error)
                 HomeDiagnostics.record(context, "Home action failed", error)
                 message = context.getString(R.string.home_change_failed) + "\n" + error.message.orEmpty().take(300)
                 refreshStatus()

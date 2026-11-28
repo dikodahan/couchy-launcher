@@ -374,6 +374,13 @@
     <string name="update_downloading">جارٍ تنزيل التحديث… %1$s</string>
     <string name="update_permission">اسمح لـ Couchy بتثبيت التطبيقات في إعدادات Android ثم حاول مجددًا.</string>
     <string name="update_failed">تعذر تنزيل التحديث أو التحقق منه أو فتحه. حاول مجددًا.</string>
+    <string name="submit_log">إرسال السجل</string>
+    <string name="submit_log_sending">جارٍ إرسال السجل…</string>
+    <string name="submit_log_sent">تم إرسال السجل إلى Telegram</string>
+    <string name="submit_log_failed">لم يؤكد Telegram التسليم. افتح البوت واضغط بدء قبل إعادة المحاولة.</string>
+    <string name="update_channel">قناة التحديث</string>
+    <string name="update_channel_stable">مستقر</string>
+    <string name="update_channel_beta">تجريبي</string>
     <string name="update_check_now">التحقق من وجود تحديثات</string>
     <string name="update_checking">جارٍ التحقق من وجود تحديثات…</string>
     <string name="update_up_to_date">لديك أحدث إصدار من Couchy.</string>

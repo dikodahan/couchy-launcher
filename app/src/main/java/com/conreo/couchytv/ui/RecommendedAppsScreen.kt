@@ -63,6 +63,8 @@ import androidx.tv.material3.Text
 import com.conreo.couchytv.Actions
 import com.conreo.couchytv.R
 import com.conreo.couchytv.data.IconLibrary
+import com.conreo.couchytv.data.BetaDiagnostics
+import com.conreo.couchytv.data.isBetaBuild
 import com.conreo.couchytv.data.RecommendedApp
 import com.conreo.couchytv.data.RecommendedCatalog
 import com.conreo.couchytv.data.RecommendedCommand
@@ -184,7 +186,14 @@ internal fun rememberRecommendedDownloadActions(
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             while (true) {
                 try {
-                    downloads = repository.downloads(apps)
+                    val updated = repository.downloads(apps)
+                    if (isBetaBuild) {
+                        val states = updated.mapValues { it.value.javaClass.simpleName }
+                        if (states != downloads.mapValues { it.value.javaClass.simpleName }) {
+                            BetaDiagnostics.event("Package downloads states=${states.values.groupingBy { it }.eachCount()}")
+                        }
+                    }
+                    downloads = updated
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (_: Exception) {
@@ -195,12 +204,12 @@ internal fun rememberRecommendedDownloadActions(
         }
     }
 
-    fun perform(entry: RecommendedApp, action: suspend () -> Unit) {
+    fun perform(entry: RecommendedApp, operation: String, action: suspend () -> Unit) {
         if (entry.key in pending) return
         pending = pending + entry.key
         scope.launch {
             try {
-                action()
+                BetaDiagnostics.operation(operation) { action() }
                 downloads = repository.downloads(apps)
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -211,8 +220,8 @@ internal fun rememberRecommendedDownloadActions(
             }
         }
     }
-    fun enqueue(entry: RecommendedApp) = perform(entry) { repository.enqueue(entry) }
-    fun install(entry: RecommendedApp) = perform(entry) { context.startActivity(repository.installer(entry)) }
+    fun enqueue(entry: RecommendedApp) = perform(entry, "Package download request") { repository.enqueue(entry) }
+    fun install(entry: RecommendedApp) = perform(entry, "Package installer launch") { context.startActivity(repository.installer(entry)) }
 
     val storagePermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         val entry = apps.firstOrNull { it.key == storageRequest }
@@ -254,7 +263,7 @@ internal fun rememberRecommendedDownloadActions(
             }
         },
         delete = { entry, target ->
-            perform(entry) {
+            perform(entry, "Package download deletion") {
                 repository.delete(entry)
                 runCatching { target.requestFocus() }
             }

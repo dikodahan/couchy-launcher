@@ -374,6 +374,13 @@
     <string name="update_downloading">Mengunduh pembaruan… %1$s</string>
     <string name="update_permission">Izinkan Couchy memasang aplikasi di setelan Android, lalu coba lagi.</string>
     <string name="update_failed">Pembaruan tidak dapat diunduh, diverifikasi, atau dibuka. Coba lagi.</string>
+    <string name="submit_log">Kirim log</string>
+    <string name="submit_log_sending">Mengirim log…</string>
+    <string name="submit_log_sent">Log dikirim ke Telegram</string>
+    <string name="submit_log_failed">Telegram belum mengonfirmasi pengiriman. Buka bot di Telegram dan tekan Mulai sebelum mencoba lagi.</string>
+    <string name="update_channel">Saluran pembaruan</string>
+    <string name="update_channel_stable">Stabil</string>
+    <string name="update_channel_beta">Beta</string>
     <string name="update_check_now">Periksa pembaruan</string>
     <string name="update_checking">Sedang memeriksa pembaruan…</string>
     <string name="update_up_to_date">Couchy sudah menggunakan versi terbaru.</string>

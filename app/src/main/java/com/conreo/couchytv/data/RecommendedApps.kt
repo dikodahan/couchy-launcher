@@ -149,6 +149,10 @@ internal class RecommendedApps(context: Context, private val catalogUrl: String)
     }
 
     suspend fun refresh(): RecommendedCatalog = withContext(Dispatchers.IO) {
+        BetaDiagnostics.operation("Recommended catalog refresh") { refreshCatalog() }
+    }
+
+    private fun refreshCatalog(): RecommendedCatalog {
         require(isRecommendedAppsUrl(catalogUrl))
         val data = fetch(catalogUrl, 256L * 1024)
         val entries = parseRecommendedCatalog(data.decodeToString())
@@ -162,7 +166,8 @@ internal class RecommendedApps(context: Context, private val catalogUrl: String)
                 throw error
             }
         }
-        entries
+        BetaDiagnostics.event("Recommended catalog validated apps=${entries.apps.size} actions=${entries.adbCommands.size}")
+        return entries
     }
 
     suspend fun fallbackIcon(entry: RecommendedApp): Bitmap? = withContext(Dispatchers.IO) {

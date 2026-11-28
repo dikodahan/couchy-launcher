@@ -8,6 +8,7 @@ import android.provider.Settings
 import android.widget.Toast
 import android.view.inputmethod.InputMethodManager
 import com.conreo.couchytv.data.AdbShellResult
+import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.LocalAdb
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
@@ -25,8 +26,15 @@ object Actions {
             ?: pm.getLaunchIntentForPackage(pkg)
         if (intent != null) {
             runCatching { context.startActivity(intent) }
-                .onFailure { toast(context, context.getString(R.string.toast_cannot_open)) }
-        } else toast(context, context.getString(R.string.toast_no_launchable))
+                .onSuccess { BetaDiagnostics.event("App launch intent dispatched") }
+                .onFailure {
+                    BetaDiagnostics.failure("App launch", it)
+                    toast(context, context.getString(R.string.toast_cannot_open))
+                }
+        } else {
+            BetaDiagnostics.event("App launch unavailable: no launchable activity")
+            toast(context, context.getString(R.string.toast_no_launchable))
+        }
     }
 
     fun openAppInfo(context: Context, pkg: String) {
@@ -124,13 +132,19 @@ object Actions {
     fun openPowerTimeoutSettings(context: Context): Boolean =
         tryOpenSettings(context, Intent("android.settings.ENERGY_SAVER_SETTINGS"))
 
-    private fun tryOpenSettings(context: Context, intent: Intent): Boolean = try {
-        context.startActivity(intent)
-        true
-    } catch (_: ActivityNotFoundException) {
-        false
-    } catch (_: SecurityException) {
-        false
+    private fun tryOpenSettings(context: Context, intent: Intent): Boolean {
+        val route = intent.action ?: intent.component?.shortClassName.orEmpty()
+        return try {
+            context.startActivity(intent)
+            BetaDiagnostics.event("Android shortcut opened route=$route")
+            true
+        } catch (error: ActivityNotFoundException) {
+            BetaDiagnostics.failure("Android shortcut $route", error)
+            false
+        } catch (error: SecurityException) {
+            BetaDiagnostics.failure("Android shortcut $route", error)
+            false
+        }
     }
 
     fun openDebuggingSettings(context: Context) {
@@ -139,6 +153,8 @@ object Actions {
 
     fun openSystemSettings(context: Context) {
         runCatching { context.startActivity(Intent(Settings.ACTION_SETTINGS)) }
+            .onSuccess { BetaDiagnostics.event("Android system settings opened") }
+            .onFailure { BetaDiagnostics.failure("Android system settings", it) }
     }
 
     fun openNetworkSettings(context: Context) {

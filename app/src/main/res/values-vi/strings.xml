@@ -374,6 +374,13 @@
     <string name="update_downloading">Đang tải bản cập nhật… %1$s</string>
     <string name="update_permission">Cho phép Couchy cài đặt ứng dụng trong phần cài đặt Android rồi thử lại.</string>
     <string name="update_failed">Không thể tải xuống, xác minh hoặc mở bản cập nhật. Hãy thử lại.</string>
+    <string name="submit_log">Gửi nhật ký</string>
+    <string name="submit_log_sending">Đang gửi nhật ký…</string>
+    <string name="submit_log_sent">Đã gửi nhật ký đến Telegram</string>
+    <string name="submit_log_failed">Telegram chưa xác nhận đã gửi. Mở bot trong Telegram và nhấn Bắt đầu trước khi thử lại.</string>
+    <string name="update_channel">Kênh cập nhật</string>
+    <string name="update_channel_stable">Ổn định</string>
+    <string name="update_channel_beta">Beta</string>
     <string name="update_check_now">Kiểm tra bản cập nhật</string>
     <string name="update_checking">Đang kiểm tra bản cập nhật…</string>
     <string name="update_up_to_date">Couchy đã ở phiên bản mới nhất.</string>

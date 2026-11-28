@@ -30,6 +30,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.conreo.couchytv.data.TopShelf
+import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.TrailerFallback
 import com.conreo.couchytv.data.publisherYouTubeId
 import kotlinx.coroutines.CancellationException
@@ -120,6 +121,8 @@ internal fun rememberAppContentPreview(
                         }
                     }
                     val slides = programs.orEmpty().toMutableList()
+                    BetaDiagnostics.event("App preview listings=${slides.size} publisherTrailers=${slides.count { it.trailer != null }} " +
+                        "fallbackCandidates=${slides.count { it.fallback != null }}")
                     Log.d("CouchyPreview", "$packageName: ${slides.size} listings, " +
                         "${slides.count { it.trailer != null }} publisher trailers, " +
                         "${slides.count { it.fallback != null }} TMDB candidates")
@@ -158,6 +161,7 @@ internal fun rememberAppContentPreview(
                                         trailer = uri, youtubeId = youtubeId, finished = finished, manualPlayback = manual,
                                     )
                                     val completed = finished.await()
+                                    BetaDiagnostics.event("App preview trailer completed=$completed manual=$manual youtube=${youtubeId != null}")
                                     deck.slide = still
                                     return completed
                                 }

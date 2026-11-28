@@ -140,6 +140,7 @@ internal object HomeDiagnostics {
             writer.appendLine()
             val file = logFile(context)
             if (file.isFile) file.bufferedReader().use { it.copyTo(writer) }
+            BetaDiagnostics.appendTo(context, writer)
         }
     }
 

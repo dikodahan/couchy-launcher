@@ -86,6 +86,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
     }
 
     fun beginLogin() {
+        BetaDiagnostics.event("Telegram sign-in requested")
         loginRequested = true
         _authUi.value = TelegramAuthUi.Working
         when (lastAuthType) {
@@ -137,6 +138,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
     }
 
     suspend fun signOut() = withContext(Dispatchers.IO) {
+        BetaDiagnostics.event("Telegram sign-out requested")
         runCatching {
             sendAwait(buildJsonObject { put("@type", JsonPrimitive("logOut")) })
         }
@@ -147,7 +149,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
     }
 
     suspend fun saveConfig(config: LauncherConfig) = uploadMutex.withLock {
-        withContext(Dispatchers.IO) { upload(config) }
+        withContext(Dispatchers.IO) { BetaDiagnostics.operation("Telegram backup upload") { upload(config) } }
     }
 
     private suspend fun upload(config: LauncherConfig) {
@@ -156,10 +158,48 @@ class TelegramCloudBackup private constructor(private val app: Context) {
         val timeLabel = SimpleDateFormat("HH:mm yyyy-MM-dd", Locale.US).format(Date())
         val chatId = savedMessagesChatId()
         val file = File.createTempFile("CouchyBackup_${stamp}_", ".$EXT", app.cacheDir)
-        val updates = Channel<JsonObject>(capacity = 32)
         val caption = "$TAG\nname=$timeLabel Couchy backup"
+        file.writeText(ConfigBackup.encode(config))
+        uploadDocument(chatId, file, caption)
+        // TDLib may reuse the uploaded local file for a restore on this TV.
+    }
+
+    internal suspend fun submitDiagnostics() = uploadMutex.withLock {
+        withContext(Dispatchers.IO) {
+            BetaDiagnostics.operation("Telegram diagnostics submission") {
+                check(isBetaBuild)
+                ensureReady()
+                val chat = sendAwait(buildJsonObject {
+                    put("@type", JsonPrimitive("searchPublicChat"))
+                    put("username", JsonPrimitive(DIAGNOSTICS_BOT))
+                }, timeoutMs = 15_000)
+                val chatType = chat["type"] as? JsonObject
+                val userId = chatType?.long("user_id") ?: 0L
+                val chatId = chat.long("id")
+                if (chatType?.str("@type") != "chatTypePrivate" || userId == 0L || chatId == 0L) {
+                    error("Diagnostic recipient is not a Telegram bot")
+                }
+                val user = sendAwait(buildJsonObject {
+                    put("@type", JsonPrimitive("getUser"))
+                    put("user_id", JsonPrimitive(userId))
+                }, timeoutMs = 15_000)
+                if ((user["type"] as? JsonObject)?.str("@type") != "userTypeBot") {
+                    error("Diagnostic recipient is not a Telegram bot")
+                }
+                val file = File.createTempFile("Couchy-Diagnostics-", ".txt", app.cacheDir)
+                try {
+                    BetaDiagnostics.copyReport(app, file)
+                    uploadDocument(chatId, file, "Couchy Launcher beta diagnostics")
+                } finally {
+                    file.delete()
+                }
+            }
+        }
+    }
+
+    private suspend fun uploadDocument(chatId: Long, file: File, caption: String) {
+        val updates = Channel<JsonObject>(capacity = 32)
         try {
-            file.writeText(ConfigBackup.encode(config))
             // Listen before sending so a fast upload cannot race the sendMessage response.
             uploadUpdates = updates
             val sent = sendAwait(
@@ -167,7 +207,6 @@ class TelegramCloudBackup private constructor(private val app: Context) {
                 timeoutMs = 90_000,
             )
             awaitBackupUpload(sent, chatId, updates)
-            // TDLib may reuse the uploaded local file for a restore on this TV.
         } finally {
             uploadUpdates = null
             updates.close()
@@ -176,6 +215,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
 
     /** Validated settings from the newest sent Couchy backup in Saved Messages. */
     suspend fun loadConfig(): LauncherConfig? = withContext(Dispatchers.IO) {
+        BetaDiagnostics.event("Telegram backup lookup started")
         ensureReady()
         val chatId = savedMessagesChatId()
         val found = sendAwait(
@@ -317,6 +357,9 @@ class TelegramCloudBackup private constructor(private val app: Context) {
     private fun handleAuth(state: JsonObject) {
         val type = state.str("@type")
         lastAuthType = type
+        if (isBetaBuild && type.startsWith("authorizationState") && type.length <= 66 && type.all(Char::isLetter)) {
+            BetaDiagnostics.event("Telegram authentication state=$type")
+        }
         when (type) {
             "authorizationStateWaitTdlibParameters" -> scope.launch {
                 runCatching { sendAwait(tdlibParameters()) }.onFailure { e ->
@@ -427,6 +470,7 @@ class TelegramCloudBackup private constructor(private val app: Context) {
         const val LOCAL_FILE = ConfigStore.LOCAL_FILE
         const val TAG = "COUCHY_BACKUP"
         const val EXT = "couchybak"
+        private const val DIAGNOSTICS_BOT = "DikoPlusBot"
 
         @Volatile private var instance: TelegramCloudBackup? = null
 

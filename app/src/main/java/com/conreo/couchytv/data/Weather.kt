@@ -397,6 +397,7 @@ internal fun searchWeatherCities(
     }
     val encoded = URLEncoder.encode(term, "UTF-8")
     val response = get("https://geocoding-api.open-meteo.com/v1/search?name=$encoded&count=8&language=$lang")
+    BetaDiagnostics.event("Weather city search response http=${response.status} dataAvailable=${response.body != null}")
     val body = response.body ?: return null
     return runCatching { json.decodeFromString<WeatherCityResponse>(body).results }
         .getOrNull()?.asSequence()
@@ -405,16 +406,19 @@ internal fun searchWeatherCities(
             it.latitude.isFinite() && it.latitude in -90.0..90.0 &&
             it.longitude.isFinite() && it.longitude in -180.0..180.0 }
         ?.distinctBy { Triple(it.label, it.latitude, it.longitude) }
-        ?.take(8)?.toList()
+        ?.take(8)?.toList().also { BetaDiagnostics.event("Weather city search matches=${it?.size}") }
 }
 
 internal object WeatherRepository {
     private val client = WeatherClient()
     fun initialWeatherUnit(): Int = client.initialWeatherUnit()
-    fun previewIpLocation(): WeatherLocation? = client.previewIpLocation()
+    fun previewIpLocation(): WeatherLocation? = client.previewIpLocation().also {
+        BetaDiagnostics.event("Weather IP location available=${it != null}")
+    }
 
     fun fetch(context: Context, request: WeatherRequest): WeatherResult {
         val storage = AtomicFile(File(context.noBackupFilesDir, "weather-ip-location.json"))
+        BetaDiagnostics.event("Weather fetch source=${request.source} unit=${request.unit}")
         return client.fetch(
             request,
             loadIpLocation = {
@@ -433,6 +437,6 @@ internal object WeatherRepository {
                     throw failure
                 }
             },
-        )
+        ).also { BetaDiagnostics.event("Weather fetch result failure=${it.failure} conditionsAvailable=${it.data != null} savedLocation=${it.usingSavedIpLocation}") }
     }
 }

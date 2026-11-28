@@ -51,6 +51,7 @@ import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import com.conreo.couchytv.Actions
 import com.conreo.couchytv.R
+import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.LANGUAGES
 import com.conreo.couchytv.data.LANGUAGE_REGIONS
 import com.conreo.couchytv.data.LauncherConfig
@@ -72,6 +73,7 @@ internal fun SetupWizard(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var step by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(step) { BetaDiagnostics.event("Setup wizard step=${step + 1}") }
     var vpnPackage by rememberSaveable { mutableStateOf(config.vpnApp.takeIf { config.showVpnButton }) }
     var pendingLanguage by rememberSaveable { mutableStateOf<String?>(null) }
     var choosingLanguage by rememberSaveable { mutableStateOf(false) }

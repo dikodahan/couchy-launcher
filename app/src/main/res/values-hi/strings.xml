@@ -374,6 +374,13 @@
     <string name="update_downloading">अपडेट डाउनलोड हो रहा है… %1$s</string>
     <string name="update_permission">Android की सेटिंग में Couchy को ऐप इंस्टॉल करने की अनुमति दें और फिर कोशिश करें।</string>
     <string name="update_failed">अपडेट डाउनलोड, सत्यापित या खोला नहीं जा सका। फिर कोशिश करें।</string>
+    <string name="submit_log">लॉग भेजें</string>
+    <string name="submit_log_sending">लॉग भेजा जा रहा है…</string>
+    <string name="submit_log_sent">लॉग Telegram पर भेज दिया गया</string>
+    <string name="submit_log_failed">Telegram ने डिलीवरी की पुष्टि नहीं की। दोबारा कोशिश करने से पहले Telegram में बॉट खोलें और शुरू करें दबाएँ।</string>
+    <string name="update_channel">अपडेट चैनल</string>
+    <string name="update_channel_stable">स्थिर</string>
+    <string name="update_channel_beta">बीटा</string>
     <string name="update_check_now">अपडेट की जाँच करें</string>
     <string name="update_checking">अपडेट की जाँच हो रही है…</string>
     <string name="update_up_to_date">Couchy का नवीनतम संस्करण इंस्टॉल है।</string>

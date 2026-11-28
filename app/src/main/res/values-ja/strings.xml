@@ -374,6 +374,13 @@
     <string name="update_downloading">アップデートをダウンロード中… %1$s</string>
     <string name="update_permission">Androidの設定でCouchyによるアプリのインストールを許可してから、再試行してください。</string>
     <string name="update_failed">アップデートをダウンロード、検証、または開くことができませんでした。再試行してください。</string>
+    <string name="submit_log">ログを送信</string>
+    <string name="submit_log_sending">ログを送信中…</string>
+    <string name="submit_log_sent">ログを Telegram に送信しました</string>
+    <string name="submit_log_failed">Telegram で配信を確認できませんでした。Telegram でボットを開き、開始を押してから再試行してください。</string>
+    <string name="update_channel">更新チャンネル</string>
+    <string name="update_channel_stable">安定版</string>
+    <string name="update_channel_beta">ベータ版</string>
     <string name="update_check_now">アップデートを確認</string>
     <string name="update_checking">アップデートを確認しています…</string>
     <string name="update_up_to_date">Couchy は最新バージョンです。</string>

@@ -18,6 +18,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import androidx.compose.runtime.Immutable
 import java.io.File
 
@@ -100,6 +101,7 @@ data class LauncherConfig(
     val uiScale: Int = 0, // Auto
     /** language code (e.g. "fr", "de"); empty = system default */
     val language: String = "",
+    val updateChannel: UpdateChannel = UpdateChannel.Stable,
     /** 0 = carousel (fixed selection), 1 = grid, 2 = dock */
     val layout: Int = 2, // Dock
     val glassStyle: Int = GLASS_STYLE_AUTOMATIC,
@@ -275,12 +277,20 @@ class ConfigStore(private val context: Context) {
     }
 
     suspend fun update(transform: (LauncherConfig) -> LauncherConfig) {
+        var changed = emptyList<String>()
         context.dataStore.edit { prefs ->
             val current = decodeConfig(prefs[KEY_CONFIG])
             val updated = transform(current)
             if (updated.weatherUnit != current.weatherUnit) prefs.remove(KEY_INITIAL_WEATHER_UNIT_PENDING)
-            prefs[KEY_CONFIG] = json.encodeToString(updated)
+            val encoded = json.encodeToString(updated)
+            prefs[KEY_CONFIG] = encoded
+            if (isBetaBuild && updated != current) {
+                val before = json.encodeToJsonElement(LauncherConfig.serializer(), current).jsonObject
+                val after = json.parseToJsonElement(encoded).jsonObject
+                changed = (before.keys + after.keys).filter { before[it] != after[it] }
+            }
         }
+        if (changed.isNotEmpty()) BetaDiagnostics.event("Settings saved fields=${changed.joinToString()}")
     }
 
     internal suspend fun saveSetupWeather(location: WeatherLocation?) {
@@ -296,7 +306,7 @@ class ConfigStore(private val context: Context) {
     suspend fun snapshot(): LauncherConfig = flow.first()
 
     /** Apply portable settings atomically while keeping destination scan state. */
-    suspend fun restore(loaded: LauncherConfig) {
+    suspend fun restore(loaded: LauncherConfig) = BetaDiagnostics.operation("Backup apply") {
         context.dataStore.edit { prefs ->
             val current = decodeConfig(prefs[KEY_CONFIG])
             prefs[KEY_CONFIG] = json.encodeToString(loaded.copy(knownApps = current.knownApps, setupDone = true))
@@ -307,6 +317,7 @@ class ConfigStore(private val context: Context) {
             prefs[KEY_RESTORE_REVISION] = revision
             prefs[KEY_PENDING_RESTORE_PERMISSION_REVIEW] = revision
         }
+        Unit
     }
 
     internal suspend fun finishRestorePermissionReview(revision: Long) {
@@ -318,7 +329,7 @@ class ConfigStore(private val context: Context) {
     }
 
     /** Same JSON the settings Save locally button writes. */
-    suspend fun exportTo(file: File) {
+    suspend fun exportTo(file: File) = BetaDiagnostics.operation("Local backup save") {
         val cfg = flow.first()
         withContext(Dispatchers.IO) {
             file.parentFile?.mkdirs()
@@ -342,6 +353,7 @@ class ConfigStore(private val context: Context) {
             }.getOrNull()
         } ?: return false
         restore(loaded)
+        BetaDiagnostics.event("Local backup import completed")
         return true
     }
 

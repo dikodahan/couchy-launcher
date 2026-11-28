@@ -374,6 +374,13 @@
     <string name="update_downloading">กำลังดาวน์โหลดอัปเดต… %1$s</string>
     <string name="update_permission">อนุญาตให้ Couchy ติดตั้งแอปในการตั้งค่า Android แล้วลองอีกครั้ง</string>
     <string name="update_failed">ดาวน์โหลด ตรวจสอบ หรือเปิดอัปเดตไม่ได้ โปรดลองอีกครั้ง</string>
+    <string name="submit_log">ส่งบันทึก</string>
+    <string name="submit_log_sending">กำลังส่งบันทึก…</string>
+    <string name="submit_log_sent">ส่งบันทึกไปยัง Telegram แล้ว</string>
+    <string name="submit_log_failed">Telegram ไม่ได้ยืนยันการส่ง เปิดบอตใน Telegram และกดเริ่มก่อนลองอีกครั้ง</string>
+    <string name="update_channel">ช่องทางการอัปเดต</string>
+    <string name="update_channel_stable">เสถียร</string>
+    <string name="update_channel_beta">เบต้า</string>
     <string name="update_check_now">ตรวจสอบการอัปเดต</string>
     <string name="update_checking">กำลังตรวจสอบการอัปเดต…</string>
     <string name="update_up_to_date">Couchy เป็นเวอร์ชันล่าสุดแล้ว</string>

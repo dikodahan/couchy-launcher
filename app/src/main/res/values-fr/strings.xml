@@ -388,6 +388,13 @@
     <string name="update_downloading">Téléchargement de la mise à jour… %1$s</string>
     <string name="update_permission">Autorisez Couchy à installer des applications dans les paramètres Android et réessayez.</string>
     <string name="update_failed">Impossible de télécharger, de vérifier ou d’ouvrir la mise à jour. Réessayez.</string>
+    <string name="submit_log">Envoyer le journal</string>
+    <string name="submit_log_sending">Envoi du journal…</string>
+    <string name="submit_log_sent">Journal envoyé sur Telegram</string>
+    <string name="submit_log_failed">Telegram n’a pas confirmé la livraison. Ouvrez le bot dans Telegram et appuyez sur Démarrer avant de réessayer.</string>
+    <string name="update_channel">Canal de mise à jour</string>
+    <string name="update_channel_stable">Stable</string>
+    <string name="update_channel_beta">Bêta</string>
     <string name="update_check_now">Rechercher des mises à jour</string>
     <string name="update_checking">Recherche de mises à jour…</string>
     <string name="update_up_to_date">Couchy est à jour.</string>

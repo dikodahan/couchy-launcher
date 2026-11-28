@@ -30,11 +30,17 @@ internal data class AppUpdate(
 )
 
 @Serializable
+enum class UpdateChannel { Stable, Beta }
+
+private const val DEVELOPMENT_BRANCH = "Development"
+
+@Serializable
 private data class GitHubRelease(
     @SerialName("tag_name") val tag: String,
     val draft: Boolean,
     val prerelease: Boolean,
     val assets: List<GitHubAsset>,
+    @SerialName("target_commitish") val target: String? = null,
     val body: String? = null,
 )
 
@@ -50,18 +56,42 @@ private data class GitHubAsset(
 private const val RELEASE_REPO = "dikodahan/couchy-launcher"
 private const val RELEASE_APK = "Couchy-Launcher.apk"
 private const val MAX_APK_BYTES = 200L * 1024 * 1024
-private val versionPattern = Regex("(0|[1-9][0-9]{0,7})\\.(0|[1-9][0-9]{0,7})\\.(0|[1-9][0-9]{0,7})")
+private const val NUMBER = "(0|[1-9][0-9]{0,7})"
+private val versionPattern = Regex("$NUMBER\\.$NUMBER\\.$NUMBER(?:-beta\\.([1-9][0-9]{0,7}))?")
 private val digestPattern = Regex("sha256:[a-f0-9]{64}")
 private val releaseJson = Json { ignoreUnknownKeys = true }
 
-internal fun parseAppUpdate(json: String, installed: String): AppUpdate? {
-    val release = releaseJson.decodeFromString<GitHubRelease>(json)
-    if (release.draft || release.prerelease || !release.tag.startsWith("v")) return null
+private data class UpdateVersion(val major: Int, val minor: Int, val patch: Int, val beta: Int?) :
+    Comparable<UpdateVersion> {
+    override fun compareTo(other: UpdateVersion): Int = compareValuesBy(
+        this, other, { it.major }, { it.minor }, { it.patch }, { it.beta ?: Int.MAX_VALUE },
+    )
+}
+
+private fun updateVersion(value: String): UpdateVersion? {
+    val parts = versionPattern.matchEntire(value)?.groupValues ?: return null
+    return UpdateVersion(parts[1].toInt(), parts[2].toInt(), parts[3].toInt(), parts[4].toIntOrNull())
+}
+
+internal val isBetaBuild = updateVersion(com.conreo.couchytv.BuildConfig.VERSION_NAME)?.beta != null
+
+internal fun parseAppUpdate(
+    stableJson: String?,
+    installed: String,
+    betaJson: String? = null,
+): AppUpdate? {
+    val current = updateVersion(installed) ?: return null
+    val stable = stableJson?.let { releaseJson.decodeFromString<GitHubRelease>(it) }
+    val betas = betaJson?.let { releaseJson.decodeFromString<List<GitHubRelease>>(it) }.orEmpty()
+    val candidates = listOfNotNull(stable?.takeUnless { it.prerelease }) +
+        betas.filter { it.prerelease && it.target == DEVELOPMENT_BRANCH }
+    val release = candidates.mapNotNull { entry ->
+        if (entry.draft || !entry.tag.startsWith("v")) return@mapNotNull null
+        val parsed = updateVersion(entry.tag.drop(1)) ?: return@mapNotNull null
+        if ((parsed.beta != null) != entry.prerelease || parsed <= current) return@mapNotNull null
+        entry to parsed
+    }.maxByOrNull { it.second }?.first ?: return null
     val version = release.tag.drop(1)
-    val currentParts = versionPattern.matchEntire(installed)?.groupValues?.drop(1) ?: return null
-    val candidateParts = versionPattern.matchEntire(version)?.groupValues?.drop(1) ?: return null
-    val firstDifference = candidateParts.indices.firstOrNull { candidateParts[it] != currentParts[it] } ?: return null
-    if (candidateParts[firstDifference].toInt() <= currentParts[firstDifference].toInt()) return null
     val url = "https://github.com/$RELEASE_REPO/releases/download/${release.tag}/$RELEASE_APK"
     val asset = release.assets.singleOrNull { it.name == RELEASE_APK } ?: throw IOException("Missing release APK")
     val digest = asset.digest?.takeIf(digestPattern::matches) ?: throw IOException("Invalid release APK checksum")
@@ -83,14 +113,21 @@ internal class AppUpdates(context: Context) {
         installed.signerDigests() == setOf(RELEASE_CERTIFICATE)
     }.getOrDefault(false)
 
-    suspend fun check(): AppUpdate? = withContext(Dispatchers.IO) {
-        val request = Request.Builder().url("https://api.github.com/repos/$RELEASE_REPO/releases/latest")
+    suspend fun check(channel: UpdateChannel): AppUpdate? = withContext(Dispatchers.IO) {
+        val stable = releaseMetadata("/latest")
+        val betas = if (channel == UpdateChannel.Beta) releaseMetadata("?per_page=20") else null
+        parseAppUpdate(stable, installed.versionName.orEmpty(), betas)
+    }
+
+    private fun releaseMetadata(path: String): String? {
+        val request = Request.Builder().url("https://api.github.com/repos/$RELEASE_REPO/releases$path")
             .header("Accept", "application/vnd.github+json").build()
-        metadataClient.newCall(request).execute().use { response ->
+        return metadataClient.newCall(request).execute().use { response ->
+            if (response.code == 404 && path == "/latest") return@use null
             if (!response.isSuccessful) throw IOException("GitHub returned HTTP ${response.code}")
             val source = response.body?.source() ?: throw IOException("Missing release metadata")
             if (source.request(MAX_METADATA_BYTES + 1)) throw IOException("Release metadata exceeds its size limit")
-            parseAppUpdate(source.readUtf8(), installed.versionName.orEmpty())
+            source.readUtf8()
         }
     }
 
@@ -199,7 +236,7 @@ internal class AppUpdates(context: Context) {
     private companion object {
         // Public SHA-256 fingerprint of the fork's GitHub release signing certificate.
         const val RELEASE_CERTIFICATE = "f322fa522b0ad0ef93cb36e07f3d37fb1dc98e7058f5ba4f712fb64696b535cf"
-        const val MAX_METADATA_BYTES = 512L * 1024
+        const val MAX_METADATA_BYTES = 2L * 1024 * 1024
         val downloadHosts = setOf("github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com")
         val metadataClient = OkHttpClient.Builder().followRedirects(false)
             .callTimeout(12, TimeUnit.SECONDS).build()

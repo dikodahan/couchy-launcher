@@ -103,10 +103,11 @@ internal class ParentalControls(context: Context) {
 
     private suspend fun protect(block: suspend () -> PinResult): PinResult = withContext(Dispatchers.IO) {
         try {
-            block()
+            block().also { BetaDiagnostics.event("Parental control operation outcome=$it") }
         } catch (error: CancellationException) {
             throw error
-        } catch (_: Exception) {
+        } catch (error: Exception) {
+            BetaDiagnostics.failure("Parental controls", error)
             PinResult.Unavailable
         }
     }

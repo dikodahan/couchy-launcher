@@ -374,6 +374,13 @@
     <string name="update_downloading">Pobieranie aktualizacji… %1$s</string>
     <string name="update_permission">Zezwól Couchy na instalowanie aplikacji w ustawieniach Androida i spróbuj ponownie.</string>
     <string name="update_failed">Nie udało się pobrać, sprawdzić lub otworzyć aktualizacji. Spróbuj ponownie.</string>
+    <string name="submit_log">Wyślij dziennik</string>
+    <string name="submit_log_sending">Wysyłanie dziennika…</string>
+    <string name="submit_log_sent">Dziennik wysłany do Telegrama</string>
+    <string name="submit_log_failed">Telegram nie potwierdził dostarczenia. Otwórz bota w Telegramie i naciśnij Start przed ponowną próbą.</string>
+    <string name="update_channel">Kanał aktualizacji</string>
+    <string name="update_channel_stable">Stabilny</string>
+    <string name="update_channel_beta">Beta</string>
     <string name="update_check_now">Sprawdź dostępność aktualizacji</string>
     <string name="update_checking">Sprawdzanie dostępności aktualizacji…</string>
     <string name="update_up_to_date">Masz najnowszą wersję Couchy.</string>

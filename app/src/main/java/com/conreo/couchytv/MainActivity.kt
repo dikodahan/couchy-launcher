@@ -12,7 +12,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
+import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.HomeDiagnostics
+import com.conreo.couchytv.data.isBetaBuild
 import com.conreo.couchytv.ui.LauncherApp
 import java.util.Locale
 
@@ -25,8 +27,11 @@ class MainActivity : ComponentActivity() {
     private var artworkGeneration by mutableIntStateOf(0)
     private val screensaverReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_DREAMING_STOPPED) {
+            if (intent.action == Intent.ACTION_DREAMING_STARTED) {
+                BetaDiagnostics.event("Screensaver started")
+            } else if (intent.action == Intent.ACTION_DREAMING_STOPPED) {
                 artworkGeneration++
+                BetaDiagnostics.event("Screensaver exited; requesting artwork refresh generation=$artworkGeneration")
                 android.util.Log.d("Couchy", "Refreshing Home artwork after screensaver exit")
             }
         }
@@ -66,6 +71,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        BetaDiagnostics.begin(this)
+        if (isBetaBuild) BetaDiagnostics.resetDrawSamples()
+        BetaDiagnostics.event("Activity created restoring=${savedInstanceState != null}")
         HomeDiagnostics.beginLaunch(this, restoringActivity = savedInstanceState != null)
 
         // A home screen never exits on Back
@@ -88,7 +96,9 @@ class MainActivity : ComponentActivity() {
         androidx.core.content.ContextCompat.registerReceiver(
             this,
             screensaverReceiver,
-            IntentFilter(Intent.ACTION_DREAMING_STOPPED),
+            IntentFilter(Intent.ACTION_DREAMING_STOPPED).apply {
+                if (isBetaBuild) addAction(Intent.ACTION_DREAMING_STARTED)
+            },
             androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
         )
 
@@ -105,7 +115,33 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
             homeIntentTick++
+            BetaDiagnostics.event("Home intent sequence=$homeIntentTick artworkGeneration=$artworkGeneration")
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isBetaBuild) {
+            val runtime = Runtime.getRuntime()
+            BetaDiagnostics.event("Activity resumed artworkGeneration=$artworkGeneration " +
+                "accelerated=${window.decorView.isHardwareAccelerated} " +
+                "heapUsedKiB=${(runtime.totalMemory() - runtime.freeMemory()) / 1024}")
+        }
+    }
+
+    override fun onStop() {
+        BetaDiagnostics.event("Activity stopped")
+        super.onStop()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        BetaDiagnostics.event("Window focus=$hasFocus artworkGeneration=$artworkGeneration")
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        BetaDiagnostics.event("Memory trim level=$level")
     }
 
     override fun onDestroy() {

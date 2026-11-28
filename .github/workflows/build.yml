@@ -75,6 +75,8 @@ jobs:
             if ! gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' | grep -Fxq "$APK"; then
               gh release upload "$RELEASE_TAG" "$APK" "$APK.sha256"
             fi
+          elif [[ "$RELEASE_TAG" == *-beta.* ]]; then
+            echo "Publish beta prereleases from Development with approved notes and signed assets."
           else
             gh release create "$RELEASE_TAG" "$APK" "$APK.sha256" --verify-tag --latest --title "Couchy Launcher $RELEASE_TAG" --generate-notes
           fi

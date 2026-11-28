@@ -391,6 +391,13 @@
     <string name="update_downloading">Downloading update… %1$s</string>
     <string name="update_permission">Allow Couchy to install apps in Android settings, then try again.</string>
     <string name="update_failed">The update could not be downloaded, verified, or opened. Try again.</string>
+    <string name="submit_log">Submit log</string>
+    <string name="submit_log_sending">Sending log…</string>
+    <string name="submit_log_sent">Log sent to Telegram</string>
+    <string name="submit_log_failed">Telegram did not confirm delivery. Open the bot in Telegram and press Start before trying again.</string>
+    <string name="update_channel">Update channel</string>
+    <string name="update_channel_stable">Stable</string>
+    <string name="update_channel_beta">Beta</string>
     <string name="update_check_now">Check for updates</string>
     <string name="update_checking">Checking for updates…</string>
     <string name="update_up_to_date">Couchy is up to date.</string>

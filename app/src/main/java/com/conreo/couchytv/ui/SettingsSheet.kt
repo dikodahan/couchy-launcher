@@ -83,7 +83,10 @@ import com.conreo.couchytv.data.BuiltinAerials
 import com.conreo.couchytv.data.CategoryCfg
 import com.conreo.couchytv.data.CloudNotConfigured
 import com.conreo.couchytv.data.CloudSession
+import com.conreo.couchytv.data.UpdateChannel
 import com.conreo.couchytv.data.ConfigBackup
+import com.conreo.couchytv.data.BetaDiagnostics
+import com.conreo.couchytv.data.isBetaBuild
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.DATE_FORMATS
 import com.conreo.couchytv.data.IconPack
@@ -152,6 +155,7 @@ internal fun SettingsSheet(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var screen by remember { mutableStateOf(if (startAtWeather) SettingsScreen.Weather else SettingsScreen.Main) }
+    LaunchedEffect(screen) { BetaDiagnostics.event("Settings page=$screen") }
     var settingsReturnTo by remember { mutableStateOf(if (startAtWeather) SettingsScreen.Weather else SettingsScreen.Apps) }
     val mainMenuScroll = rememberScrollState()
     fun openSettings(target: SettingsScreen) {
@@ -416,7 +420,8 @@ internal fun SettingsSheet(
                     SettingsScreen.Categories -> CategoriesScreen(config = config, store = store)
                     SettingsScreen.AndroidShortcuts -> AndroidShortcutsScreen()
                     SettingsScreen.About -> AboutScreen(
-                        onBack = { screen = SettingsScreen.Main },
+                        updateChannel = config.updateChannel.takeIf { BuildConfig.GITHUB_UPDATES },
+                        onSelectChannel = { channel -> scope.launch { store.update { it.copy(updateChannel = channel) } } },
                     )
                     SettingsScreen.Launcher -> LauncherSettingsSubscreen(
                         config = config,
@@ -585,9 +590,11 @@ private fun MainScreen(
 
 @Composable
 private fun AboutScreen(
-    onBack: () -> Unit,
+    updateChannel: UpdateChannel?,
+    onSelectChannel: (UpdateChannel) -> Unit,
 ) {
     val context = LocalContext.current
+    var submittingLog by remember { mutableStateOf(false) }
     SettingsPage {
         SettingsTitle(stringResource(R.string.item_about))
         Row(
@@ -614,6 +621,30 @@ private fun AboutScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp, top = 12.dp),
         )
+
+        if (updateChannel != null) {
+            val focus = initialFocus()
+            SelectorRow(
+                modifier = Modifier.focusRequester(focus),
+                label = stringResource(R.string.update_channel),
+                value = stringResource(updateChannel.label()),
+                steps = UpdateChannel.entries.size,
+                current = updateChannel.ordinal,
+                onSelect = { onSelectChannel(UpdateChannel.entries[it]) },
+            )
+        }
+
+        if (isBetaBuild) {
+            SettingsItem(
+                onClick = {
+                    val cloud = TelegramCloudBackup.get(context)
+                    if (cloud.isConfigured()) submittingLog = true
+                    else Actions.toast(context, cloud.unavailableMessage())
+                },
+                headlineContent = { Text(stringResource(R.string.submit_log)) },
+                leadingContent = { Icon(AppIcons.Save, contentDescription = null) },
+            )
+        }
 
         SettingsSectionLabel(stringResource(R.string.about_foss).uppercase())
         Text(
@@ -648,6 +679,12 @@ private fun AboutScreen(
             modifier = Modifier.padding(start = 8.dp),
         )
     }
+    if (submittingLog) SubmitDiagnostics { submittingLog = false }
+}
+
+private fun UpdateChannel.label() = when (this) {
+    UpdateChannel.Stable -> R.string.update_channel_stable
+    UpdateChannel.Beta -> R.string.update_channel_beta
 }
 
 /* ------------------------------ display ------------------------------ */
@@ -896,6 +933,7 @@ private fun LauncherSettingsSubscreen(
     fun openPane(target: LauncherPane) {
         launcherReturnTo = target
         pane = target
+        BetaDiagnostics.event("Launcher settings page=$target")
     }
     var pendingCloud by remember { mutableStateOf<LauncherPane?>(null) }
     var confirmWizardRerun by remember { mutableStateOf(false) }
@@ -915,6 +953,7 @@ private fun LauncherSettingsSubscreen(
                     output.bufferedWriter().use { it.write(text) }
                 }.isSuccess
             }
+            BetaDiagnostics.event("Document backup save successful=$saved")
             Actions.toast(context, context.getString(if (saved) R.string.toast_config_saved else R.string.toast_config_save_failed))
         }
     }
@@ -931,10 +970,12 @@ private fun LauncherSettingsSubscreen(
         scope.launch {
             if (loaded != null) {
                 val saved = runCatching { store.restore(loaded) }.isSuccess
+                BetaDiagnostics.event("Settings backup applied successful=$saved")
                 Actions.toast(context, context.getString(
                     if (saved) R.string.toast_config_loaded else R.string.toast_config_bad,
                 ))
             } else {
+                BetaDiagnostics.event("Settings backup rejected: missing or invalid document")
                 Actions.toast(context, context.getString(R.string.toast_config_bad))
             }
         }
@@ -978,6 +1019,9 @@ private fun LauncherSettingsSubscreen(
     fun loadCloud() {
         scope.launch {
             val result = withContext(Dispatchers.IO) { runCatching { cloud.loadConfig() } }
+            val error = result.exceptionOrNull()
+            if (error != null) BetaDiagnostics.failure("Telegram backup lookup", error)
+            else BetaDiagnostics.event("Telegram backup lookup found=${result.getOrNull() != null}")
             when (val e = result.exceptionOrNull()) {
                 is NeedTelegramLogin, is CloudNotConfigured -> {
                     if (!cloud.isConfigured()) {

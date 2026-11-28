@@ -374,6 +374,13 @@
     <string name="update_downloading">업데이트 다운로드 중… %1$s</string>
     <string name="update_permission">Android 설정에서 Couchy의 앱 설치를 허용한 뒤 다시 시도하세요.</string>
     <string name="update_failed">업데이트를 다운로드하거나 확인하거나 열 수 없습니다. 다시 시도하세요.</string>
+    <string name="submit_log">로그 제출</string>
+    <string name="submit_log_sending">로그 전송 중…</string>
+    <string name="submit_log_sent">Telegram에 로그를 보냈습니다</string>
+    <string name="submit_log_failed">Telegram에서 전송을 확인하지 못했습니다. Telegram에서 봇을 열고 시작을 누른 뒤 다시 시도하세요.</string>
+    <string name="update_channel">업데이트 채널</string>
+    <string name="update_channel_stable">안정 버전</string>
+    <string name="update_channel_beta">베타</string>
     <string name="update_check_now">업데이트 확인</string>
     <string name="update_checking">업데이트 확인 중…</string>
     <string name="update_up_to_date">Couchy가 최신 버전입니다.</string>

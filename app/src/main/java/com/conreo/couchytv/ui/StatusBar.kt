@@ -290,12 +290,13 @@ private fun statusControlColors() = ClickableSurfaceDefaults.colors(
 @Composable
 private fun StatusGlyph(icon: ImageVector, contentDescription: String, active: Boolean) {
     Box(Modifier.size(STATUS_SLOT_SIZE), contentAlignment = Alignment.Center) {
-        key(LocalHomeArtworkGeneration.current) {
+        val generation = LocalHomeArtworkGeneration.current
+        key(generation) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
                 tint = Color.White.copy(alpha = if (active) 0.95f else 0.35f),
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(22.dp).trackBetaArtworkDraw("tray-icon", generation),
             )
         }
     }

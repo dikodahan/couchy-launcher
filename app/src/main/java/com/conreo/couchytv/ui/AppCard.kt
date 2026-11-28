@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -43,6 +44,12 @@ import com.conreo.couchytv.data.AppEntry
 
 // Recreate the artwork draw nodes after Android dismisses a screensaver.
 // Keep focusable controls and cached bitmaps outside the keyed content.
+internal fun Modifier.trackBetaArtworkDraw(layer: String, generation: Int): Modifier =
+    if (!com.conreo.couchytv.data.isBetaBuild) this else drawWithContent {
+        drawContent()
+        com.conreo.couchytv.data.BetaDiagnostics.artworkDrawn(layer, generation, size.width.toInt(), size.height.toInt())
+    }
+
 internal val LocalHomeArtworkGeneration = compositionLocalOf { 0 }
 
 /** One immutable shader shared by every fallback tile. */
@@ -155,7 +162,8 @@ fun AppCard(
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
         ) {
-            key(LocalHomeArtworkGeneration.current) {
+            val generation = LocalHomeArtworkGeneration.current
+            key(generation) {
                 if (app.banner != null) {
                     Image(
                         bitmap = app.banner,
@@ -164,7 +172,7 @@ fun AppCard(
                         // The TV Surface already owns the focus transform layer. A
                         // second graphicsLayer here duplicated compositor work for
                         // every banner and consumed scarce layer memory.
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().trackBetaArtworkDraw("app-banner", generation),
                     )
                 } else {
                     // Banner-less apps: give the flat tile depth with a subtle sheen
@@ -185,7 +193,7 @@ fun AppCard(
                                 Image(
                                     bitmap = app.icon,
                                     contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
+                                    modifier = Modifier.size(48.dp).trackBetaArtworkDraw("app-icon", generation),
                                 )
                             }
                         }

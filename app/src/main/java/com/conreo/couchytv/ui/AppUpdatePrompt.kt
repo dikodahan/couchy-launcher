@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -42,6 +43,8 @@ import com.conreo.couchytv.BuildConfig
 import com.conreo.couchytv.R
 import com.conreo.couchytv.data.AppUpdate
 import com.conreo.couchytv.data.AppUpdates
+import com.conreo.couchytv.data.BetaDiagnostics
+import com.conreo.couchytv.data.UpdateChannel
 import java.text.NumberFormat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -63,9 +66,11 @@ internal class AppUpdatePrompt(
     context: Context,
     private val repository: AppUpdates,
     private val scope: CoroutineScope,
+    private val channel: UpdateChannel,
 ) {
     private val preferences = context.applicationContext.getSharedPreferences("app_updates", Context.MODE_PRIVATE)
-    private var deferred by mutableStateOf(preferences.getString("deferred_version", null))
+    private val deferredKey = if (channel == UpdateChannel.Stable) "deferred_version" else "deferred_version_beta"
+    private var deferred by mutableStateOf(preferences.getString(deferredKey, null))
     private var inFlight: Deferred<Result<AppUpdate?>>? = null
     var checkStatus by mutableStateOf<UpdateCheckStatus?>(null)
         private set
@@ -107,10 +112,14 @@ internal class AppUpdatePrompt(
         // If a periodic check is already running, give the manual check its result too.
         val lookup = inFlight?.takeUnless { it.isCompleted } ?: scope.async {
             try {
-                Result.success(repository.check())
+                BetaDiagnostics.event("Update check channel=$channel")
+                val update = repository.check(channel)
+                BetaDiagnostics.event("Update check completed channel=$channel candidate=${update?.version ?: "none"}")
+                Result.success(update)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
+                BetaDiagnostics.event("Update check failed channel=$channel type=${error.javaClass.simpleName}")
                 Result.failure(error)
             }
         }.also { inFlight = it }
@@ -119,7 +128,7 @@ internal class AppUpdatePrompt(
 
     fun later() {
         deferred = available?.version
-        preferences.edit().putString("deferred_version", deferred).apply()
+        preferences.edit().putString(deferredKey, deferred).apply()
         visible = false
     }
 }
@@ -128,14 +137,18 @@ private const val CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000L
 private const val INITIAL_DELAY_MS = 6_000L
 
 @Composable
-internal fun rememberAppUpdatePrompt(connected: Boolean, homeIdle: Boolean): AppUpdatePrompt? {
-    if (!BuildConfig.GITHUB_UPDATES) return null
+internal fun rememberAppUpdatePrompt(
+    channel: UpdateChannel,
+    connected: Boolean,
+    homeIdle: Boolean,
+): AppUpdatePrompt? = key(channel) {
+    if (!BuildConfig.GITHUB_UPDATES) return@key null
     val context = LocalContext.current.applicationContext
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val focused = LocalWindowInfo.current.isWindowFocused
     val repository = remember(context) { AppUpdates(context) }
     val scope = rememberCoroutineScope()
-    val prompt = remember(context, repository, scope) { AppUpdatePrompt(context, repository, scope) }
+    val prompt = remember(context, repository, scope) { AppUpdatePrompt(context, repository, scope, channel) }
     val supported by produceState(false, repository) {
         value = withContext(Dispatchers.IO) { repository.isSupported() }
     }
@@ -160,7 +173,7 @@ internal fun rememberAppUpdatePrompt(connected: Boolean, homeIdle: Boolean): App
     LaunchedEffect(prompt.available, focused, homeIdle) {
         if (focused && homeIdle && prompt.shouldOffer) prompt.open()
     }
-    return prompt.takeIf { supported }
+    prompt.takeIf { supported }
 }
 
 @Composable
@@ -180,12 +193,16 @@ internal fun AppUpdateDialog(prompt: AppUpdatePrompt) {
         status = UpdateStatus.Downloading
         scope.launch {
             try {
-                val apk = repository.download(update) { progress = it }
+                val apk = BetaDiagnostics.operation("Update APK download ${update.version}") {
+                    repository.download(update) { progress = it }
+                }
                 context.startActivity(repository.installerIntent(apk))
+                BetaDiagnostics.event("Update installer launched version=${update.version}")
                 prompt.later()
             } catch (cancelled: CancellationException) {
                 throw cancelled
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                BetaDiagnostics.failure("Update install flow", error)
                 status = UpdateStatus.Failed
             }
         }

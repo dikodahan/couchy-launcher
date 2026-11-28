@@ -13,13 +13,14 @@ class AppUpdatesTest {
         tag: String = "v1.10.0",
         prerelease: Boolean = false,
         draft: Boolean = false,
+        target: String = "main",
         assetName: String = "Couchy-Launcher.apk",
         url: String = "https://github.com/dikodahan/couchy-launcher/releases/download/$tag/$assetName",
         digest: String = "sha256:$sha",
         size: Long = 99_387_302L,
     ) = """
         {
-          "tag_name": "$tag", "draft": $draft, "prerelease": $prerelease,
+          "tag_name": "$tag", "draft": $draft, "prerelease": $prerelease, "target_commitish": "$target",
           "assets": [{"name": "$assetName", "state": "uploaded", "size": $size,
                       "browser_download_url": "$url", "digest": "$digest"}]
         }
@@ -51,6 +52,26 @@ class AppUpdatesTest {
         assertNull(parseAppUpdate(release(prerelease = true), "1.1.0"))
         assertNull(parseAppUpdate(release(draft = true), "1.1.0"))
         assertNull(parseAppUpdate(release(tag = "v2.0.0-rc.1"), "1.1.0"))
+    }
+
+    @Test
+    fun selectsTheNewestDevelopmentBetaNumerically() {
+        val first = release("v1.10.0-beta.9", prerelease = true, target = "Development")
+        val next = release("v1.10.0-beta.10", prerelease = true, target = "Development")
+        val otherBranch = release("v1.10.0-beta.11", prerelease = true, target = "main")
+        val draft = release("v1.10.0-beta.12", prerelease = true, draft = true, target = "Development")
+        assertEquals("1.10.0-beta.10", parseAppUpdate(null, "1.10.0-beta.8", "[$first,$next,$otherBranch,$draft]")?.version)
+        assertNull(parseAppUpdate(null, "1.10.0", "[$next]"))
+        assertNull(parseAppUpdate(first, "1.9.0"))
+    }
+
+    @Test
+    fun stableReachesBetaSubscribersAndBetaInstallsCanReturnToStable() {
+        val beta = release("v1.10.0-beta.3", prerelease = true, target = "Development")
+        assertEquals("1.10.0", parseAppUpdate(release(), "1.10.0-beta.2", "[$beta]")?.version)
+        assertEquals("1.10.0", parseAppUpdate(release(), "1.10.0-beta.3")?.version)
+        assertEquals("1.10.0-beta.3", parseAppUpdate(release("v1.9.9"), "1.9.9", "[$beta]")?.version)
+        assertNull(parseAppUpdate(release("v1.9.9"), "1.10.0-beta.3"))
     }
 
     @Test

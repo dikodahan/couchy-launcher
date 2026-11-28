@@ -98,6 +98,8 @@ import com.conreo.couchytv.data.appsInDockOrder
 import com.conreo.couchytv.data.AppRepository
 import com.conreo.couchytv.data.AerialVideoCache
 import com.conreo.couchytv.data.AerialLoadErrorPolicy
+import com.conreo.couchytv.data.BetaDiagnostics
+import com.conreo.couchytv.data.isBetaBuild
 import com.conreo.couchytv.data.BuiltinAerials
 import com.conreo.couchytv.data.StoredConfig
 import com.conreo.couchytv.data.ConfigStore
@@ -277,10 +279,18 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     var loadedArtworkGeneration by remember { mutableIntStateOf(artworkGeneration) }
     val appsOrNull by produceState(initialValue = AppRepository.memoryCache, rescanTick, artworkGeneration) {
         val reloadArtwork = loadedArtworkGeneration != artworkGeneration
-        value = withContext(Dispatchers.Default) {
+        val start = android.os.SystemClock.elapsedRealtime()
+        BetaDiagnostics.event("Artwork scan started generation=$artworkGeneration fresh=$reloadArtwork")
+        val entries = withContext(Dispatchers.Default) {
             AppRepository.scan(context.applicationContext, reloadArtwork = reloadArtwork)
         }
+        value = entries
         loadedArtworkGeneration = artworkGeneration
+        if (isBetaBuild) {
+            BetaDiagnostics.event("Artwork scan completed generation=$artworkGeneration apps=${entries.size} " +
+                "banners=${entries.count { it.banner != null }} icons=${entries.count { it.icon != null }} " +
+                "elapsedMs=${android.os.SystemClock.elapsedRealtime() - start}")
+        }
     }
     val parentalState = parentalOrNull ?: run {
         LoadingScreen()
@@ -361,6 +371,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                                     }
                                     // Android can bring this activity to the front via Home.
                                     // Commit setup before asking the user to press that button.
+                                    BetaDiagnostics.event("Setup completed homeConfirmation=$pressHome vpnConfigured=${vpnPackage != null}")
                                     if (pressHome) pressHomeAtTick = homeIntentTick
                                 } catch (_: IOException) {
                                     Actions.toast(context, context.getString(R.string.toast_config_save_failed))
@@ -460,6 +471,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     // the raw scan — recomputed off the main thread whenever config or the
     // scan itself changes.
     var overrideVersion by remember { mutableIntStateOf(0) }
+    LaunchedEffect(overrideVersion) { BetaDiagnostics.event("Custom artwork revision=$overrideVersion") }
     val displayApps by produceState(initialValue = apps, apps, config.labelOverrides, config.iconPackPkg, overrideVersion) {
         value = AppRepository.overlay(context.applicationContext, apps, config)
     }
@@ -475,6 +487,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     var customizeFor by remember { mutableStateOf<AppEntry?>(null) }
     var renameFor by remember { mutableStateOf<AppEntry?>(null) }
     var reorderFrom by remember { mutableStateOf<AppPlacement?>(null) }
+    LaunchedEffect(reorderFrom != null) { BetaDiagnostics.event("App reorder mode active=${reorderFrom != null}") }
     var menuSectionId by remember { mutableStateOf<String?>(null) }
     var savingReorder by remember { mutableStateOf(false) }
     fun openAppMenu(app: AppEntry, section: String? = null) {
@@ -497,6 +510,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
 
     fun protectedAction(pkg: String, action: () -> Unit) {
         if (parentalState.isLocked(pkg)) {
+            BetaDiagnostics.event("App action requires parental authorization")
             pinPrompt = PinPrompt(R.string.parental_open_app, verify = parental::verify, onAccepted = action)
         } else action()
     }
@@ -510,7 +524,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         closingApp = true
         scope.launch {
             val result = try {
-                Actions.closeAndClearCache(context, pkg)
+                Actions.closeAndClearCache(context, pkg).also { BetaDiagnostics.event("Close and clear cache result=$it") }
             } finally {
                 closingApp = false
             }
@@ -551,6 +565,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     var packIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
     var libraryIconPickFor by remember { mutableStateOf<AppEntry?>(null) }
     val updatePrompt = rememberAppUpdatePrompt(
+        channel = config.updateChannel,
         connected = net.connected,
         homeIdle = !showSetupHomePrompt && !showSettings && !showForecast && reorderFrom == null && menuFor == null &&
             customizeFor == null && renameFor == null && pinPrompt == null &&
@@ -559,6 +574,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     )
     val iconPacks by produceState(initialValue = emptyList<com.conreo.couchytv.data.IconPackInfo>(), apps, resumeTick) {
         value = withContext(Dispatchers.IO) { IconPack.installedIconPacks(context.applicationContext) }
+        BetaDiagnostics.event("Icon pack scan count=${value.size}")
     }
     val bannerPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val pkg = bannerTargetPkg; bannerTargetPkg = null
@@ -650,6 +666,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     fun recordAerialFailure() {
         if (aerialError || aerialCoolingDown) return
         aerialFailureStreak++
+        BetaDiagnostics.event("Aerial recovery triggered failures=$aerialFailureStreak")
         if (aerialFailureStreak >= 6 || aerialPlaylist.size < 2) {
             aerialCoolingDown = true
         } else {
@@ -657,6 +674,7 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         }
     }
     fun recordAerialReady(firstFrameMs: Long) {
+        BetaDiagnostics.event("Aerial first frame elapsedMs=$firstFrameMs")
         aerialFailureStreak = 0
         android.util.Log.d("Couchy", "Aerial ready in ${firstFrameMs}ms; cache=${AerialVideoCache.bytesUsed()}")
     }
@@ -760,6 +778,20 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     }
     val videoGlassActive = liquidGlass && videoBackdropVisible && reorderFrom == null && LocalWindowInfo.current.isWindowFocused &&
         (config.statusBarGlass || (config.layout == LAYOUT_DOCK && !dockExpanded))
+
+    if (isBetaBuild) {
+        val wallpaperKind = when {
+            trailerVisible -> "trailer"
+            previewArtwork != null -> "preview"
+            videoBackdropVisible -> if (playsAerial) "aerial" else "local-video"
+            wallpaperSharp != null -> "photo"
+            else -> "gradient"
+        }
+        LaunchedEffect(artworkGeneration, wallpaperKind, dockExpanded, liquidGlass, videoGlassActive) {
+            BetaDiagnostics.event("Home render generation=$artworkGeneration wallpaper=$wallpaperKind " +
+                "dockExpanded=$dockExpanded liquidGlass=$liquidGlass videoGlass=$videoGlassActive")
+        }
+    }
 
     val corner: Dp = CORNER_RADII[config.cornerRadius.coerceIn(0, CORNER_RADII.size - 1)]
     Box(Modifier.fillMaxSize()) {
@@ -2006,6 +2038,16 @@ internal fun VideoWallpaper(
                 }
             }
             override fun onPlaybackStateChanged(state: Int) {
+                if (isBetaBuild) {
+                    val name = when (state) {
+                        androidx.media3.common.Player.STATE_IDLE -> "idle"
+                        androidx.media3.common.Player.STATE_BUFFERING -> "buffering"
+                        androidx.media3.common.Player.STATE_READY -> "ready"
+                        androidx.media3.common.Player.STATE_ENDED -> "ended"
+                        else -> state.toString()
+                    }
+                    BetaDiagnostics.event("Video state=$name trailer=$playOnce streamingWallpaper=$remoteCache")
+                }
                 trailerRebuffering = playOnce && firstFrameGen > 0 &&
                     state == androidx.media3.common.Player.STATE_BUFFERING
                 // Fallback for a one-item queue or an exhausted source list.
@@ -2028,6 +2070,8 @@ internal fun VideoWallpaper(
                 latestOnAdvanced()
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                BetaDiagnostics.event("Video error=${error.errorCodeName} cause=${error.cause?.javaClass?.simpleName} " +
+                    "trailer=$playOnce streamingWallpaper=$remoteCache")
                 if (playOnce && !useHlsTrailer && firstFrameGen == 0 &&
                     error.cause is androidx.media3.exoplayer.source.UnrecognizedInputFormatException
                 ) {

@@ -374,6 +374,13 @@
     <string name="update_downloading">Загрузка обновления… %1$s</string>
     <string name="update_permission">Разрешите Couchy устанавливать приложения в настройках Android и попробуйте снова.</string>
     <string name="update_failed">Не удалось загрузить, проверить или открыть обновление. Попробуйте снова.</string>
+    <string name="submit_log">Отправить журнал</string>
+    <string name="submit_log_sending">Отправка журнала…</string>
+    <string name="submit_log_sent">Журнал отправлен в Telegram</string>
+    <string name="submit_log_failed">Telegram не подтвердил доставку. Откройте бота в Telegram и нажмите Старт перед повторной попыткой.</string>
+    <string name="update_channel">Канал обновлений</string>
+    <string name="update_channel_stable">Стабильный</string>
+    <string name="update_channel_beta">Бета</string>
     <string name="update_check_now">Проверить обновления</string>
     <string name="update_checking">Проверка обновлений…</string>
     <string name="update_up_to_date">Установлена последняя версия Couchy.</string>

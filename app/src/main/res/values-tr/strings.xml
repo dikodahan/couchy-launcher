@@ -374,6 +374,13 @@
     <string name="update_downloading">Güncelleme indiriliyor… %1$s</string>
     <string name="update_permission">Android ayarlarında Couchy’nin uygulama yüklemesine izin verin ve tekrar deneyin.</string>
     <string name="update_failed">Güncelleme indirilemedi, doğrulanamadı veya açılamadı. Yeniden deneyin.</string>
+    <string name="submit_log">Günlüğü gönder</string>
+    <string name="submit_log_sending">Günlük gönderiliyor…</string>
+    <string name="submit_log_sent">Günlük Telegram’a gönderildi</string>
+    <string name="submit_log_failed">Telegram teslimatı doğrulamadı. Yeniden denemeden önce Telegram’da botu açıp Başlat’a basın.</string>
+    <string name="update_channel">Güncelleme kanalı</string>
+    <string name="update_channel_stable">Kararlı</string>
+    <string name="update_channel_beta">Beta</string>
     <string name="update_check_now">Güncellemeleri denetle</string>
     <string name="update_checking">Güncellemeler denetleniyor…</string>
     <string name="update_up_to_date">Couchy güncel.</string>

@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalView
+import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.youtubeIdPattern
 import kotlinx.coroutines.delay
 
@@ -87,10 +88,14 @@ internal fun YouTubePreview(
                     request.isForMainFrame
 
                 override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                    if (request.isForMainFrame) finish(false)
+                    if (request.isForMainFrame) {
+                        BetaDiagnostics.event("YouTube frame error code=${error.errorCode}")
+                        finish(false)
+                    }
                 }
 
                 override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                    BetaDiagnostics.event("YouTube render process gone crashed=${detail.didCrash()}")
                     finish(false)
                     return true
                 }
@@ -110,11 +115,13 @@ internal fun YouTubePreview(
                         }
                         "couchy-ended" -> finish(playing)
                         "couchy-autoplay-blocked", "couchy-api-error", "couchy-buffering" -> {
+                            BetaDiagnostics.event("YouTube playback unavailable state=$title")
                             Log.w("CouchyPreview", "YouTube playback unavailable: $title")
                             finish(false)
                         }
                         else -> if (title.orEmpty().startsWith("couchy-error:")) {
                             val code = title?.substringAfter(':')?.toIntOrNull()
+                            BetaDiagnostics.event("YouTube playback error code=$code")
                             Log.w("CouchyPreview", "YouTube playback error: $code")
                             finish(false)
                         }

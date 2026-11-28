@@ -359,6 +359,13 @@
     <string name="update_downloading">העדכון יורד… %1$s</string>
     <string name="update_permission">יש לאפשר ל־Couchy להתקין אפליקציות בהגדרות Android ולנסות שוב.</string>
     <string name="update_failed">לא ניתן להוריד, לאמת או לפתוח את העדכון. יש לנסות שוב.</string>
+    <string name="submit_log">שליחת יומן</string>
+    <string name="submit_log_sending">היומן נשלח…</string>
+    <string name="submit_log_sent">היומן נשלח ל-Telegram</string>
+    <string name="submit_log_failed">לא התקבל אישור מסירה מ-Telegram. יש לפתוח את הבוט ב-Telegram וללחוץ על התחל לפני ניסיון נוסף.</string>
+    <string name="update_channel">ערוץ עדכונים</string>
+    <string name="update_channel_stable">יציב</string>
+    <string name="update_channel_beta">בטא</string>
     <string name="update_check_now">בדיקה אם יש עדכונים</string>
     <string name="update_checking">מתבצעת בדיקה אם יש עדכונים…</string>
     <string name="update_up_to_date">הגרסה העדכנית של Couchy מותקנת.</string>

@@ -70,6 +70,7 @@ internal class LocalAdb private constructor(
             require(command.isNotBlank() && '\u0000' !in command) { "Invalid ADB command" }
             require(command.toByteArray(Charsets.UTF_8).size <= MAX_COMMAND_BYTES) { "ADB command is too long" }
         }
+        BetaDiagnostics.event("Local ADB sequence requested steps=${commands.size}")
         val operationBudget = (operationTimeoutMs * commands.size).coerceAtMost(MAX_SEQUENCE_OPERATION_MS)
         return withTimeout(CONNECT_TIMEOUT_MS.toLong() + authTimeoutMs + operationBudget + TIMEOUT_HEADROOM_MS) {
             withContext(Dispatchers.IO) {
@@ -85,10 +86,12 @@ internal class LocalAdb private constructor(
                         socket.connect(InetSocketAddress(LOOPBACK, port), CONNECT_TIMEOUT_MS)
                         val session = AdbSession(socket.getInputStream(), socket.getOutputStream(), continuation.context)
                         val remoteMax = session.connect({ key }, authTimeoutMs)
+                        BetaDiagnostics.event("Local ADB authenticated")
                         val results = buildList {
                             for ((index, command) in commands.withIndex()) {
                                 val result = session.shell(command, remoteMax, index + 1, operationTimeoutMs)
                                 add(result)
+                                BetaDiagnostics.event("Local ADB step=${index + 1} exit=${result.exitCode}")
                                 if (result.exitCode != 0) break
                             }
                         }
@@ -96,6 +99,7 @@ internal class LocalAdb private constructor(
                     } catch (cancelled: CancellationException) {
                         continuation.cancel(cancelled)
                     } catch (error: Exception) {
+                        BetaDiagnostics.failure("Local ADB transport", error)
                         if (continuation.isActive) continuation.resumeWithException(error)
                     } finally {
                         runCatching { socket.close() }

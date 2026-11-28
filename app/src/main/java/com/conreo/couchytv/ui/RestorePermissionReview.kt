@@ -29,6 +29,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.conreo.couchytv.R
+import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.LauncherConfig
 import com.conreo.couchytv.data.READ_TV_LISTINGS
 
@@ -55,8 +56,11 @@ internal fun RestorePermissionReview(config: LauncherConfig, onFinished: suspend
     var approved by rememberSaveable { mutableStateOf(false) }
     var attempted by rememberSaveable { mutableStateOf(arrayListOf<String>()) }
     var inFlight by rememberSaveable { mutableStateOf<String?>(null) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        inFlight?.let { attempted = ArrayList(attempted + it) }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        inFlight?.let {
+            BetaDiagnostics.event("Restore permission result permission=$it granted=$granted")
+            attempted = ArrayList(attempted + it)
+        }
         inFlight = null
     }
     val missing = restoredRuntimePermissions.filter {
@@ -71,6 +75,7 @@ internal fun RestorePermissionReview(config: LauncherConfig, onFinished: suspend
             onFinished()
         } else if (approved) {
             inFlight = next.name
+            BetaDiagnostics.event("Restore permission requested permission=${next.name}")
             launcher.launch(next.name)
         }
     }
