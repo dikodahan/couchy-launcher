@@ -34,7 +34,11 @@ import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.LauncherConfig
 import com.conreo.couchytv.data.READ_TV_LISTINGS
 import com.conreo.couchytv.data.hasWallpaperVideoAccess
-import com.conreo.couchytv.data.isIndexedWallpaperFolder
+import com.conreo.couchytv.data.hasWallpaperMediaAccess
+import com.conreo.couchytv.data.needsIndexedPhotoAccess
+import com.conreo.couchytv.data.wallpaperMediaPermission
+import com.conreo.couchytv.data.wallpaperMediaPermissions
+import com.conreo.couchytv.data.needsIndexedVideoAccess
 import com.conreo.couchytv.data.wallpaperVideoPermission
 import com.conreo.couchytv.data.wallpaperVideoPermissions
 
@@ -58,9 +62,16 @@ private val restoredRuntimePermissions = listOf(
     RestoredRuntimePermission(
         wallpaperVideoPermission,
         R.string.wallpaper_folder_access,
-        { BuildConfig.GITHUB_UPDATES && it.useVideoWallpaper && isIndexedWallpaperFolder(it.videoFolderUri) },
+        { BuildConfig.GITHUB_UPDATES && it.needsIndexedVideoAccess },
         request = ::wallpaperVideoPermissions,
         granted = { it.hasWallpaperVideoAccess() },
+    ),
+    RestoredRuntimePermission(
+        wallpaperMediaPermission(photo = true),
+        R.string.wallpaper_photo_access,
+        { BuildConfig.GITHUB_UPDATES && it.needsIndexedPhotoAccess },
+        request = { wallpaperMediaPermissions(photo = true) },
+        granted = { it.hasWallpaperMediaAccess(photo = true) },
     ),
 )
 

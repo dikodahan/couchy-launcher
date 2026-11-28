@@ -59,6 +59,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextAlign
 import com.conreo.couchytv.BuildConfig
+import com.conreo.couchytv.data.SmbProfile
+import com.conreo.couchytv.data.SmbProfiles
+import com.conreo.couchytv.data.isSmbWallpaper
+
 import com.conreo.couchytv.data.RecommendedCatalog
 import com.conreo.couchytv.data.RecommendedApps
 import androidx.compose.ui.text.style.TextOverflow
@@ -87,9 +91,9 @@ import com.conreo.couchytv.data.UpdateChannel
 import com.conreo.couchytv.data.ConfigBackup
 import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.isBetaBuild
-import com.conreo.couchytv.data.indexedWallpaperVideos
+import com.conreo.couchytv.data.indexedWallpaperFolderUris
 import com.conreo.couchytv.data.keepWallpaperAccess
-import com.conreo.couchytv.data.wallpaperFolderVideos
+import com.conreo.couchytv.data.wallpaperFolderMedia
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.DATE_FORMATS
 import com.conreo.couchytv.data.IconPack
@@ -118,7 +122,6 @@ import kotlinx.coroutines.Dispatchers
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 
 private enum class SettingsScreen { Main, Wallpaper, AppContentPreview, Display, StatusBar, Weather, Apps, RecommendedApps, Categories, IconPack, Parental, Launcher, AndroidShortcuts, About }
@@ -157,6 +160,12 @@ internal fun SettingsSheet(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var smbProfile by remember { mutableStateOf<SmbProfile?>(null) }
+    LaunchedEffect(context, config.smbSetup) {
+        smbProfile = withContext(Dispatchers.IO) {
+            runCatching { SmbProfiles.matching(context, config.smbSetup) }.getOrNull()
+        }
+    }
     var screen by remember { mutableStateOf(if (startAtWeather) SettingsScreen.Weather else SettingsScreen.Main) }
     LaunchedEffect(screen) { BetaDiagnostics.event("Settings page=$screen") }
     var settingsReturnTo by remember { mutableStateOf(if (startAtWeather) SettingsScreen.Weather else SettingsScreen.Apps) }
@@ -194,43 +203,55 @@ internal fun SettingsSheet(
         else Actions.toast(context, context.getString(R.string.app_content_preview_need_permission))
     }
 
-    // Same document-picker flow as videos: opens the system file manager,
-    // works with USB drives and network storage providers.
-    val photoPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.use { input ->
-                        File(context.filesDir, "wallpaper.jpg").outputStream().use { out ->
-                            input.copyTo(out)
-                        }
-                    }
+    fun setPhotos(files: List<String> = emptyList(), folder: String = "", documents: List<android.net.Uri> = emptyList()) {
+        if (files.isEmpty() && folder.isEmpty() && documents.isEmpty()) return
+        scope.launch {
+            try {
+                if (documents.isNotEmpty()) withContext(Dispatchers.IO) {
+                    documents.distinct().forEach(context::keepWallpaperAccess)
                 }
                 store.update {
                     it.copy(
+                        photoFiles = if (folder.isEmpty()) (files + documents.map { uri -> uri.toString() }).distinct() else emptyList(),
+                        photoFolderUri = folder,
                         useCustomWallpaper = true,
                         useVideoWallpaper = false,
                         useBuiltinAerials = false,
                     )
                 }
                 onWallpaperChanged()
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                BetaDiagnostics.failure("Wallpaper photo selection", error)
+                Actions.toast(context, context.getString(R.string.wallpaper_photo_failed))
             }
         }
+    }
+
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) {
+        setPhotos(documents = it)
+    }
+    val photoFolderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { folder ->
+        if (folder != null) setPhotos(folder = folder.toString(), documents = listOf(folder))
     }
 
     fun setLocalVideos(
         files: List<android.net.Uri> = emptyList(),
         folder: android.net.Uri? = null,
         indexedFolder: String? = null,
+        indexedFiles: List<String> = emptyList(),
+        smbFiles: List<String> = emptyList(),
+        smbFolder: String? = null,
     ) {
-        if (files.isEmpty() && folder == null && indexedFolder == null) return
+        if (files.isEmpty() && indexedFiles.isEmpty() && smbFiles.isEmpty() &&
+            folder == null && indexedFolder == null && smbFolder == null
+        ) return
         scope.launch {
             try {
                 val selected = withContext(Dispatchers.IO) {
-                    if (folder != null && context.wallpaperFolderVideos(folder).isEmpty()) return@withContext false
-                    if (indexedFolder != null && context.indexedWallpaperVideos(indexedFolder).isEmpty()) return@withContext false
+                    if (folder != null && context.wallpaperFolderMedia(folder).isEmpty()) return@withContext false
+                    if (indexedFolder != null && context.indexedWallpaperFolderUris(indexedFolder, photo = false).isEmpty()) return@withContext false
                     (listOfNotNull(folder) + files).distinct().forEach(context::keepWallpaperAccess)
                     true
                 }
@@ -241,8 +262,9 @@ internal fun SettingsSheet(
                 store.update {
                     it.copy(
                         videoUri = "",
-                        videoUris = files.map { file -> file.toString() }.distinct(),
-                        videoFolderUri = indexedFolder ?: folder?.toString().orEmpty(),
+                        videoUris = (files.map { file -> file.toString() } + smbFiles).distinct(),
+                        videoFolderUri = smbFolder ?: indexedFolder ?: folder?.toString().orEmpty(),
+                        indexedVideoFiles = indexedFiles,
                         useVideoWallpaper = true,
                         useCustomWallpaper = false,
                         useBuiltinAerials = false,
@@ -265,29 +287,61 @@ internal fun SettingsSheet(
         if (folder != null) setLocalVideos(folder = folder)
     }
 
-    var showIndexedFolderPicker by remember { mutableStateOf(false) }
-    fun openVideoFolderPicker() {
-        val action = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE)
-        val systemPickerAvailable = context.packageManager.queryIntentActivities(
-            action, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY,
-        ).any { it.activityInfo?.packageName != "com.android.tv.frameworkpackagestubs" }
-        if (systemPickerAvailable && runCatching { videoFolderPicker.launch(null) }.isSuccess) return
-        if (BuildConfig.GITHUB_UPDATES) showIndexedFolderPicker = true
-        else Actions.toast(context, context.getString(R.string.toast_no_picker))
+    fun browseWithAndroid(mode: WallpaperPickerMode): Boolean = runCatching {
+        when (mode) {
+            WallpaperPickerMode.Photo -> photoPicker.launch(arrayOf("image/*"))
+            WallpaperPickerMode.PhotoFolder -> photoFolderPicker.launch(null)
+            WallpaperPickerMode.Videos -> videoPicker.launch(arrayOf("video/*"))
+            WallpaperPickerMode.Folder -> videoFolderPicker.launch(null)
+        }
+    }.onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }.isSuccess
+
+    var wallpaperPicker by remember { mutableStateOf<WallpaperPickerMode?>(null) }
+    var smbSetupFromPicker by remember { mutableStateOf<WallpaperPickerMode?>(null) }
+    fun returnToWallpaperPicker() {
+        wallpaperPicker = smbSetupFromPicker
+        smbSetupFromPicker = null
+        screen = SettingsScreen.Wallpaper
     }
-    if (showIndexedFolderPicker) {
-        IndexedVideoFolderPicker(
-            onSelect = { source ->
-                showIndexedFolderPicker = false
-                setLocalVideos(indexedFolder = source)
+    wallpaperPicker?.let { mode ->
+        val pickFolder = mode.folder
+        WallpaperFilePicker(
+            mode = mode,
+            deviceMediaEnabled = BuildConfig.GITHUB_UPDATES,
+            smbProfile = smbProfile?.takeIf { it.verified },
+            selectedFiles = if (mode.photo) config.photoFiles
+                else config.indexedVideoFiles + config.videoUris.filter(::isSmbWallpaper),
+            onSelect = { sources ->
+                val smb = isSmbWallpaper(sources.first())
+                when {
+                    mode.photo && pickFolder -> setPhotos(folder = sources.single())
+                    mode.photo -> setPhotos(files = sources)
+                    pickFolder && smb -> setLocalVideos(smbFolder = sources.single())
+                    pickFolder -> setLocalVideos(indexedFolder = sources.single())
+                    smb -> setLocalVideos(smbFiles = sources)
+                    else -> setLocalVideos(indexedFiles = sources)
+                }
+                wallpaperPicker = null
             },
-            onDismiss = { showIndexedFolderPicker = false },
+            onAndroidBrowse = if (!BuildConfig.GITHUB_UPDATES) {
+                { if (browseWithAndroid(mode)) wallpaperPicker = null }
+            } else null,
+            onConfigureSmb = {
+                smbSetupFromPicker = mode
+                wallpaperPicker = null
+                screen = SettingsScreen.Launcher
+            },
+            onDismiss = { wallpaperPicker = null },
         )
     }
 
     Dialog(
         onDismissRequest = {
-            if (screen != SettingsScreen.Main) screen = SettingsScreen.Main else onDismiss()
+            when {
+                smbSetupFromPicker != null -> returnToWallpaperPicker()
+                screen != SettingsScreen.Main -> screen = SettingsScreen.Main
+                else -> onDismiss()
+            }
         },
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
@@ -389,15 +443,10 @@ internal fun SettingsSheet(
                                 }
                             }
                         },
-                        onPickPhoto = {
-                            runCatching { photoPicker.launch(arrayOf("image/*")) }
-                                .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
-                        },
-                        onPickVideo = {
-                            runCatching { videoPicker.launch(arrayOf("video/*")) }
-                                .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
-                        },
-                        onPickVideoFolder = ::openVideoFolderPicker,
+                        onPickPhoto = { wallpaperPicker = WallpaperPickerMode.Photo },
+                        onPickPhotoFolder = { wallpaperPicker = WallpaperPickerMode.PhotoFolder },
+                        onPickVideo = { wallpaperPicker = WallpaperPickerMode.Videos },
+                        onPickVideoFolder = { wallpaperPicker = WallpaperPickerMode.Folder },
                     )
                     SettingsScreen.AppContentPreview -> AppContentPreviewScreen(
                         config = config,
@@ -474,6 +523,17 @@ internal fun SettingsSheet(
                         onBack = { screen = SettingsScreen.Main },
                         onRerunWizard = onRerunWizard,
                         onHomeSetupComplete = onHomeSetupComplete,
+                        smbProfile = smbProfile,
+                        onBackFromSmb = if (smbSetupFromPicker != null) ::returnToWallpaperPicker else null,
+                        onSmbChanged = { profile ->
+                            store.update { it.copy(smbSetup = profile?.setup) }
+                            smbProfile = profile
+                            if (isSmbWallpaper(config.videoFolderUri) || config.videoUris.any(::isSmbWallpaper) ||
+                                isSmbWallpaper(config.photoFolderUri) || config.photoFiles.any(::isSmbWallpaper)
+                            ) {
+                                onWallpaperChanged()
+                            }
+                        },
                     )
                 }
                 }
@@ -958,7 +1018,7 @@ private fun AppThumb(app: AppEntry) {
 
 /* ------------------------------ launcher settings ------------------------------ */
 
-private enum class LauncherPane { Menu, Home, Language, RecommendedApps, Save, Load }
+private enum class LauncherPane { Menu, Home, Language, RecommendedApps, Smb, Save, Load }
 
 @Composable
 private fun LauncherSettingsSubscreen(
@@ -967,12 +1027,15 @@ private fun LauncherSettingsSubscreen(
     onBack: () -> Unit,
     onRerunWizard: () -> Unit,
     onHomeSetupComplete: () -> Unit,
+    smbProfile: SmbProfile?,
+    onSmbChanged: suspend (SmbProfile?) -> Unit,
+    onBackFromSmb: (() -> Unit)?,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val cloud = remember { TelegramCloudBackup.get(context.applicationContext) }
     val session by cloud.session.collectAsStateWithLifecycle(CloudSession.Empty)
-    var pane by remember { mutableStateOf(LauncherPane.Menu) }
+    var pane by remember { mutableStateOf(if (onBackFromSmb == null) LauncherPane.Menu else LauncherPane.Smb) }
     var launcherReturnTo by remember { mutableStateOf(LauncherPane.Home) }
     val launcherMenuScroll = rememberScrollState()
     fun openPane(target: LauncherPane) {
@@ -986,7 +1049,10 @@ private fun LauncherSettingsSubscreen(
     LaunchedEffect(cloud) { cloud.warmup() }
 
     if (pane != LauncherPane.Menu) {
-        BackHandler { pane = LauncherPane.Menu }
+        BackHandler {
+            if (pane == LauncherPane.Smb && onBackFromSmb != null) onBackFromSmb()
+            else pane = LauncherPane.Menu
+        }
     }
 
     val savePicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -1125,6 +1191,7 @@ private fun LauncherSettingsSubscreen(
     when (pane) {
         LauncherPane.Home -> HomeLauncherScreen(onHomeSetupComplete)
         LauncherPane.RecommendedApps -> RecommendedAppsSettings(config, store)
+        LauncherPane.Smb -> SmbSettings(config.smbSetup, smbProfile, onChanged = onSmbChanged)
         LauncherPane.Language -> LanguageScreen(
             config = config, store = store, onBack = { pane = LauncherPane.Menu },
         )
@@ -1182,6 +1249,13 @@ private fun LauncherSettingsSubscreen(
                     leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
                 )
             }
+            SettingsItem(
+                onClick = { openPane(LauncherPane.Smb) },
+                modifier = focusFor(LauncherPane.Smb),
+                headlineContent = { Text(stringResource(R.string.smb_setup)) },
+                supportingContent = { Text(config.smbSetup?.name ?: stringResource(R.string.smb_setup_description)) },
+                leadingContent = { Icon(AppIcons.Wifi, contentDescription = null) },
+            )
             SettingsItem(
                 onClick = { openPane(LauncherPane.Save) },
                 modifier = focusFor(LauncherPane.Save),
@@ -2034,6 +2108,7 @@ internal fun TextEntryDialog(
     urlInput: Boolean = false,
     positionAboveKeyboard: Boolean = false,
     secretInput: Boolean = false,
+    trimInput: Boolean = true,
 ) {
     var name by remember { mutableStateOf(initial) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -2041,8 +2116,8 @@ internal fun TextEntryDialog(
     val cancelFocus = remember { FocusRequester() }
     val canSave = !busy && (allowEmpty || name.isNotBlank())
     fun submit() {
-        val trimmed = name.trim()
-        if (!busy && (allowEmpty || trimmed.isNotEmpty())) onSave(trimmed)
+        val input = if (trimInput) name.trim() else name
+        if (!busy && (allowEmpty || input.isNotEmpty())) onSave(input)
     }
     Dialog(onDismissRequest = onDismiss) {
         if (positionAboveKeyboard) PositionDialogAboveKeyboard()
@@ -2104,7 +2179,9 @@ internal fun TextEntryDialog(
                         modifier = Modifier.fillMaxWidth().focusRequester(f)
                             .onFocusChanged { editorFocused = it.isFocused }
                             .onPreviewKeyEvent { event ->
-                                if ((urlInput || secretInput) && event.key == Key.DirectionDown && event.type == KeyEventType.KeyDown) {
+                                if ((positionAboveKeyboard || urlInput || secretInput) &&
+                                    event.key == Key.DirectionDown && event.type == KeyEventType.KeyDown
+                                ) {
                                     (if (canSave) saveFocus else cancelFocus).requestFocus()
                                     true
                                 } else false
@@ -2211,6 +2288,7 @@ private fun WallpaperScreen(
     onSetSpeed: (Int) -> Unit,
     onPreset: (Int) -> Unit,
     onPickPhoto: () -> Unit,
+    onPickPhotoFolder: () -> Unit,
     onPickVideo: () -> Unit,
     onPickVideoFolder: () -> Unit,
 ) {
@@ -2276,7 +2354,14 @@ private fun WallpaperScreen(
             headlineContent = { Text(stringResource(R.string.pick_photo)) },
             supportingContent = { Text(stringResource(R.string.pick_photo_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
-            trailingContent = { CheckMark(checked = config.useCustomWallpaper) },
+            trailingContent = { CheckMark(checked = config.useCustomWallpaper && config.photoFolderUri.isEmpty()) },
+        )
+        SettingsItem(
+            onClick = onPickPhotoFolder,
+            headlineContent = { Text(stringResource(R.string.pick_video_folder)) },
+            supportingContent = { Text(stringResource(R.string.pick_photo_folder_sub)) },
+            leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.useCustomWallpaper && config.photoFolderUri.isNotEmpty()) },
         )
 
         /* ---------------- VIDEO: built-in aerials + your own video ---------------- */

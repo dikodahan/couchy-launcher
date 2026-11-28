@@ -56,6 +56,7 @@ object ConfigBackup {
                 validTmdbCredential(config.appContentPreviewTmdbCredential))
             require(config.appContentPreviewSubtitleLanguage in LANGUAGES)
             require(!config.appContentPreviewFallback || config.appContentPreviewTmdbCredential.isNotEmpty())
+            require(config.smbSetup?.isStorable() != false)
             require(config.weatherLat.isFinite() && config.weatherLon.isFinite())
         }
     }

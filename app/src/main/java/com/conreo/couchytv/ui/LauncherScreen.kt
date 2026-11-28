@@ -5,6 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -101,7 +105,14 @@ import com.conreo.couchytv.data.AerialLoadErrorPolicy
 import com.conreo.couchytv.data.BetaDiagnostics
 import com.conreo.couchytv.data.hasLocalVideoWallpaper
 import com.conreo.couchytv.data.hasWallpaperVideoAccess
-import com.conreo.couchytv.data.isIndexedWallpaperFolder
+import com.conreo.couchytv.data.hasWallpaperMediaAccess
+import com.conreo.couchytv.data.needsIndexedPhotoAccess
+import com.conreo.couchytv.data.needsIndexedVideoAccess
+import com.conreo.couchytv.data.isSmbWallpaper
+import com.conreo.couchytv.data.localWallpaperPhotos
+import com.conreo.couchytv.data.withWallpaperPhotoFile
+import com.conreo.couchytv.data.WALLPAPER_PHOTO_INTERVAL_MS
+import com.conreo.couchytv.data.SmbVideoDataSource
 import com.conreo.couchytv.data.localWallpaperVideos
 import com.conreo.couchytv.data.isBetaBuild
 import com.conreo.couchytv.data.BuiltinAerials
@@ -609,28 +620,59 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
     var dockExpanded by remember { mutableStateOf(false) }
     LaunchedEffect(config.layout) { if (config.layout != LAYOUT_DOCK) dockExpanded = false }
 
-    // ----- wallpaper: decoded off the main thread, downsampled, cached.
-    // A ~100px copy is decoded alongside: upscaled by the GPU it looks
-    // blurred, and crossfading it in costs one texture blend per frame
-    // instead of a full-screen RenderEffect blur (heavy on TV GPUs). -----
-    val wallpaperPair by produceState<Pair<ImageBitmap?, ImageBitmap?>>(
-        initialValue = null to null, config.useCustomWallpaper, wallpaperVersion, restoreRevision
+    // Decode one slide off the main thread. Keep the last visible slide while the next one loads.
+    val indexedPhotoAccess = remember(config.needsIndexedPhotoAccess, resumeTick) {
+        config.needsIndexedPhotoAccess && context.hasWallpaperMediaAccess(photo = true)
+    }
+    val wallpaperPair by key(config.useCustomWallpaper, config.photoFiles, config.photoFolderUri,
+        config.smbSetup, indexedPhotoAccess, wallpaperVersion, restoreRevision, lifecycleOwner,
     ) {
-        value = if (!config.useCustomWallpaper) null to null
-        else withContext(Dispatchers.IO) {
-            val f = File(context.filesDir, "wallpaper.jpg")
-            if (!f.exists()) null to null
-            else runCatching {
-                // 1280px is indistinguishable as a scrimmed background but the
-                // texture is ~2.3× smaller than 1920 — TV GPUs choke on the
-                // first upload of full-res textures. prepareToDraw() moves the
-                // upload off the first visible frame.
-                val sharp = decodeDownsampled(f, maxWidth = 1280)
-                    ?.also { it.prepareToDraw() }?.asImageBitmap()
-                val blurred = decodeDownsampled(f, maxWidth = 96)
-                    ?.also { it.prepareToDraw() }?.asImageBitmap()
-                sharp to blurred
-            }.getOrDefault(null to null)
+        produceState<Pair<ImageBitmap?, ImageBitmap?>>(null to null) {
+            if (!config.useCustomWallpaper) return@produceState
+            lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                if (config.photoFiles.isEmpty() && config.photoFolderUri.isEmpty()) {
+                    // Existing installs may still have a single imported photo.
+                    value = withContext(Dispatchers.IO) {
+                        runCatching { decodeWallpaperPhoto(File(context.filesDir, "wallpaper.jpg")) }
+                            .getOrDefault(null to null)
+                    }
+                    return@repeatOnLifecycle
+                }
+                var last: String? = null
+                while (true) {
+                    val photos = try {
+                        withContext(Dispatchers.IO) { config.localWallpaperPhotos(context).distinct().shuffled() }
+                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                        throw cancelled
+                    } catch (error: Exception) {
+                        BetaDiagnostics.failure("Wallpaper photo playlist", error)
+                        emptyList()
+                    }
+                    val ordered = if (photos.size > 1 && photos.first() == last) photos.drop(1) + photos.first()
+                        else photos
+                    var displayed = false
+                    for (photo in ordered) {
+                        val next = try {
+                            withContext(Dispatchers.IO) {
+                                context.withWallpaperPhotoFile(photo, config.smbSetup, ::decodeWallpaperPhoto)
+                            }
+                        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                            throw cancelled
+                        } catch (error: Exception) {
+                            BetaDiagnostics.failure("Wallpaper photo", error)
+                            continue
+                        }
+                        if (next.first == null) continue
+                        value = next
+                        BetaDiagnostics.event("Photo wallpaper displayed")
+                        last = photo
+                        displayed = true
+                        if (photos.size == 1 && config.photoFolderUri.isEmpty()) return@repeatOnLifecycle
+                        delay(WALLPAPER_PHOTO_INTERVAL_MS)
+                    }
+                    if (!displayed) delay(WALLPAPER_PHOTO_INTERVAL_MS)
+                }
+            }
         }
     }
     val (wallpaperSharp, wallpaperBlurred) = wallpaperPair
@@ -638,13 +680,14 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
         WALLPAPERS[config.wallpaper.coerceIn(0, WALLPAPERS.size - 1)].brush()
     }
 
-    val indexedVideoAccess = remember(config.videoFolderUri, resumeTick) {
-        isIndexedWallpaperFolder(config.videoFolderUri) && context.hasWallpaperVideoAccess()
+    val indexedVideoAccess = remember(config.needsIndexedVideoAccess, resumeTick) {
+        config.needsIndexedVideoAccess && context.hasWallpaperVideoAccess()
     }
     // Keep one shuffled queue for either source. The player preloads the next clip.
     val videoPlaylist by key(
         config.useBuiltinAerials, config.builtinSource, config.aerialQuality, config.useVideoWallpaper,
-        config.videoUri, config.videoUris, config.videoFolderUri, indexedVideoAccess, wallpaperVersion, restoreRevision, aerialRestart,
+        config.videoUri, config.videoUris, config.videoFolderUri, config.indexedVideoFiles, indexedVideoAccess,
+        config.smbSetup, wallpaperVersion, restoreRevision, aerialRestart,
     ) {
         produceState<List<String>>(initialValue = emptyList()) {
             value = withContext(Dispatchers.IO) {
@@ -954,21 +997,22 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                     gap = gap,
                     saving = savingReorder,
                 ) { original, reordered ->
-                    if (original == reordered) {
-                        reorderFrom = null
-                    } else if (!savingReorder) {
-                        savingReorder = true
-                        scope.launch {
-                            try {
-                                store.update {
-                                    if (dockMode) it.applyDockReorder(original.single().second, reordered.single().second)
-                                    else it.applyReorder(original, reordered)
+                    when {
+                        original == reordered -> reorderFrom = null
+                        !savingReorder -> {
+                            savingReorder = true
+                            scope.launch {
+                                try {
+                                    store.update {
+                                        if (dockMode) it.applyDockReorder(original.single().second, reordered.single().second)
+                                        else it.applyReorder(original, reordered)
+                                    }
+                                    reorderFrom = null
+                                } catch (_: java.io.IOException) {
+                                    Actions.toast(context, context.getString(R.string.toast_config_save_failed))
+                                } finally {
+                                    savingReorder = false
                                 }
-                                reorderFrom = null
-                            } catch (_: java.io.IOException) {
-                                Actions.toast(context, context.getString(R.string.toast_config_save_failed))
-                            } finally {
-                                savingReorder = false
                             }
                         }
                     }
@@ -1195,16 +1239,37 @@ fun LauncherApp(rescanTick: Int, homeIntentTick: Int, artworkGeneration: Int) {
                 }
             }
 
-            if (immersivePreview && !immersiveTray && preview?.manualTrailerAvailable == true) {
-                Text(
-                    text = stringResource(R.string.trailer_press_ok),
+            if (immersivePreview && !immersiveTray && !trailerVisible && deck != null &&
+                (preview?.manualTrailerAvailable == true || deck.manualTrailerStatus != ManualTrailerStatus.Idle)
+            ) {
+                Box(
                     modifier = Modifier.align(Alignment.TopStart)
                         .padding(start = 40.dp, top = 18.dp)
                         .launcherGlass(LocalCornerRadius.current, GlassPanel.PreviewHint)
                         .padding(horizontal = 14.dp, vertical = 10.dp),
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(shadow = Shadow(Color.Black, blurRadius = 5f)),
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (deck.manualTrailerStatus == ManualTrailerStatus.Loading) {
+                        val loading = stringResource(R.string.trailer_loading)
+                        ProgressRing(
+                            progress = null,
+                            modifier = Modifier.semantics {
+                                contentDescription = loading
+                                progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate
+                            },
+                            color = Color.White,
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(
+                                if (deck.manualTrailerStatus == ManualTrailerStatus.Unavailable) R.string.trailer_not_found
+                                else R.string.trailer_press_ok,
+                            ),
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium.copy(shadow = Shadow(Color.Black, blurRadius = 5f)),
+                        )
+                    }
+                }
             }
 
             if (showPreviewDots && deck != null && deck.count > 0) {
@@ -1937,15 +2002,19 @@ internal fun VideoWallpaper(
     val latestOnEnded by androidx.compose.runtime.rememberUpdatedState(onEnded)
     val latestOnAdvanced by androidx.compose.runtime.rememberUpdatedState(onAdvanced)
     val latestNextUri by androidx.compose.runtime.rememberUpdatedState(nextUri)
-    DisposableEffect(lifecycleOwner, loop, remoteCache, playOnce, muted, subtitleLanguage) {
+    val smbSource = !playOnce && isSmbWallpaper(uri)
+    DisposableEffect(lifecycleOwner, loop, remoteCache, playOnce, muted, subtitleLanguage, smbSource) {
         fun build(): androidx.media3.exoplayer.ExoPlayer {
             val renderers = androidx.media3.exoplayer.DefaultRenderersFactory(context)
                 .setEnableDecoderFallback(true) // fall back to SW decoder on odd clips
             // A failed certificate check falls back to the gradient; never bypass TLS validation.
             val http = androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(aerialHttpClient)
             val dataSource: androidx.media3.datasource.DataSource.Factory =
-                if (remoteCache) AerialVideoCache.dataSourceFactory(http)
-                else androidx.media3.datasource.DefaultDataSource.Factory(context, http)
+                when {
+                    smbSource -> SmbVideoDataSource.factory(context)
+                    remoteCache -> AerialVideoCache.dataSourceFactory(http)
+                    else -> androidx.media3.datasource.DefaultDataSource.Factory(context, http)
+                }
             val sourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSource)
             if (remoteCache) sourceFactory.setLoadErrorHandlingPolicy(AerialLoadErrorPolicy)
             return androidx.media3.exoplayer.ExoPlayer.Builder(context)
@@ -2225,13 +2294,22 @@ private fun LoadingScreen() {
     }
 }
 
-/** Decodes a bitmap with an inSampleSize so its width stays near [maxWidth]. */
-private fun decodeDownsampled(file: File, maxWidth: Int): android.graphics.Bitmap? {
+private fun decodeWallpaperPhoto(file: File): Pair<ImageBitmap?, ImageBitmap?> {
+    if (!file.isFile) return null to null
+    val sharp = decodeDownsampled(file, maxEdge = 1280)?.also { it.prepareToDraw() }?.asImageBitmap()
+    val blurred = if (sharp != null) decodeDownsampled(file, maxEdge = 96)
+        ?.also { it.prepareToDraw() }?.asImageBitmap() else null
+    return sharp to blurred
+}
+
+/** Downsamples a wallpaper according to its longest edge. */
+private fun decodeDownsampled(file: File, maxEdge: Int): android.graphics.Bitmap? {
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeFile(file.absolutePath, bounds)
-    if (bounds.outWidth <= 0) return null
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+    val longest = maxOf(bounds.outWidth, bounds.outHeight)
     var sample = 1
-    while (bounds.outWidth / (sample * 2) >= maxWidth) sample *= 2
+    while (longest / sample / 2 >= maxEdge) sample *= 2
     val opts = BitmapFactory.Options().apply {
         inSampleSize = sample
         inPreferredConfig = android.graphics.Bitmap.Config.RGB_565

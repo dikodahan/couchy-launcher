@@ -53,6 +53,8 @@ data class LauncherConfig(
     val knownApps: Set<String> = emptySet(),
     val wallpaper: Int = 1, // Aurora
     val useCustomWallpaper: Boolean = false,
+    val photoFiles: List<String> = emptyList(),
+    val photoFolderUri: String = "",
     @SerialName("useTopShelf") // Preserve existing settings and backups.
     val appContentPreviewEnabled: Boolean = false,
     val appContentPreviewTrailers: Boolean = false,
@@ -66,6 +68,8 @@ data class LauncherConfig(
     val useVideoWallpaper: Boolean = false,
     val videoUris: List<String> = emptyList(),
     val videoFolderUri: String = "",
+    val indexedVideoFiles: List<String> = emptyList(),
+    val smbSetup: SmbSetup? = null,
     /** built-in aerials source */
     val useBuiltinAerials: Boolean = false,
     /** which built-in collection (index into BuiltinAerials.SOURCES; 0 = all) */

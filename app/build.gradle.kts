@@ -43,8 +43,8 @@ android {
         applicationId = "com.conreo.couchytv"
         minSdk = 28
         targetSdk = 34
-        versionCode = 24
-        versionName = "1.2.10-beta.3"
+        versionCode = 25
+        versionName = "1.2.10-beta.4"
         buildConfigField("boolean", "GITHUB_UPDATES", githubUpdates.toString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -129,6 +129,10 @@ kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarg
 dependencies {
     // Media3's transitive Guava version predates the native-deserialization allocation fix.
     constraints { implementation("com.google.guava:guava:33.8.0-android") }
+    implementation("eu.agno3.jcifs:jcifs-ng:2.1.10")
+    runtimeOnly("org.slf4j:slf4j-nop:1.7.36")
+    // Keep SMB authentication on a supported Bouncy Castle release.
+    constraints { implementation("org.bouncycastle:bcprov-jdk18on:1.87") }
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

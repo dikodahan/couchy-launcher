@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -316,7 +317,7 @@ internal fun RecommendedAppRow(
             },
             onClick = { if (enabled && !ready && active == null) actions.download(entry) },
         ) {
-            if (active != null) DownloadRing(active.progress)
+            if (active != null) ProgressRing(active.progress)
             else RecommendedActionIcon(if (ready) AppIcons.Check else AppIcons.Download)
         }
         RecommendedButton(stringResource(R.string.recommended_install), enabled = ready && enabled, onClick = { actions.install(entry) }) {
@@ -352,8 +353,11 @@ private fun RecommendedActionIcon(icon: ImageVector) {
 }
 
 @Composable
-private fun DownloadRing(progress: Float?) {
-    val color = LocalContentColor.current
+internal fun ProgressRing(
+    progress: Float?,
+    modifier: Modifier = Modifier,
+    color: Color = LocalContentColor.current,
+) {
     val start = if (progress != null) -90f else {
         val transition = rememberInfiniteTransition(label = "download")
         val angle by transition.animateFloat(
@@ -364,7 +368,7 @@ private fun DownloadRing(progress: Float?) {
         )
         angle
     }
-    Canvas(Modifier.size(17.dp)) {
+    Canvas(modifier.size(17.dp)) {
         val ring = Stroke(2.dp.toPx())
         drawCircle(color.copy(alpha = 0.25f), style = ring)
         drawArc(color, start, progress?.times(360f) ?: 85f, useCenter = false, style = ring)

@@ -56,12 +56,19 @@ internal data class AppPreviewSlide(
     val manualPlayback: Boolean = false,
 )
 
+private const val POSTER_INTERVAL_MS = 7_000L
+private const val MISSING_TRAILER_MESSAGE_MS = 3_000L
+
+internal enum class ManualTrailerStatus { Idle, Loading, Unavailable }
+
 internal class AppPreviewDeck {
     private var requestId = 0
     internal data class Selection(val index: Int, val requestId: Int, val playTrailer: Boolean = false)
 
     internal val selection = MutableStateFlow(Selection(0, requestId))
     var slide by mutableStateOf<AppPreviewSlide?>(null)
+        internal set
+    var manualTrailerStatus by mutableStateOf(ManualTrailerStatus.Idle)
         internal set
     var index by mutableIntStateOf(0)
         internal set
@@ -71,6 +78,7 @@ internal class AppPreviewDeck {
     fun move(delta: Int) {
         if (count < 2) return
         index = (index + delta).mod(count)
+        manualTrailerStatus = ManualTrailerStatus.Idle
         // Dispose the active native or web player even if artwork is still loading.
         slide = slide?.let { AppPreviewSlide(it.artwork) }
         selection.value = Selection(index, ++requestId)
@@ -79,17 +87,20 @@ internal class AppPreviewDeck {
     fun playCurrentTrailer() {
         val current = slide?.takeIf { it.manualTrailerAvailable } ?: return
         slide = current.copy(manualTrailerAvailable = false)
+        manualTrailerStatus = ManualTrailerStatus.Loading
         selection.value = Selection(index, ++requestId, playTrailer = true)
     }
 
     fun stopManualTrailer() {
-        if (!selection.value.playTrailer) return
+        if (manualTrailerStatus == ManualTrailerStatus.Idle) return
+        manualTrailerStatus = ManualTrailerStatus.Idle
         slide = slide?.let { AppPreviewSlide(it.artwork) }
         selection.value = Selection(index, ++requestId)
     }
 
     internal fun reset() {
         slide = null
+        manualTrailerStatus = ManualTrailerStatus.Idle
         index = 0
         count = 0
         selection.value = Selection(0, ++requestId)
@@ -145,6 +156,7 @@ internal fun rememberAppContentPreview(
                         }
                         deck.count = slides.size
                         deck.selection.collectLatest { selection ->
+                            var manualRequested = selection.playTrailer
                             var index = selection.index.coerceAtMost((slides.size - 1).coerceAtLeast(0))
                             while (slides.isNotEmpty()) {
                                 val program = slides[index]
@@ -158,8 +170,8 @@ internal fun rememberAppContentPreview(
                                 val trailer = program.trailer
                                 val lookup = program.fallback
                                 val hasTrailer = trailer != null || lookup != null
-                                val manual = selection.playTrailer
-                                val still = AppPreviewSlide(image, manualTrailerAvailable = !playTrailers && !manual && hasTrailer)
+                                val manual = manualRequested
+                                val still = AppPreviewSlide(image, manualTrailerAvailable = !playTrailers && !manual)
                                 deck.index = index
                                 deck.slide = still
                                 if (slides.size > 1) loadArtwork(slides[(index + 1) % slides.size])
@@ -192,15 +204,22 @@ internal fun rememberAppContentPreview(
                                         }
                                     }
                                 }
+                                var posterDelay = if (played && !manual) 1_000L else POSTER_INTERVAL_MS
                                 if (manual) {
-                                    deck.slide = still.copy(manualTrailerAvailable = played)
-                                    // Return to the same poster after a deliberate play.
-                                    awaitCancellation()
+                                    manualRequested = false
+                                    if (!played) {
+                                        deck.manualTrailerStatus = ManualTrailerStatus.Unavailable
+                                        delay(MISSING_TRAILER_MESSAGE_MS)
+                                        posterDelay -= MISSING_TRAILER_MESSAGE_MS
+                                    }
+                                    deck.manualTrailerStatus = ManualTrailerStatus.Idle
+                                    deck.slide = still.copy(manualTrailerAvailable = true)
                                 }
                                 if (slides.size == 1) break
-                                delay(if (played) 1_000 else 7_000)
+                                delay(posterDelay)
                                 index = (index + 1) % slides.size
                             }
+                            if (manualRequested) deck.manualTrailerStatus = ManualTrailerStatus.Unavailable
                             // Hold the last slide until navigation or lifecycle changes.
                             awaitCancellation()
                         }
